@@ -152,8 +152,14 @@ jobs:
         # Remove the --target flag if DOCKER_TARGET is empty
         [ -z "$TARGET_STAGE" ] && TARGET_FLAG=""
         echo "[DEBUG] TARGET_FLAG: $TARGET_FLAG"
+
+        BUILD_CMD="docker build ${TARGET_FLAG} -t ${IMAGE_REF} ."
+        echo "[DEBUG] BUILD_CMD: $BUILD_CMD"
+
+        sh -c "$BUILD_CMD"
+
         # Build the Docker image with or without the target flag
-        docker build "$TARGET_FLAG" -t "${IMAGE_REF}" .
+        # docker build "$TARGET_FLAG" -t "${IMAGE_REF}" .
 
         echo " -- DOCKER BUILD DONE --"
         echo " -- IMAGE: ${IMAGE_REF}"
