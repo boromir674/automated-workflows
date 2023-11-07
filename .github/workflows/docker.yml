@@ -111,7 +111,7 @@ jobs:
       TARGET_STAGE: ${{ inputs.target_stage }}
       DOCKER_USER: ${{ inputs.DOCKER_USER }}
     steps:
-    - run: "Job Triggered with Policy: ${{ inputs.acceptance_policy }}"
+    - run: 'echo "Job Triggered with Policy: ${{ inputs.acceptance_policy }}"'
     - run: |
         echo === INPUTS ============
         echo "$DOCKER_USER"
