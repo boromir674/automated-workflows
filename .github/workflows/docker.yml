@@ -78,13 +78,13 @@ on:
     outputs:
       IMAGE_REF:
         description: "Docker Image reference"
-        value: ${{ jobs.docker_build.outputs.image_ref }}
+        value: ${{ jobs.docker_build.outputs.IMAGE_REF }}
 
 jobs:
   ## AUTONOMOUS DOCKER BUILD and PUBLISH ON DOCKERHUB ##
   docker_build:
     outputs:
-      image_ref: ${{ steps.build_docker_image.outputs.IMAGE_REF }}
+      IMAGE_REF: ${{ steps.build_docker_image.outputs.IMAGE_REF }}
 
     ## Policy Logic ##
     # 2 bit state machine
