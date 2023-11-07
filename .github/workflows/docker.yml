@@ -78,7 +78,7 @@ on:
     outputs:
       IMAGE_REF:
         description: "Docker Image reference"
-        value: ${{ jobs.build_docker_image.outputs.image_ref }}
+        value: ${{ jobs.docker_build.outputs.image_ref }}
 
 jobs:
   ## AUTONOMOUS DOCKER BUILD and PUBLISH ON DOCKERHUB ##
