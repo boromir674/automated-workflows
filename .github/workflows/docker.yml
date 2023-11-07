@@ -113,46 +113,52 @@ jobs:
     steps:
     - run: 'echo "Job Triggered with Policy: ${{ inputs.acceptance_policy }}"'
     - run: |
-        echo === INPUTS ============
-        echo "$DOCKER_USER"
-        echo "$IMAGE_SLUG"
-        echo "$image_tag"
-        echo "$TARGET_STAGE"
-        echo ${{ inputs.target_stage }}
+        echo "=== ENV VARS ===""
+        echo "Docker Username: $DOCKER_USER"
+        echo "Image Slug $IMAGE_SLUG"
+        echo "Target Stage: $TARGET_STAGE"
+        echo === INPUTS ===
+        echo ${{ inputs.DOCKER_USER }}
+        echo ${{ inputs.image_slug }}
         echo ${{ inputs.acceptance_policy }}
+        echo ${{ inputs.target_stage }}
+        echo ${{ inputs.image_tag }}
+        echo === SECRETS ===
+        echo ${{ secrets.DOCKER_PASSWORD }}
 
-
-    # - uses: actions/checkout@v3
-    # - name: Build Docker Image from Dockerfile
-    #   id: build_docker_image
-    #   run: |
+    - uses: actions/checkout@v3
+    - name: Build Docker Image from Dockerfile
+      id: build_docker_image
+      run: |
         
-    #     # tag image with input tag if given
-    #     IMAGE_TAG="${{ inputs.image_tag }}"
-    #     # else use the git ref, which normally a branch or tag name
-    #     # assuming workflow is enabled for branches and v* tags
-    #     [ -z "$IMAGE_TAG" ] && IMAGE_TAG="${GITHUB_REF_NAME}"
+        # tag image with input tag if given
+        IMAGE_TAG="${{ inputs.image_tag }}"
+        echo "[DEBUG] IMAGE_TAG: $IMAGE_TAG"
+        # else use the git ref, which normally a branch or tag name
+        # assuming workflow is enabled for branches and v* tags
+        [ -z "$IMAGE_TAG" ] && IMAGE_TAG="${GITHUB_REF_NAME}"
 
-    #     IMAGE_REF="${DOCKER_USER}/${IMAGE_SLUG}:${IMAGE_TAG}"
+        IMAGE_REF="${DOCKER_USER}/${IMAGE_SLUG}:${IMAGE_TAG}"
+        echo "[DEBUG] IMAGE_REF: $IMAGE_REF"
 
-    #     echo " == Image Tag from Git Ref: $IMAGE_TAG == "
-    #     echo " == Image Slug: $IMAGE_SLUG == "
-    #     echo " == Image Ref: $IMAGE_REF == "
+        echo " == Image Tag from Git Ref: $IMAGE_TAG == "
+        echo " == Image Slug: $IMAGE_SLUG == "
+        echo " == Image Ref: $IMAGE_REF == "
 
-    #     # Set TARGET_FLAG to --target $TARGET_STAGE or an empty string
-    #     TARGET_FLAG="--target $TARGET_STAGE"
+        # Set TARGET_FLAG to --target $TARGET_STAGE or an empty string
+        TARGET_FLAG="--target $TARGET_STAGE"
 
-    #     # Remove the --target flag if DOCKER_TARGET is empty
-    #     [ -z "$TARGET_STAGE" ] && TARGET_FLAG=""
+        # Remove the --target flag if DOCKER_TARGET is empty
+        [ -z "$TARGET_STAGE" ] && TARGET_FLAG=""
+        echo "[DEBUG] TARGET_FLAG: $TARGET_FLAG"
+        # Build the Docker image with or without the target flag
+        docker build "$TARGET_FLAG" -t "${IMAGE_REF}" .
 
-    #     # Build the Docker image with or without the target flag
-    #     docker build "$TARGET_FLAG" -t "${IMAGE_REF}" .
+        echo " -- DOCKER BUILD DONE --"
+        echo " -- IMAGE: ${IMAGE_REF}"
 
-    #     echo " -- DOCKER BUILD DONE --"
-    #     echo " -- IMAGE: ${IMAGE_REF}"
-
-    #     echo "IMAGE_REF=${IMAGE_REF}" >> $GITHUB_ENV
-    #     echo "IMAGE_REF=${IMAGE_REF}" >> $GITHUB_OUTPUT
+        echo "IMAGE_REF=${IMAGE_REF}" >> $GITHUB_ENV
+        echo "IMAGE_REF=${IMAGE_REF}" >> $GITHUB_OUTPUT
 
     # - name: Login to Dockerhub, public Image Registry
     #   env:
