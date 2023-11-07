@@ -76,13 +76,15 @@ on:
         required: true
     # Map the workflow outputs to job outputs
     outputs:
-      image_ref:
+      IMAGE_REF:
         description: "Docker Image reference"
-        value: ${{ jobs.docker_build.outputs.IMAGE_REF }}
+        value: ${{ jobs.build_docker_image.outputs.image_ref }}
 
 jobs:
   ## AUTONOMOUS DOCKER BUILD and PUBLISH ON DOCKERHUB ##
   docker_build:
+    outputs:
+      image_ref: ${{ steps.build_docker_image.outputs.IMAGE_REF }}
 
     ## Policy Logic ##
     # 2 bit state machine
@@ -196,5 +198,3 @@ jobs:
         fi
         echo "Exiting with status code: $job_status"
         exit $job_status
-    outputs:
-      image_ref: ${{ steps.build_docker_image.outputs.IMAGE_REF }}
