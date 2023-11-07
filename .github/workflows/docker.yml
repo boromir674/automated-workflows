@@ -116,7 +116,7 @@ jobs:
         echo "=== ENV VARS ===""
         echo "Docker Username: ${DOCKER_USER}"
         echo "Image Slug ${IMAGE_SLUG}"
-        echo "Target Stage: ${TARGET_STAGE}"
+        # echo "Target Stage: ${TARGET_STAGE}"
         echo === INPUTS ===
         echo ${{ inputs.DOCKER_USER }}
         echo ${{ inputs.image_slug }}
