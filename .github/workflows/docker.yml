@@ -110,6 +110,7 @@ jobs:
       IMAGE_SLUG: ${{ inputs.image_slug }}
       TARGET_STAGE: ${{ inputs.target_stage }}
       DOCKER_USER: ${{ inputs.DOCKER_USER }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
     - run: 'echo "Job Triggered with Policy: ${{ inputs.acceptance_policy }}"'
     - run: |
@@ -124,7 +125,7 @@ jobs:
         echo ${{ inputs.target_stage }}
         echo ${{ inputs.image_tag }}
         echo === SECRETS ===
-        echo ${{ secrets.DOCKER_PASSWORD }}
+        echo ${DOCKER_PASSWORD}
 
     - uses: actions/checkout@v3
     - name: Build Docker Image from Dockerfile
