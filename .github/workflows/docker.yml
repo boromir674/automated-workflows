@@ -10,20 +10,20 @@
 # Features:
 # Configurable Behaviour, using Policies (see input.acceptance_policy):
 
-#  1. Never run Docker build and publish to Dockerhub
+#  0. Never run Docker build and publish to Dockerhub
 #  aka: 'NO Docker', Docker Shutdown, 'No Admitance'
 #  aka: guarantee that nothing is published
 
-#  2. Always build and publish to Dockerhub
+#  1. Always build and publish to Dockerhub
 #   aka: Force Publish, Always Docker, 'Admit All'
 #   aka: 'Free Admitance', 'No Entry Barrier', 'Free Entrance'
 
-#  3. Run Docker build and publish to Dockerhub only if Tests passed (and ran!)
+#  2. Run Docker build and publish to Dockerhub only if Tests passed (and ran!)
 #   aka: Continous Integration / Continuous Deployment (CI/C Dpl)
 #   aka: guranteed quality, everything published is tested
 #   aka: 'required succesful evaluation', 'accept only a Pass'
 
-#  4. Run Docker build and publish to Dockerhub, if Tests ran and passed, but also if Tests were skipped
+#  3. Run Docker build and publish to Dockerhub, if Tests ran and passed, but also if Tests were skipped
 #   aka: Continous Integration / Continuous Delivery (CI/C Dlv)
 #   aka: CI/CD with Bypass Option
 #   aka: 'accepted_when_Test_OFF', 'accept a Pass or a Skip'
@@ -55,6 +55,9 @@ on:
   # Aka parent/caller workflow calls the child/"called" workflow
   workflow_call:
     inputs:
+      DOCKER_USER:
+        required: true
+        type: string
       image_slug:
         required: true
         type: string
@@ -69,8 +72,6 @@ on:
         required: false
         type: string
     secrets:
-      DOCKER_USER:
-        required: true
       DOCKER_PASSWORD:
         required: true
     # Map the workflow outputs to job outputs
@@ -100,8 +101,9 @@ jobs:
     env:
       IMAGE_SLUG: ${{ inputs.image_slug }}
       TARGET_STAGE: ${{ inputs.target_stage }}
-      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_USER: ${{ inputs.DOCKER_USER }}
     steps:
+    - run: "Job Triggered with Policy: ${{ inputs.acceptance_policy }}"
     - uses: actions/checkout@v3
     - name: Build Docker Image from Dockerfile
       id: build_docker_image
