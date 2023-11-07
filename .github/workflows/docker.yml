@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_SLUG: ${{ inputs.image_slug }}
-      TARGET_STAGE: ${{ inputs.target_stage }}
+      TARGET_STAGE: "${{ inputs.target_stage }}"
       DOCKER_USER: ${{ inputs.DOCKER_USER }}
     steps:
     - run: 'echo "Job Triggered with Policy: ${{ inputs.acceptance_policy }}"'
