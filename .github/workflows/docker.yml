@@ -64,7 +64,7 @@ on:
       # Defaults to CI/CD if unknown policy or not given
       acceptance_policy:
         required: false
-        type: number
+        type: string
       target_stage:
         required: false
         type: string
