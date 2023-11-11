@@ -97,6 +97,7 @@ jobs:
     # if: always() && inputs.acceptance_policy != 0 && ( inputs.acceptance_policy == 1 || (
     #     needs.*.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') ) || (
     #     inputs.acceptance_policy == 3 && !contains(needs.*.result, 'failure') && ( !contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled') ) )
+    #     inputs.acceptance_policy == 3 && !contains(needs.*.result, 'failure') && ( contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled') ) )
     #   )
     runs-on: ubuntu-latest
     env:
@@ -124,11 +125,11 @@ jobs:
 
       - run: echo ${{ inputs.acceptance_policy == 3 }}
       - run: echo ${{ !contains(needs.*.result, 'failure') }}
-      - run: echo ${{ !contains(needs.*.result, 'skipped') }}
+      - run: echo ${{ contains(needs.*.result, 'skipped') }}
       - run: echo ${{ contains(needs.*.result, 'cancelled') }}
 
-      - name: "ONE OF: Pol is 3 and NOT Failure and NOT Cancelled"
-        run: echo ${{ inputs.acceptance_policy == 3 && !contains(needs.*.result, 'failure') && ( !contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled') ) }}
+      - name: "ONE OF: Pol is 3 and NOT Failure and (SKIPPED OR Cancelled)"
+        run: echo ${{ inputs.acceptance_policy == 3 && !contains(needs.*.result, 'failure') && ( contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled') ) }}
 
 
       ##
