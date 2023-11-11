@@ -108,9 +108,9 @@ jobs:
     # DEBUG
       - run: echo ${{ inputs.acceptance_policy }}
       - run: echo ${{ inputs.acceptance_policy != 0 }}
-      - run: echo ${{ inputs.acceptance_policy != "0" }}
+      - run: echo ${{ inputs.acceptance_policy != '0' }}
       - run: echo ${{ inputs.acceptance_policy == 1 }}
-      - run: echo ${{ inputs.acceptance_policy == "1" }}
+      - run: echo ${{ inputs.acceptance_policy == '1' }}
       - run: echo ${{ needs.*.result }}
       ##
       - run: 'echo "POLICY: ${{ inputs.acceptance_policy }}"'
