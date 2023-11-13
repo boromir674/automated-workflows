@@ -7,6 +7,9 @@ on:
       require_wheel:
         required: false
         type: boolean
+      allow_existing:
+        required: false
+        type: boolean
       distro_name:
         required: true
         type: string
@@ -105,6 +108,6 @@ jobs:
         TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         PYPI_SERVER: ${{ vars.PYPI_SERVER }}
-      run: tox -vv -s false -e deploy -- upload --non-interactive --skip-existing
+      run: tox -vv -s false -e deploy -- upload --non-interactive ${{ inputs.allow_existing && '--skip-existing' }}
 
     - run: echo "Published :\)"
