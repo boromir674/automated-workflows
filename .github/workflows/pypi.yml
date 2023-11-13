@@ -39,11 +39,10 @@ jobs:
     #   name: ${{ needs.check_which_git_branch_we_are_on.outputs.ENVIRONMENT_NAME }}
     env:
       DIST_DIR: ${{ inputs.dist_folder || 'dist' }}
-      DISTRO_SEMVER: ${{ inputs.distro_version }}  # required env var by deploy script (tox -e deploy)
-      TWINE_USERNAME: ${{ inputs.TWINE_USERNAME }}
-      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      # TWINE_USERNAME: ${{ inputs.TWINE_USERNAME }}
+      # TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      # PYPI_SERVER: testpypi
       # PYPI_SERVER: ${{ inputs.pypi_server }}
-      PYPI_SERVER: testpypi
     steps:
     - uses: actions/checkout@v3
     - name: Download Source & Wheel distributions
