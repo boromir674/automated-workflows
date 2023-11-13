@@ -3,6 +3,10 @@ name: "PyPI Publish Environment"
 on:
   workflow_call:
     inputs:
+      # Success Policy
+      require_wheel:
+        required: false
+        type: boolean
       distro_name:
         required: true
         type: string
@@ -72,12 +76,23 @@ jobs:
     - name: "SOURCE DISTRO: ${{ env.DISTRO_FILE_NAME }} -- "
       run: cp "${{ env.SOURCE_DISTRO }}" "${DIST_DIR}"
 
+    - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl)" >> $GITHUB_ENV
+    - run: echo wheel_files_array="(${{ env.wheel_files }})" >> $GITHUB_ENV
+    - name: "Verify at least one Wheel is Distributed"
+      if: ${{ inputs.require_wheel == true }}
+      run: |
+        if [[ ${#wheel_files_array[@]} -eq 0 ]]; then
+          echo "Error: No Wheel Distribution .whl files found!"
+          exit 1
+        fi
+
     - name: "Copy found .whl Distributions into '${{ env.DIST_DIR }}' folder"
       run: |
         for f in `find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl`; do
           echo "WHEEL DISTRO: $f";
           cp $f ${DIST_DIR}
         done
+
     - run: ls -la ${DIST_DIR}
     ##
 
