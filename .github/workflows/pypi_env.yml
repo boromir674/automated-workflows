@@ -87,6 +87,7 @@ jobs:
 
     - name: "WHEEL DISTRO(s): ${{ env.wheel_files }}"
       run: |
+        wheel_files_array=(${{ env.wheel_files }})
         for f in "${wheel_files_array[@]}"; do
           echo "WHEEL DISTRO: $f";
           cp $f ${DIST_DIR}
