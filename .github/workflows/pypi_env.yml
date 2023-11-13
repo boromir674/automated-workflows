@@ -79,7 +79,7 @@ jobs:
     - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl)" >> $GITHUB_ENV
     - run: echo wheel_files_array="(${{ env.wheel_files }})" >> $GITHUB_ENV
     - name: "Verify at least one Wheel is Distributed"
-      if: ${{ inputs.require_wheel == true }}
+      if: ${{ inputs.require_wheel == 'true' }}
       run: |
         if [[ ${#wheel_files_array[@]} -eq 0 ]]; then
           echo "Error: No Wheel Distribution .whl files found!"
