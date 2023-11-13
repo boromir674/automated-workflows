@@ -1,0 +1,46 @@
+name: "PyPI Publish Environment 1"
+on:
+  workflow_call:
+    inputs:
+      distro_name:
+        required: true
+        type: string
+      # PEP 440 compliant version string
+      distro_version:
+        required: true
+        type: string
+      should_trigger:
+        required: true
+        type: boolean
+      artifacts_path:
+        required: true
+        type: string
+      pypi_env:
+        required: true
+        type: string
+      dist_folder:
+        required: false
+        type: string
+
+jobs:
+  # https://github.com/marketplace/actions/pypi-publish
+  ### PYPI UPLOAD JOB ###
+  pypi_publish:
+    if: always() && inputs.should_trigger
+    # environment:
+    #   name: ${{ inputs.pypi_env }}
+    # env:
+    #   PYPI_SERVER: ${{ vars.PYPI_SERVER }}
+    #   TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
+      # TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+    uses: boromir674/automated-workflows/.github/workflows/pypi.yml@test
+    with:
+      distro_name: cicd_test_workflow
+      distro_version: "0.0.1"
+      should_trigger: true
+      artifacts_path: ${{ inputs.artifacts_path }}
+      pypi_server: ${{ env.PYPI_SERVER }}
+      TWINE_USERNAME: ${{ env.TWINE_USERNAME }}
+      dist_folder: ${{ inputs.dist_folder || 'dist' }}
+    secrets:
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
