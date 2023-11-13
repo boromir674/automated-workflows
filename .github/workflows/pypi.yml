@@ -1,0 +1,99 @@
+name: "PyPI Publish"
+on:
+  workflow_call:
+    inputs:
+      distro_name:
+        required: true
+        type: string
+      # PEP 440 compliant version string
+      distro_version:
+        required: true
+        type: string
+      should_trigger:
+        required: true
+        type: boolean
+    artifacts_path:
+      required: true
+      type: string
+    pypi_server:
+      required: true
+      type: string
+    dist_folder:
+      required: false
+      type: string
+    TWINE_USERNAME:
+      required: true
+      type: string
+    secrets:
+      TWINE_PASSWORD:
+        required: true
+
+jobs:
+### PYPI UPLOAD JOB ###
+  pypi_publish:
+    runs-on: ubuntu-latest
+    # if we are on tag starting with "v" and if we are on master or release branch
+    if: always() && inputs.should_trigger
+    # environment:
+    #   name: ${{ needs.check_which_git_branch_we_are_on.outputs.ENVIRONMENT_NAME }}
+    env:
+      DIST_DIR: ${{ inputs.dist_folder || 'dist' }}
+      DISTRO_SEMVER: ${{ inputs.distro_version }}  # required env var by deploy script (tox -e deploy)
+      TWINE_USERNAME: ${{ inputs.TWINE_USERNAME }}
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      PYPI_SERVER: ${{ inputs.pypi_server }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download Source & Wheel distributions
+      uses: actions/download-artifact@v3
+      with:
+        path: ${{ inputs.artifacts_path }}
+    - run: ls -la ${{ inputs.artifacts_path }}
+    - run: echo "Github Ref ${{ github.ref }}"
+    - run: echo "Github Ref Name ${{ github.ref_name }}"
+
+    ## PUT TAR.GZ & WHEEL's in DIST FOLDER ##
+    - run: mkdir ${DIST_DIR}
+    - name: "Copy .tar.gz Source Distribution into '${{ env.DIST_DIR }}' folder"
+      run: |
+        targz_files=$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.tar.gz)
+        targz_files_array=($targz_files)
+
+        SOURCE_DISTRO=${targz_files_array[0]}  # a *.tar.gz file path
+        DISTRO_FILE_NAME=$(basename "$SOURCE_DISTRO")
+
+        # Check if all source distribution (.tar.gz) files have the same name
+        for file in "${targz_files_array[@]}"; do
+          if [ "$DISTRO_FILE_NAME" != "$(basename "$file")" ]; then
+            echo "Error: Not all Source Distribution .tar.gz files have the same name!"
+            exit 1
+          fi
+        done
+        echo "SOURCE_DISTRO=$SOURCE_DISTRO" >> $GITHUB_ENV
+        echo "DISTRO_FILE_NAME=$DISTRO_FILE_NAME" >> $GITHUB_ENV
+
+    - name: "SOURCE DISTRO: ${{ env.DISTRO_FILE_NAME }} -- "
+      run: cp "${{ env.SOURCE_DISTRO }}" "${DIST_DIR}"
+
+    - name: "Copy found .whl Distributions into '${{ env.DIST_DIR }}' folder"
+      run: |
+        for f in `find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl`; do
+          echo "WHEEL DISTRO: $f";
+          cp $f ${DIST_DIR}
+        done
+    - run: ls -la ${DIST_DIR}
+    ##
+
+    ## PyPI Upload Command
+    - run: pip install tox==3.28
+
+    - name: "Publish '${{ inputs.distro_name }}' version ${{ inputs.distro_version }} to '${{ inputs.pypi_server }}' Server"
+      env:
+        PACKAGE_DIST_VERSION: ${{ inputs.distro_version }}
+        TWINE_USERNAME: ${{ inputs.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        PYPI_SERVER: ${{ inputs.pypi_server }}
+      run: tox -vv -s false -e deploy -- upload --non-interactive --skip-existing
+
+    - run: echo "Published :\)"
+    ##
