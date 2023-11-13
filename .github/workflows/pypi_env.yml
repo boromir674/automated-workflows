@@ -50,11 +50,9 @@ jobs:
       with:
         path: ${{ inputs.artifacts_path }}
     - run: ls -la ${{ inputs.artifacts_path }}
-    - run: echo "Github Ref ${{ github.ref }}"
-    - run: echo "Github Ref Name ${{ github.ref_name }}"
 
-    ## PUT TAR.GZ & WHEEL's in DIST FOLDER ##
     - run: mkdir ${DIST_DIR}
+    ## PUT TAR.GZ file in DIST FOLDER ##
     - name: "Copy .tar.gz Source Distribution into '${{ env.DIST_DIR }}' folder"
       run: |
         targz_files=$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.tar.gz)
@@ -73,9 +71,10 @@ jobs:
         echo "SOURCE_DISTRO=$SOURCE_DISTRO" >> $GITHUB_ENV
         echo "DISTRO_FILE_NAME=$DISTRO_FILE_NAME" >> $GITHUB_ENV
 
-    - name: "SOURCE DISTRO: ${{ env.DISTRO_FILE_NAME }} -- "
+    - name: "SOURCE DISTRO: ${{ env.DISTRO_FILE_NAME }}"
       run: cp "${{ env.SOURCE_DISTRO }}" "${DIST_DIR}"
 
+    ## PUT WHEEL file(s) in DIST FOLDER ##
     - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl)" >> $GITHUB_ENV
     - run: echo wheel_files_array="(${{ env.wheel_files }})" >> $GITHUB_ENV
     - name: "Verify at least one Wheel is Distributed"
@@ -86,9 +85,9 @@ jobs:
           exit 1
         fi
 
-    - name: "Copy found .whl Distributions into '${{ env.DIST_DIR }}' folder"
+    - name: "WHEEL DISTRO(s): ${{ env.wheel_files }}"
       run: |
-        for f in `find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl`; do
+        for f in "${wheel_files_array[@]}"; do
           echo "WHEEL DISTRO: $f";
           cp $f ${DIST_DIR}
         done
