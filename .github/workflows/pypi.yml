@@ -1,4 +1,5 @@
 name: "PyPI Publish"
+
 on:
   workflow_call:
     inputs:
@@ -33,16 +34,9 @@ jobs:
 ### PYPI UPLOAD JOB ###
   pypi_publish:
     runs-on: ubuntu-latest
-    # if we are on tag starting with "v" and if we are on master or release branch
     if: always() && inputs.should_trigger
-    # environment:
-    #   name: ${{ needs.check_which_git_branch_we_are_on.outputs.ENVIRONMENT_NAME }}
     env:
       DIST_DIR: ${{ inputs.dist_folder || 'dist' }}
-      # TWINE_USERNAME: ${{ inputs.TWINE_USERNAME }}
-      # TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-      # PYPI_SERVER: testpypi
-      # PYPI_SERVER: ${{ inputs.pypi_server }}
     steps:
     - uses: actions/checkout@v3
     - name: Download Source & Wheel distributions
@@ -97,4 +91,3 @@ jobs:
       run: tox -vv -s false -e deploy -- upload --non-interactive --skip-existing
 
     - run: echo "Published :\)"
-    ##
