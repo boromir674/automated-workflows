@@ -1,0 +1,64 @@
+site_name: 'CI/CD Workflows'
+site_url: https://automated-workflows.readthedocs.io/
+site_description: CI/CD Wokflows Project Documentation.
+site_author: Konstantinos Lampridis
+
+repo_url: https://github.com/boromir674/automated-workflows/
+repo_name: boromir674/automated-workflows
+edit_uri: blob/main/docs/
+
+theme:
+  # 1
+  name: material
+  icon:
+    logo: material/palette
+    previous: fontawesome/solid/angle-left
+    next: fontawesome/solid/angle-right
+    default: material/tag
+
+  # favicon: images/favicon.png
+  features:
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    # - navigation.indexes
+  # navigation.instant break mermaid
+  # features:
+  #   - navigation.tracking
+
+    # - navigation.instant
+
+plugins:
+  # Enable jinja inside your markdown files
+  # https://github.com/fralau/mkdocs_macros_plugin
+  # - macros
+
+  # Authors need installation
+  # - git-authors
+
+  - tags:
+      tags_file: tags.md
+
+  # BASIC SEARCH PLUGIN
+  - search
+
+  # MERMAID Render Support
+  - mermaid2
+
+  # - literate-nav:
+  #     nav_file: SUMMARY.md
+
+  - section-index
+
+markdown_extensions:
+  - pymdownx.highlight
+  
+nav:
+  - Home:
+    - "Quick Start": index.md  
+  - Test Suite: tests_index.md
+  - tags: tags.md
+
+
+extra:
+  generator: false
