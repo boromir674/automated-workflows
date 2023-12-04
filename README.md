@@ -1,10 +1,18 @@
 # CI/CD Workflows
 
-Reusable Workflows for `CI/CD Pipelines`, implemented as `Github Actions Workflows`.
+`Reusable Workflows` for **CI/CD Pipelines**, implemented as `Github Actions Workflows`.
+
+- Source: https://github.com/boromir674/automated-workflows
+- Docs: https://automated-workflows.readthedocs.io
+- CI: https://github.com/boromir674/cicd-test/actions
 
 | expected green   | expected red |
 | --- | --- |
 |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol0_green_0000_1100.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/docker_pol0_green_0000_1100.yaml)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_green_0001_1101.yaml/badge.svg)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_green_1110_0010.yaml/badge.svg)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_green_1111_0011.yaml/badge.svg)       |    ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol0_red_0100.yaml/badge.svg)    ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_red_0101.yaml.yaml/badge.svg)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_red_0110.yaml/badge.svg)  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_red_0111.yaml/badge.svg)   |
+
+[![docs](https://readthedocs.org/projects/automated-workflows/badge/?version=main)](https://automated-workflows.readthedocs.io/en/main/?badge=main)
+
+[![license](https://img.shields.io/github/license/boromir674/automated-workflows)](https://github.com/boromir674/automated-workflows/blob/main/LICENSE)
 
 
 ## Workflows Overview
@@ -29,35 +37,37 @@ List any prerequisites that users need before using your workflows. For example:
 
 ```mermaid
 graph LR
-workflow_triggered("CI Start") --> rt{"Run Tests?"}
+workflow_triggered("CI Start") --> rt{"Do QA?"}
 rt -- Yes --> cit
-cit["Run Tests"] --> ifpass{"Succeeded?"}
+cit["Run Tests"] --> ifpass{"Passed?"}
 ifpass -- "Yes" --> run_docker["Publish Docker"]
 ifpass -- "No" --> do_not_publish_broken_build["Decline Publish"]
 rt -- No --> do_not_publish_broken_build
 ```
 
 ```yaml
+env:
+  DO_QA: true
 
 jobs:
+  build_n_test:
+    runs-on: ubuntu-latest
+    if: always() && ${{ env.DO_QA == 'true' }}
+    steps:
+      - run: echo "Build Code and run Tests"
 
-    build_n_test:
-      runs-on: ubuntu-latest
-      steps:
-        - run: echo "Build Code and run Tests"
-
-    call_docker_job:
-      needs: build_n_test
-      uses: boromir674/automated-workflows/.github/workflows/docker.yml@test
-      with:
-        DOCKER_USER: ${{ vars.DOCKER_USER }}
-        acceptance_policy: 2
-        image_slug: "my_app_name"
-        image_tag: "1.0.0"
-        tests_pass: ${{ needs.build_n_test.result == 'success' }}
-        tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
-      secrets:
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  call_docker_job:
+    needs: build_n_test
+    uses: boromir674/automated-workflows/.github/workflows/docker.yml@test
+    with:
+      DOCKER_USER: ${{ vars.DOCKER_USER }}
+      acceptance_policy: 2
+      image_slug: "my_app_name"
+      image_tag: "1.0.0"
+      tests_pass: ${{ needs.build_n_test.result == 'success' }}
+      tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
 
 ### `Use Case 2: CI/Continuous Delivery`
@@ -68,41 +78,41 @@ Useful to trigger Docker Job, without waiting for Tests.
 
 ```mermaid
 graph LR
-workflow_triggered("CI Start") --> rt{"Run Tests?"}
+workflow_triggered("CI Start") --> rt{"Run QA?"}
 rt -- Yes --> cit
-cit["Run Tests"] --> ifpass{"Succeeded?"}
+cit["Run Tests"] --> ifpass{"Passed?"}
 ifpass -- "Yes" --> run_docker["Publish Docker"]
 ifpass -- "No" --> do_not_publish_broken_build["Decline Publish"]
 rt -- No --> run_docker
 ```
 
 ```yaml
+env:
+  DO_QA: false
 
 jobs:
+  build_n_test:
+    runs-on: ubuntu-latest
+    if: always() && ${{ env.DO_QA == 'true' }}
+    steps:
+      - run: echo "Build Code and run Tests"
 
-    build_n_test:
-      runs-on: ubuntu-latest
-      steps:
-        - run: echo "Build Code and run Tests"
-
-    call_docker_job:
-      needs: build_n_test
-      uses: boromir674/automated-workflows/.github/workflows/docker.yml@test
-      with:
-        DOCKER_USER: ${{ vars.DOCKER_USER }}
-        acceptance_policy: 3
-        image_slug: "my_app_name"
-        image_tag: "1.0.0"
-        tests_pass: ${{ needs.build_n_test.result == 'success' }}
-        tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
-      secrets:
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  call_docker_job:
+    needs: build_n_test
+    uses: boromir674/automated-workflows/.github/workflows/docker.yml@test
+    with:
+      DOCKER_USER: ${{ vars.DOCKER_USER }}
+      acceptance_policy: 3
+      image_slug: "my_app_name"
+      image_tag: "1.0.0"
+      tests_pass: ${{ needs.build_n_test.result == 'success' }}
+      tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
-
-### Example
-
 
 ## License
 
-This project is licensed under the [License Name](LICENSE) - see the [LICENSE](LICENSE) file for details.
-
+- See the [LICENSE](LICENSE) file to read the License, under which this Project is released under.
+- This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+- Free software: `GNU Affero General Public License v3.0`
