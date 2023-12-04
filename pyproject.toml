@@ -5,7 +5,7 @@ description = ""
 authors = ["konstantinos <boromir674@hotmail.com>"]
 readme = "README.md"
 packages = [{include = "ga_workflows"}]
-
+license = "AGPL-3.0-only"
 
 [tool.poetry.dependencies]
 python = "^3.10"
