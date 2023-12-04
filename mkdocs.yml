@@ -56,7 +56,9 @@ markdown_extensions:
 nav:
   - Home:
     - "Quick Start": index.md
-  - Guides: guide_setup_cicd.md
+  - Guides:
+    - "CI/CD: Dockerhub": "guide_setup_cicd.md"
+    - "CI/CD: PyPI": "guide_setup_pypi.md"
   - Test Suite: tests_index.md
   - tags: tags.md
 

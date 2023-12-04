@@ -21,24 +21,23 @@ rt -- No --> do_not_publish_broken_build
 ```yaml
 
 jobs:
+  build_n_test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Build Code and run Tests"
 
-    build_n_test:
-      runs-on: ubuntu-latest
-      steps:
-        - run: echo "Build Code and run Tests"
-
-    call_docker_job:
-      needs: build_n_test
-      uses: boromir674/automated-workflows/.github/workflows/docker.yml@test
-      with:
-        DOCKER_USER: ${{ vars.DOCKER_USER }}
-        acceptance_policy: 2
-        image_slug: "my_app_name"
-        image_tag: "1.0.0"
-        tests_pass: ${{ needs.build_n_test.result == 'success' }}
-        tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
-      secrets:
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  call_docker_job:
+    needs: build_n_test
+    uses: boromir674/automated-workflows/.github/workflows/docker.yml@test
+    with:
+      DOCKER_USER: ${{ vars.DOCKER_USER }}
+      acceptance_policy: 2
+      image_slug: "my_app_name"
+      image_tag: "1.0.0"
+      tests_pass: ${{ needs.build_n_test.result == 'success' }}
+      tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
 
 `Case 2: CI/Continuous Delivery`
