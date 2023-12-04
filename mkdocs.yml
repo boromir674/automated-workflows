@@ -55,7 +55,8 @@ markdown_extensions:
   
 nav:
   - Home:
-    - "Quick Start": index.md  
+    - "Quick Start": index.md
+  - Guides: guide_setup_cicd.md
   - Test Suite: tests_index.md
   - tags: tags.md
 
