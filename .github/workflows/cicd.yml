@@ -34,6 +34,9 @@ jobs:
           tox -e pin-deps
 
       - name: Run Automated Test Suite
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CICD_TEST_GH_TOKEN: ${{ secrets.CICD_TEST_GH_TOKEN }}
         run: |
           cd cicd-test
           tox -e test -vv
