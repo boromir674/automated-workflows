@@ -27,5 +27,10 @@ jobs:
       - name: Install tox
         run: pip install 'tox<4.0'
 
+      - name: Pin Python Dependencies
+        run: |
+          cd cicd-test
+          tox -e pin-deps
+
       - name: Run Automated Test Suite
-        run: tox -e pin-deps && tox -e test
+        run: tox -e test -vv
