@@ -18,6 +18,7 @@ jobs:
         with:
           repository: 'boromir674/cicd-test'
           ref: 'main'
+          path: 'cicd-test'
       - name: Setup Python ${{ env.py_ver }}
         env:
           py_ver: '3.10'
