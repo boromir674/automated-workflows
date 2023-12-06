@@ -1,0 +1,31 @@
+name: 'Automated Workflows - CI Pipeline'
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test_workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Automated Test Suite
+        uses: actions/checkout@v4
+        with:
+          repository: 'boromir674/cicd-test'
+          ref: 'main'
+      - name: Setup Python ${{ env.py_ver }}
+        env:
+          py_ver: '3.10'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '${{ env.py_ver }}'
+      - name: Install tox
+        run: pip install tox<4.0
+
+      - name: Run Automated Test Suite
+        run: tox -e pin-deps && tox -e test
