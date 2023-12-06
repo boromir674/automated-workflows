@@ -34,4 +34,6 @@ jobs:
           tox -e pin-deps
 
       - name: Run Automated Test Suite
-        run: tox -e test -vv
+        run: |
+          cd cicd-test
+          tox -e test -vv
