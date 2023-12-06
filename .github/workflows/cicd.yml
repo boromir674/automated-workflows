@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: '${{ env.py_ver }}'
       - name: Install tox
-        run: pip install tox<4.0
+        run: pip install 'tox<4.0'
 
       - name: Run Automated Test Suite
         run: tox -e pin-deps && tox -e test
