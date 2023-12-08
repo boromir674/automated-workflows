@@ -18,29 +18,29 @@ Event Trigger: `workflow_call`
 
 #### Required Inputs
 
-- `image_slug`
+- `DOCKER_USER`
     - type: _string_
     - Description: 
-- `DOCKER_USER`
+- `image_slug`
     - type: _string_
     - Description: 
 
 #### Optional Inputs
 
+- `acceptance_policy`
+    - type: _string_
+    - Description: 
 - `image_tag`
     - type: _string_
     - Description: 
-- `tests_run`
-    - type: _boolean_
-    - Description: 
-- `acceptance_policy`
+- `target_stage`
     - type: _string_
     - Description: 
 - `tests_pass`
     - type: _boolean_
     - Description: 
-- `target_stage`
-    - type: _string_
+- `tests_run`
+    - type: _boolean_
     - Description: 
 
 ### Secrets

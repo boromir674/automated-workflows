@@ -21,6 +21,9 @@ Event Trigger: `workflow_call`
 - `artifacts_path`
     - type: _string_
     - Description: 
+- `distro_name`
+    - type: _string_
+    - Description: 
 - `distro_version`
     - type: _string_
     - Description: 
@@ -30,20 +33,17 @@ Event Trigger: `workflow_call`
 - `should_trigger`
     - type: _boolean_
     - Description: 
-- `distro_name`
-    - type: _string_
-    - Description: 
 
 #### Optional Inputs
 
-- `require_wheel`
-    - type: _boolean_
-    - Description: 
 - `allow_existing`
     - type: _boolean_
     - Description: 
 - `dist_folder`
     - type: _string_
+    - Description: 
+- `require_wheel`
+    - type: _boolean_
     - Description: 
 
 ### Secrets

@@ -110,7 +110,7 @@ def generate_markdown(
         "will be triggered.\n\n"
     )
     # events List
-    for event in events.keys():
+    for event in sorted(events.keys()):
         markdown_content += f"- {event}\n"
     markdown_content += "\n"
     markdown_content += (
@@ -122,7 +122,7 @@ def generate_markdown(
     markdown_content += (
         f"{'#' * max_mk_level} Environment Variables\n\n"
         f"Environment variables set in the workflow's `env` section:\n"
-        '\n'.join([f"- {env_var_name}: {env_var_value}" for env_var_name, env_var_value in env_section.items()]) + \
+        '\n'.join([f"- {env_var_name}: {env_var_value}" for env_var_name, env_var_value in sorted(env_section.items(), key=lambda x: x[0])]) + \
         "\n"
     )
     # Resuable Workflow - Section #
@@ -134,7 +134,7 @@ def generate_markdown(
     markdown_content += f"{'#' * (max_mk_level + 1)} Inputs\n\n"
     required_inputs: t.Set[str] = {x for x in inputs.keys() if inputs[x].get("required", False)}
     markdown_content += f"{'#' * (max_mk_level + 2)} Required Inputs\n\n"
-    for input_name in required_inputs:
+    for input_name in sorted(required_inputs):
         markdown_content += f"- `{input_name}`\n"
         markdown_content += f"    - type: _{inputs[input_name].get('type', 'string')}_\n"
         markdown_content += f"    - Description: {inputs[input_name].get('description', '')}\n"
@@ -142,7 +142,7 @@ def generate_markdown(
     # Optional Inputs
     optional_inputs: t.Set[str] = {x for x in inputs.keys() if x not in required_inputs}
     markdown_content += f"{'#' * (max_mk_level + 2)} Optional Inputs\n\n"
-    for input_name in optional_inputs:
+    for input_name in sorted(optional_inputs):
         markdown_content += f"- `{input_name}`\n"
         markdown_content += f"    - type: _{inputs[input_name].get('type', 'string')}_\n"
         markdown_content += f"    - Description: {inputs[input_name].get('description', '')}\n"
@@ -150,7 +150,7 @@ def generate_markdown(
 
     ## Workflow Secrets ##
     markdown_content += f"{'#' * (max_mk_level + 1)} Secrets\n\n"
-    for secret_name, secret_details in secrets.items():
+    for secret_name, secret_details in sorted(secrets.items(), key=lambda x: x[0]):
         markdown_content += f"- `{secret_name}`\n"
         markdown_content += f"    - type: _{secret_details.get('type', 'string')}_\n"
         markdown_content += f"    - Required: {secret_details.get('required', False)}\n"
@@ -159,7 +159,7 @@ def generate_markdown(
 
     ## Workflow Outputs ##
     markdown_content += f"{'#' * (max_mk_level + 1)} Outputs\n\n"
-    for output_name, output_details in outputs.items():
+    for output_name, output_details in sorted(outputs.items(), key=lambda x: x[0]):
         markdown_content += f"- `{output_name}`\n"
         markdown_content += f"    - type: _{output_details.get('type', 'string')}_\n"
         markdown_content += f"    - Value: {output_details.get('value', '')}\n"
