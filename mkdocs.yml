@@ -54,12 +54,17 @@ markdown_extensions:
   - pymdownx.highlight
   
 nav:
+  # each item in the list, renders a left side navigation item/page
   - Home:
     - "Quick Start": index.md
   - Guides:
     - "CI/CD: Dockerhub": "guide_setup_cicd.md"
     - "CI/CD: PyPI": "guide_setup_pypi.md"
-  - Test Suite: tests_index.md
+  - References:
+    - "Docker": "ref_docker.md"
+    - "PyPI": "ref_pypi_env.md"
+  - Topics:
+    - "Test Suite": tests_index.md
   - tags: tags.md
 
 

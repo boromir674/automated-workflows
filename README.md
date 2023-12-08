@@ -2,17 +2,13 @@
 
 `Reusable Workflows` for **CI/CD Pipelines**, implemented as `Github Actions Workflows`.
 
+[![Workflows Tests](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
+[![Read the Docs](https://img.shields.io/readthedocs/automated-workflows?style=plastic&logo=readthedocs&logoColor=lightblue&label=Docs&color=lightgreen&link=https%3A%2F%2Fautomated-workflows.readthedocs.io%2F)](https://automated-workflows.readthedocs.io)
+[![license](https://img.shields.io/github/license/boromir674/automated-workflows?style=plastic&)](https://github.com/boromir674/automated-workflows/blob/main/LICENSE)
+
 - Source: https://github.com/boromir674/automated-workflows
-- Docs: https://automated-workflows.readthedocs.io
 - CI: https://github.com/boromir674/cicd-test/actions
-
-| expected green   | expected red |
-| --- | --- |
-|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol0_green_0000_1100.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/docker_pol0_green_0000_1100.yaml)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_green_0001_1101.yaml/badge.svg)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_green_1110_0010.yaml/badge.svg)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_green_1111_0011.yaml/badge.svg)       |    ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol0_red_0100.yaml/badge.svg)    ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_red_0101.yaml.yaml/badge.svg)   ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_red_0110.yaml/badge.svg)  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_red_0111.yaml/badge.svg)   |
-
-[![docs](https://readthedocs.org/projects/automated-workflows/badge/?version=main)](https://automated-workflows.readthedocs.io/en/main/?badge=main)
-
-[![license](https://img.shields.io/github/license/boromir674/automated-workflows)](https://github.com/boromir674/automated-workflows/blob/main/LICENSE)
+- Docs: https://automated-workflows.readthedocs.io
 
 
 ## Workflows Overview
