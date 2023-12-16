@@ -103,12 +103,7 @@ jobs:
         inputs.tests_pass && inputs.tests_run ) || (
         inputs.acceptance_policy == 3 && inputs.tests_pass == false && inputs.tests_run == false )
       )
-    # if: always()
-    # if: always() && inputs.acceptance_policy != 0 && ( inputs.acceptance_policy == 1 || (
-    #     needs.*.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') ) || (
-    #     inputs.acceptance_policy == 3 && !contains(needs.*.result, 'failure') && ( !contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled') ) )
-    #   )
-    #     inputs.acceptance_policy == 3 && !contains(needs.*.result, 'failure') && ( contains(needs.*.result, 'skipped') || contains(needs.*.result, 'cancelled') ) )
+
     runs-on: ubuntu-latest
     env:
       IMAGE_SLUG: ${{ inputs.image_slug }}
