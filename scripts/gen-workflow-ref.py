@@ -15,6 +15,7 @@ from yaml.resolver import Resolver
 class InputArgument(TypedDict):
     required: bool  # allowed values {True, False}
     type: str  # common values {'string', 'boolean', 'number'}
+    default: t.Optional[str]  # default value for the input argument
 
 ## Resuable Workflow 'secrets' ##
 class SecretArgument(TypedDict):
@@ -133,7 +134,11 @@ def generate_markdown(
     ## Workflow Inputs ##
     markdown_content += f"{'#' * (max_mk_level + 1)} Inputs\n\n"
     required_inputs: t.Set[str] = {x for x in inputs.keys() if inputs[x].get("required", False)}
+
+    # Required Inputs
     markdown_content += f"{'#' * (max_mk_level + 2)} Required Inputs\n\n"
+    if not required_inputs:
+        markdown_content += f"None\n"
     for input_name in sorted(required_inputs):
         markdown_content += f"- `{input_name}`\n"
         markdown_content += f"    - type: _{inputs[input_name].get('type', 'string')}_\n"
@@ -142,14 +147,20 @@ def generate_markdown(
     # Optional Inputs
     optional_inputs: t.Set[str] = {x for x in inputs.keys() if x not in required_inputs}
     markdown_content += f"{'#' * (max_mk_level + 2)} Optional Inputs\n\n"
+    if not optional_inputs:
+        markdown_content += f"None\n"
     for input_name in sorted(optional_inputs):
         markdown_content += f"- `{input_name}`\n"
         markdown_content += f"    - type: _{inputs[input_name].get('type', 'string')}_\n"
         markdown_content += f"    - Description: {inputs[input_name].get('description', '')}\n"
+        if inputs[input_name].get("default", None):
+            markdown_content += f"    - Default: `{inputs[input_name]['default']}`\n"
     markdown_content += "\n"
 
     ## Workflow Secrets ##
     markdown_content += f"{'#' * (max_mk_level + 1)} Secrets\n\n"
+    if not secrets:
+        markdown_content += f"None\n"
     for secret_name, secret_details in sorted(secrets.items(), key=lambda x: x[0]):
         markdown_content += f"- `{secret_name}`\n"
         markdown_content += f"    - type: _{secret_details.get('type', 'string')}_\n"
@@ -159,12 +170,15 @@ def generate_markdown(
 
     ## Workflow Outputs ##
     markdown_content += f"{'#' * (max_mk_level + 1)} Outputs\n\n"
+    if not outputs:
+        markdown_content += f"None\n"
     for output_name, output_details in sorted(outputs.items(), key=lambda x: x[0]):
         markdown_content += f"- `{output_name}`\n"
         markdown_content += f"    - type: _{output_details.get('type', 'string')}_\n"
         markdown_content += f"    - Value: {output_details.get('value', '')}\n"
         markdown_content += f"    - Description: {output_details.get('description', '')}\n"
-    markdown_content += "\n"
+    # omit last \n
+    # markdown_content += "\n"
 
     # markdown_content += "### Environments\n\n"
     # for environment_name, environment_value in repository_details["environments"].items():

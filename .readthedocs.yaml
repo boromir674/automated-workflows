@@ -30,6 +30,7 @@ build:
       - chmod +x ./scripts/gen-workflow-ref.py
       - ./scripts/gen-workflow-ref.py ./.github/workflows/docker.yml > ./docs/ref_docker.md
       - ./scripts/gen-workflow-ref.py ./.github/workflows/pypi_env.yml > ./docs/ref_pypi_env.md
+      - ./scripts/gen-workflow-ref.py ./.github/workflows/lint.yml > ./docs/ref_lint.md
 
 
 # Build documentation in the "docs/" directory with mkdocs
