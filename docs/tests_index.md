@@ -10,7 +10,7 @@ There is a dedicated [`cicd-test`](https://github.com/boromir674/cicd-test) Gith
 
 The `Test Suite` consists of
 
-- a set of [**GA Workflows**](https://github.com/boromir674/cicd-test/tree/main/.github/workflows) that call our [**Docker**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/docker.yml) and [**PyPI**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/pypi_env.yml) Workflows in various 
+- a set of [**GA Workflows**](https://github.com/boromir674/cicd-test/tree/main/.github/workflows) that call our [**Docker**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/docker.yml), [**PyPI**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/pypi_env.yml), and [**Lint**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/lint_env.yml) Workflows in various 
 *Scenarios* and *Situations*
 - a set of [**Automated Tests**](https://github.com/boromir674/cicd-test/tree/main/tests), implemented with `Pytest` (Python)
 - a *Test Runner* with a CLI (`pytest -n auto`)
@@ -35,3 +35,10 @@ make the necessary assertions.
 | expected green pass   | expected red (because scenario involves upload python dist to existing index, without allow_existing set to True) |
 | --- | --- |
 |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_test.yaml)    |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test_red.yaml/badge.svg)  |
+
+
+## Lint Workflow Automated Tests
+
+| expected green pass   | expected red |
+| --- | --- |
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/static_code_green.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/static_code_green.yaml)    |    |
