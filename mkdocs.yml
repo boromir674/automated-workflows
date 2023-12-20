@@ -64,6 +64,7 @@ nav:
     - "Docker": "ref_docker.md"
     - "PyPI": "ref_pypi_env.md"
     - "Lint": "ref_lint.md"
+    - "Code Visualization": "ref_pydeps.md"
   - Topics:
     - "Test Suite": tests_index.md
   - tags: tags.md
