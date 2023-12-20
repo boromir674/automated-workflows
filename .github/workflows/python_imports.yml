@@ -64,7 +64,7 @@ jobs:
         name: 'POLICY: 2 & Tag: ${{ github.ref_name }} -> Trigger'
         run: echo "SHOULD_DRAW_GRAPHS=true" >> $GITHUB_ENV
 
-      - if: ${{ !env.SHOULD_DRAW_GRAPHS && contains(['2', '3'], inputs.run_policy) }}
+      - if: ${{ !env.SHOULD_DRAW_GRAPHS && contains('2, 3', inputs.run_policy) }}
         name: 'POLICY: 2, 3 -> Check if Source Code Changed'
         run: |
           echo "=============== list modified files ==============="
