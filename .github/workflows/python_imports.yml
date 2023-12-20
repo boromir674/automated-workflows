@@ -23,10 +23,6 @@ on:
         required: false
         type: string
         default: 'master, main, dev'
-      tags:
-        required: false
-        type: string
-        default: 'v'
       source_code_targets:
         required: false
         type: string

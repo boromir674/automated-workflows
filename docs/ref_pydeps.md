@@ -42,10 +42,6 @@ None
     - type: _string_
     - Description: 
     - Default: `src`
-- `tags`
-    - type: _string_
-    - Description: 
-    - Default: `v`
 
 ### Secrets
 
