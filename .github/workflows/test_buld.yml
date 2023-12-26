@@ -3,6 +3,8 @@
 ##     Reusable Workflow     ##
 ###############################
 
+# TODO run Tests in Parallel Jobs
+
 # Triggers on push to any branch, or PR to main
 
 #### INPUTS ####
@@ -75,13 +77,20 @@ on:
       build_installation:
         required: false
         type: string
-        default: 'edit,sdist,wheel'
+        default: 'edit sdist wheel'
 
       # ARTIFACT NAME
       artifact_name:
         required: false
         type: string
         default: 'dist'
+
+    ### OUTPUTS ###
+    # Map the workflow outputs to job outputs
+    outputs:
+      COVERAGE_ARTIFACT:
+        description: "Artifact Name (id / alias) of Coverage XML"
+        value: ${{ jobs.test_build.outputs.COVERAGE_ARTIFACT }}
 
 env:
   ## Important Branches ##
@@ -91,16 +100,18 @@ env:
 
 jobs:
   test_build:
-    runs-on: ${{ inputs.target_stage }}
-    if: always() && inputs.acceptance_policy != 0
+    runs-on: ${{ matrix.platform }}
+    if: always() && inputs.run_policy != 0
     strategy:
       matrix: ${{fromJSON(inputs.job_matrix)}}
     outputs:
       SEMVER_PIP_FORMAT: ${{ steps.parse_version.outputs.SEMVER_PIP_FORMAT }}    
+      COVERAGE_ARTIFACT: ${{ steps.set_coverage_artifact.outputs.COVERAGE_ARTIFACT }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SDIST_DIR: 'sdist_dir'
       WHEEL_DIR: 'wheel_dir'
+      BUILD_DEST: 'dist'
     steps:
       - run: 'echo "OS: ${{ matrix.platform }}, Python: ${{ matrix.python-version }}"'
       # Setup Python
@@ -112,109 +123,97 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      ### Sanity Checks ###
       - run: pip install pyroma
       - run: pyroma --directory .
 
-      # EDIT MODE: Test Suite RUN #
+      ### EDIT MODE Tests ###
       - name: Edit Mode Tests
         if: contains('${{ inputs.build_installation }}', 'edit')
         run: tox -e dev -vv -s false
+
+      # - run: echo PEP440_DISTRO="${{ inputs.distro_name }}-${{ inputs.pep440_version }}" >> $GITHUB_ENV
+      #   id: pep440_distro
+
+      ### Build ###
+      # build, avoids making wheels for our requirements / depependecies
+      # BUILD_DEST controls where the wheel and tar.gz is stored
+      # defaults to the DIST env var, which defaults to 'dist'
+
+      ## Build Wheel with `build`, not `pip wheel` and Test ##
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        run: tox -e build -vv -s false
         env:
-          DIST: ${{ env.SDIST_DIR }}
+          BUILD_DEST: ${{ env.BUILD_DEST }}
 
-      # create sdist
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        id: distros
+        run: |
+          PEP440_DISTRO="${{ inputs.distro_name }}-${{ inputs.pep440_version }}"
+          SDIST_NAME="${PEP440_DISTRO}.tar.gz"
+          WHEEL_NAME="${PEP440_DISTRO}-py3-none-any.whl"
+
+          echo SDIST_FILE="$BUILD_DEST/$SDIST_NAME" >> $GITHUB_OUTPUT
+          echo WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME" >> $GITHUB_OUTPUT
+      
+      # Pyroma: check Sdist
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        run: pyroma --file "${{ steps.distros.outputs.SDIST_FILE }}"
+
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        run: pip install twine
+      
+      # Twine: check Sdist
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        run: python -m twine check "${{ steps.distros.outputs.SDIST_FILE }}"
+      
+      # Twine: check Wheel
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        run: python -m twine check "${{ steps.distros.outputs.WHEEL_FILE }}"
+
+      ## Install SDIST and TEST ##
       - if: contains('${{ inputs.build_installation }}', 'sdist')
-        run: tox -e sdist -vv -s false --notest
+        run: tox -e ga -vv -s false
         env:
-          DIST: ${{ env.SDIST_DIR }}
+          ARTIFACT: '${{ steps.distros.outputs.SDIST_FILE }}[test]'
 
-      # SDIST at: ".tox/${DIST_DIR}/cookiecutter_python-${PKG_VERSION}.tar.gz"
+      ## Install WHEEL and TEST ##
       - if: contains('${{ inputs.build_installation }}', 'sdist')
-        run: mkdir ${{ env.SDIST_DIR }}
-      - if: contains('${{ inputs.build_installation }}', 'sdist')
-        run: |
-          mkdir ${{ env.SDIST_DIR }}
-          mv -r .tox/${{ env.SDIST_DIR }}/${{ inputs.distro_name }}-${{ inputs.pep440_version }}.tar.gz ${{ env.SDIST_DIR }}
-
-      - run: echo SDIST_FILE="${{ env.SDIST_DIR }}/${{ inputs.distro_name }}-${{ inputs.pep440_version }}.tar.gz" >> $GITHUB_ENV
-
-      - if: contains('${{ inputs.build_installation }}', 'sdist')
-        run: pyroma --file ${{ env.SDIST_FILE }}
-
-      # SDIST: Test Suite RUN #
-      - name: Sdist Mode Tests
-        if: contains('${{ inputs.build_installation }}', 'sdist')
-        run: tox -e sdist -vv -s false
-
-#        mv ".tox/${DIST_DIR}/cookiecutter_python-${PKG_VERSION}.tar.gz" "${DIST_DIR}"
-#       DIST_DIR=dist
-#-        echo "DIST_DIR=dist" >> $GITHUB_ENV
-#-        mkdir ${DIST_DIR}
-#-        mv ".tox/${DIST_DIR}/cookiecutter_python-${PKG_VERSION}-py3-none-any.whl" "${DIST_DIR}"
-
-      # WHEEL MODE: Test Suite RUN #
-
-      # create wheel, using build and avod creating wheels for all the deps
-      # only builds wheel for our Distro
-      - if: contains('${{ inputs.build_installation }}', 'wheel')
-        run: |
-          mkdir ${{ env.WHEEL_DIR }}
-          tox -e build -vv -s false
+        run: tox -e ga -vv -s false
         env:
-          DIST: ${{ env.WHEEL_DIR }}
+          ARTIFACT: '${{ steps.distros.outputs.WHEEL_FILE }}[test]'
 
-      - run: echo WHEEL_FILE="${{ env.WHEEL_DIR }}/${{ inputs.distro_name }}-${{ inputs.pep440_version }}-py3-none-any.whl" >> $GITHUB_ENV
 
-      - if: contains('${{ inputs.build_installation }}', 'wheel')
-        run: |
-          pip install twine
-          python -m twine check "${{ env.WHEEL_FILE }}"
-        # python -m twine check "${{ env.WHEEL_DIR }}/${{ inputs.distro_name }}-${{ inputs.pep440_version }}*"
-
-      - name: Prepare for Wheel Tests
-        if: contains('${{ inputs.build_installation }}', 'wheel')
-        run: |
-          # Deterministic Dependencies
-          python -m pip install poetry
-          python -m poetry export -o req-test.txt -E test
-
-          # create virtual env for wheel tests
-          tox -e wheel -vv -s false --notest
-          
-          .tox/wheel/bin/pip install -r req-test.txt
-          .tox/wheel/bin/pip install "${{ env.WHEEL_FILE }}[test]"
-
-      - name: Wheel Tests
-        if: contains('${{ inputs.build_installation }}', 'wheel')
-        run: |
-          .tox/wheel/bin/pytest -ra --cov --cov-report=term-missing \
-            --cov-report=html:.tox/wheel/htmlcov --cov-context=test \
-            --cov-report=xml:.tox/coverage.xml \
-            -n auto tests
-        env:
-          PKG_VERSION: no_effect
-
-      ## Code Coverage ##
-      - name: "Combine Coverage (dev, sdist, wheel) & make Reports"
+      ##### CODE COVERAGE XML #####
+      # Combines, and converts Code Coverage results (measured during tests) into XML
+      - name: "Code Coverage, during tests, in XML: converts coverage results (ie per sdist, wheel) and formats them into XML"
         run: tox -e coverage --sitepackages -vv -s false
 
-      - name: Rename Coverage Files
+      - run: echo COVERAGE_FILE="coverage-${{ matrix.platform }}-${{ matrix.python-version }}.xml" >> $GITHUB_ENV
+        
+      - run: mv ./.tox/coverage.xml ${{ env.COVERAGE_FILE }}
         shell: bash
-        run: mv ./.tox/coverage.xml ./coverage-${{ matrix.platform }}-${{ matrix.python-version }}.xml
+
+      - run: echo COVERAGE_ARTIFACT="ALL_CODE_COVERAGE" >> $GITHUB_OUTPUT
+        id: set_coverage_artifact
 
       - name: "Upload Test Coverage as Artifacts"
         uses: actions/upload-artifact@v3
         with:
-          name: all_coverage_raw
-          path: coverage-${{ matrix.platform }}-${{ matrix.python-version }}.xml
+          name: ${{ steps.set_coverage_artifact.outputs.COVERAGE_ARTIFACT }}
+          path: ${{ env.COVERAGE_FILE }}
           if-no-files-found: error
 
-      # run if load_json(inputs.checks)['typecheck\]['run'] == true
+
+      ## Type Checking ##
       - name: Do Type Checking
         if: inputs.typecheck_policy != 0
         run: |
-          run, capture all output and capture exit code
           tox -e type -vv -s false || true
+
+          echo
+          echo "Checking Result of Type Check.."
+
           if [ $? -eq 0 ]; then
             echo "Type Checking Passed"
           else
@@ -224,3 +223,11 @@ jobs:
             fi
             echo "Type Checking Failed, but continuing"
           fi
+
+      ## DISTROs (SDIST, WHEEL) ARTIFACTS ##
+      - name: "Upload .TAR.GZ and .WHL Distro Artifacts"
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ env.BUILD_DEST }}
+          if-no-files-found: error
