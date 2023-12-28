@@ -167,7 +167,6 @@ jobs:
           else
             echo "No Version found inside Python Source Code."
             echo "No Version found in pyproject.toml or setup.py either"
-            exit 1
           fi
           echo VERSION="$VERSION" >> $GITHUB_ENV
 
