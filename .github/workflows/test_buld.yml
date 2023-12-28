@@ -44,12 +44,6 @@
 on:
   workflow_call:
     inputs:
-      # DISTRO NAME
-      distro_name:
-        required: true
-        description: 'Name of the distro to build. Currently critical for discovering built distro file names.'
-        type: string
-
       typecheck_policy:
         required: false
         type: string
@@ -94,7 +88,6 @@ on:
 
 env:
   ## Important Branches ##
-
   BRANCH_WITH_SEM_VER_TAGS: 'master'
   CARRIER_TEMP: 'empemeral-br-ci-quick-win-test'
 
@@ -105,7 +98,6 @@ jobs:
     strategy:
       matrix: ${{fromJSON(inputs.job_matrix)}}
     outputs:
-      SEMVER_PIP_FORMAT: ${{ steps.parse_version.outputs.SEMVER_PIP_FORMAT }}    
       COVERAGE_ARTIFACT: ${{ steps.set_coverage_artifact.outputs.COVERAGE_ARTIFACT }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,10 +124,9 @@ jobs:
         if: contains('${{ inputs.build_installation }}', 'edit')
         run: tox -e dev -vv -s false
 
-      # - run: echo PEP440_DISTRO="${{ inputs.distro_name }}-${{ inputs.pep440_version }}" >> $GITHUB_ENV
-      #   id: pep440_distro
 
-      ### Build ###
+      ##### Build #####
+
       # build, avoids making wheels for our requirements / depependecies
       # BUILD_DEST controls where the wheel and tar.gz is stored
       # defaults to the DIST env var, which defaults to 'dist'
@@ -146,10 +137,28 @@ jobs:
         env:
           BUILD_DEST: ${{ env.BUILD_DEST }}
 
+      # we try to automatically parse the distro name from the pyproject.toml or setup.py
+      # first detect which file is present
+      # then parse the name from the file, with a regex (ie grep, sed, awk, etc)
+      # then set the distro name as an env var
+
+      - name: Set Distro Name
+        shell: bash
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            DISTRO_NAME=$(cat pyproject.toml | grep -E "^name" | sed -E "s/name = \"(.*)\"/\1/")
+          elif [ -f "setup.py" ]; then
+            DISTRO_NAME=$(cat setup.py | grep -E "^name" | sed -E "s/name = \"(.*)\"/\1/")
+          else
+            echo "No pyproject.toml or setup.py found"
+            exit 1
+          fi
+          echo DISTRO_NAME="$DISTRO_NAME" >> $GITHUB_ENV
+
       - if: contains('${{ inputs.build_installation }}', 'build')
         id: distros
         run: |
-          PEP440_DISTRO="${{ inputs.distro_name }}-${{ inputs.pep440_version }}"
+          PEP440_DISTRO="${DISTRO_NAME}-${{ inputs.pep440_version }}"
           SDIST_NAME="${PEP440_DISTRO}.tar.gz"
           WHEEL_NAME="${PEP440_DISTRO}-py3-none-any.whl"
 
