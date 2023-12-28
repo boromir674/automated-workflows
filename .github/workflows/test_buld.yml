@@ -152,17 +152,17 @@ jobs:
       - name: Find Version from Source
         shell: bash
         run: |
-          if [ -f "src/$DISTRO_NAME/__init__.py" ]; then
-            echo [DEBUG] Found Version in src/$DISTRO_NAME/__init__.py 
+          if [[ -f "src/$DISTRO_NAME/__init__.py" ]]; then
+            echo [[DEBUG]] Found Version in src/$DISTRO_NAME/__init__.py 
             VERSION=$(cat src/$DISTRO_NAME/__init__.py | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
-          elif [ -f "src/$DISTRO_NAME/__version__.py" ]; then
-            echo [DEBUG] Found Version in src/$DISTRO_NAME/__version__.py
+          elif [[ -f "src/$DISTRO_NAME/__version__.py" ]]; then
+            echo [[DEBUG]] Found Version in src/$DISTRO_NAME/__version__.py
             VERSION=$(cat src/$DISTRO_NAME/__version__.py | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
-          elif [ -f "pyproject.toml" ]; then
-            echo [DEBUG] Found Version in pyproject.toml
+          elif [[ -f "pyproject.toml" ]]; then
+            echo [[DEBUG]] Found Version in pyproject.toml
             VERSION=$(cat pyproject.toml | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
-          elif [ -f "setup.py" ]; then
-            echo [DEBUG] Found Version in setup.py
+          elif [[ -f "setup.py" ]]; then
+            echo [DEBUG]] Found Version in setup.py
             VERSION=$(cat setup.py | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
           else
             echo "No Version found inside Python Source Code."
