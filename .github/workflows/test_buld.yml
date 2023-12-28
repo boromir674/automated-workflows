@@ -4,6 +4,7 @@
 ###############################
 
 # TODO run Tests in Parallel Jobs
+# Edit Test is independent (dedicate Job)
 
 # Triggers on push to any branch, or PR to main
 
@@ -49,12 +50,6 @@ on:
         type: string
         default: "1"
 
-      # PEP 440 VERSION to expect
-      pep440_version:
-        required: true
-        description: 'PEP 440 VERSION to expect. Currently critical for discovering built distro file names.'
-        type: string
-
       # JOB_MATRIX
       job_matrix:
         required: false
@@ -91,7 +86,12 @@ env:
   BRANCH_WITH_SEM_VER_TAGS: 'master'
   CARRIER_TEMP: 'empemeral-br-ci-quick-win-test'
 
+
 jobs:
+  # gather_info:
+  #   runs-on: ubuntu-latest
+     
+  ## TEST BUILD ##
   test_build:
     runs-on: ${{ matrix.platform }}
     if: always() && inputs.run_policy != 0
@@ -125,22 +125,6 @@ jobs:
         run: tox -e dev -vv -s false
 
 
-      ##### Build #####
-
-      # build, avoids making wheels for our requirements / depependecies
-      # BUILD_DEST controls where the wheel and tar.gz is stored
-      # defaults to the DIST env var, which defaults to 'dist'
-
-      ## Build Wheel with `build`, not `pip wheel` and Test ##
-      - if: contains('${{ inputs.build_installation }}', 'build')
-        run: tox -e build -vv -s false
-        env:
-          BUILD_DEST: ${{ env.BUILD_DEST }}
-
-      # we try to automatically parse the distro name from the pyproject.toml or setup.py
-      # first detect which file is present
-      # then parse the name from the file, with a regex (ie grep, sed, awk, etc)
-      # then set the distro name as an env var
 
       - name: Set Distro Name
         shell: bash
@@ -155,16 +139,100 @@ jobs:
           fi
           echo DISTRO_NAME="$DISTRO_NAME" >> $GITHUB_ENV
 
-      - if: contains('${{ inputs.build_installation }}', 'build')
+      ## Version from Source ##
+
+      # will parse `version = '1.0.0'` from *.py
+      # and `version = "1.0.0"` from pyproject.toml, or setup.py
+
+      # We look for sem ver value from widely accepted sources
+      # Priotity
+      # 1. src/<distro_name>/__init__.py
+      # 2. src/<distro_name>/__version__.py
+      # 3. pyproject.toml
+      # 4. setup.py
+
+      - run: 'which grep || echo "grep not found"'
+        shell: bash
+
+      - name: Find Version from Source
+        shell: bash
+        run: |
+          set -e
+
+          if [[ -f "src/$DISTRO_NAME/__init__.py" ]]; then
+
+              echo "[DEBUG] CHECKING src/$DISTRO_NAME/__init__.py"
+
+              if [[ $(cat "src/$DISTRO_NAME/__init__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__init__.py"
+              else
+                  echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__init__.py"
+                  exit 1
+              fi
+
+          elif [[ -f "src/$DISTRO_NAME/__version__.py" ]]; then
+              echo "[DEBUG] CHECKING src/$DISTRO_NAME/__version__.py"
+
+              if [[ $(cat "src/$DISTRO_NAME/__version__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__version__.py"
+              else
+                  echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__version__.py"
+                  exit 1
+              fi
+
+          elif [[ -f "pyproject.toml" ]]; then
+
+              if [[ $(cat "pyproject.toml") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in pyproject.toml"
+              else
+                  echo "[DEBUG] Did not find Version in pyproject.toml"
+                  exit 1
+              fi
+
+          elif [[ -f "setup.py" ]]; then
+
+              if [[ $(cat "setup.py") =~ version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in setup.py"
+              else
+                  echo "[DEBUG] Did not find Version in setup.py"
+                  exit 1
+              fi
+
+          else
+              echo "No Version found inside Python Source Code."
+              echo "No Version found in pyproject.toml or setup.py either"
+              exit 1
+          fi
+          echo VERSION="$VERSION" >> $GITHUB_ENV
+
+      - name: Set Distro Version
         id: distros
         run: |
-          PEP440_DISTRO="${DISTRO_NAME}-${{ inputs.pep440_version }}"
+          PEP440_DISTRO="${DISTRO_NAME}-${VERSION}"
           SDIST_NAME="${PEP440_DISTRO}.tar.gz"
           WHEEL_NAME="${PEP440_DISTRO}-py3-none-any.whl"
 
           echo SDIST_FILE="$BUILD_DEST/$SDIST_NAME" >> $GITHUB_OUTPUT
           echo WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME" >> $GITHUB_OUTPUT
-      
+
+
+
+      ##### Build #####
+
+      # build, avoids making wheels for our requirements / depependecies
+      # BUILD_DEST controls where the wheel and tar.gz is stored
+      # defaults to the DIST env var, which defaults to 'dist'
+
+      ## Build Wheel with `build`, not `pip wheel` and Test ##
+      - if: contains('${{ inputs.build_installation }}', 'build')
+        run: tox -e build -vv -s false
+        env:
+          BUILD_DEST: ${{ env.BUILD_DEST }}
+
       # Pyroma: check Sdist
       - if: contains('${{ inputs.build_installation }}', 'build')
         run: pyroma --file "${{ steps.distros.outputs.SDIST_FILE }}"
