@@ -86,7 +86,12 @@ env:
   BRANCH_WITH_SEM_VER_TAGS: 'master'
   CARRIER_TEMP: 'empemeral-br-ci-quick-win-test'
 
+
 jobs:
+  # gather_info:
+  #   runs-on: ubuntu-latest
+     
+  ## TEST BUILD ##
   test_build:
     runs-on: ${{ matrix.platform }}
     if: always() && inputs.run_policy != 0
@@ -120,10 +125,6 @@ jobs:
         run: tox -e dev -vv -s false
 
 
-      # we try to automatically parse the distro name from the pyproject.toml or setup.py
-      # first detect which file is present
-      # then parse the name from the file, with a regex (ie grep, sed, awk, etc)
-      # then set the distro name as an env var
 
       - name: Set Distro Name
         shell: bash
@@ -149,6 +150,7 @@ jobs:
       # 2. src/<distro_name>/__version__.py
       # 3. pyproject.toml
       # 4. setup.py
+
       - run: 'which grep || echo "grep not found"'
         shell: bash
 
@@ -157,33 +159,46 @@ jobs:
         run: |
           set -e
           if [[ -f "src/$DISTRO_NAME/__init__.py" ]]; then
-            echo "[DEBUG] Found Version in src/$DISTRO_NAME/__init__.py"
+            echo "[DEBUG] CHECKING src/$DISTRO_NAME/__init__.py"
             
-            # VERSION=$(cat "src/$DISTRO_NAME/__init__.py" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
-
-            # above fails, using decomposed statements
-
-            CONTENTS=$(cat "src/$DISTRO_NAME/__init__.py")
-            echo "[DEBUG] CONTENTS: $CONTENTS"
-
-            # VERSION=$(echo "$CONTENTS" | grep -E "^version")
-
-            # above fails
-
-            echo "[DEBUG] VERSION: $VERSION"
-
-            VERSION=$(echo "$VERSION" | sed -E "s/version = \"(.*)\"/\1/")
-            echo "[DEBUG] VERSION: $VERSION"
+            if [[ $(cat "src/$DISTRO_NAME/__init__.py") =~ ^__version__[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
+              VERSION="${BASH_REMATCH[1]}"
+              echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__init__.py"
+            else
+              echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__init__.py"
+              exit 1
+            fi
 
           elif [[ -f "src/$DISTRO_NAME/__version__.py" ]]; then
-            echo "[DEBUG] Found Version in src/$DISTRO_NAME/__version__.py"
-            VERSION=$(cat "src/$DISTRO_NAME/__version__.py" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
+            echo "[DEBUG] CHECKING src/$DISTRO_NAME/__version__.py"
+            
+            if [[ $(cat "src/$DISTRO_NAME/__version__.py") =~ ^__version__[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
+              VERSION="${BASH_REMATCH[1]}"
+              echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__version__.py"
+            else
+              echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__version__.py"
+              exit 1
+            fi
+
           elif [[ -f "pyproject.toml" ]]; then
-            echo "[DEBUG] Found Version in pyproject.toml"
-            VERSION=$(cat "pyproject.toml" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
+            if [[ $(cat "pyproject.toml") =~ ^version[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
+              VERSION="${BASH_REMATCH[1]}"
+              echo "[INFO] Found Version ${VERSION} in pyproject.toml"
+            else
+              echo "[DEBUG] Did not find Version in pyproject.toml"
+              exit 1
+            fi
+
           elif [[ -f "setup.py" ]]; then
-            echo "[DEBUG] Found Version in setup.py"
-            VERSION=$(cat "setup.py" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
+          # version[\ ]*=[\ ]*(?:'|")(.+)(?:'|") 
+            if [[ $(cat "setup.py") =~ version[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
+              VERSION="${BASH_REMATCH[1]}"
+              echo "[INFO] Found Version ${VERSION} in setup.py"
+            else
+              echo "[DEBUG] Did not find Version in setup.py"
+              exit 1
+            fi
+
           else
             echo "No Version found inside Python Source Code."
             echo "No Version found in pyproject.toml or setup.py either"
@@ -201,6 +216,7 @@ jobs:
 
           echo SDIST_FILE="$BUILD_DEST/$SDIST_NAME" >> $GITHUB_OUTPUT
           echo WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME" >> $GITHUB_OUTPUT
+
 
 
       ##### Build #####
