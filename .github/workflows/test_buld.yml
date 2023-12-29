@@ -158,53 +158,55 @@ jobs:
         shell: bash
         run: |
           set -e
+
           if [[ -f "src/$DISTRO_NAME/__init__.py" ]]; then
-            echo "[DEBUG] CHECKING src/$DISTRO_NAME/__init__.py"
-            
-            if [[ $(cat "src/$DISTRO_NAME/__init__.py") =~ ^__version__[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
-              VERSION="${BASH_REMATCH[1]}"
-              echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__init__.py"
-            else
-              echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__init__.py"
-              exit 1
-            fi
+
+              echo "[DEBUG] CHECKING src/$DISTRO_NAME/__init__.py"
+
+              if [[ $(cat "src/$DISTRO_NAME/__init__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__init__.py"
+              else
+                  echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__init__.py"
+                  exit 1
+              fi
 
           elif [[ -f "src/$DISTRO_NAME/__version__.py" ]]; then
-            echo "[DEBUG] CHECKING src/$DISTRO_NAME/__version__.py"
-            
-            if [[ $(cat "src/$DISTRO_NAME/__version__.py") =~ ^__version__[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
-              VERSION="${BASH_REMATCH[1]}"
-              echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__version__.py"
-            else
-              echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__version__.py"
-              exit 1
-            fi
+              echo "[DEBUG] CHECKING src/$DISTRO_NAME/__version__.py"
+
+              if [[ $(cat "src/$DISTRO_NAME/__version__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__version__.py"
+              else
+                  echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__version__.py"
+                  exit 1
+              fi
 
           elif [[ -f "pyproject.toml" ]]; then
-            if [[ $(cat "pyproject.toml") =~ ^version[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
-              VERSION="${BASH_REMATCH[1]}"
-              echo "[INFO] Found Version ${VERSION} in pyproject.toml"
-            else
-              echo "[DEBUG] Did not find Version in pyproject.toml"
-              exit 1
-            fi
+
+              if [[ $(cat "pyproject.toml") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in pyproject.toml"
+              else
+                  echo "[DEBUG] Did not find Version in pyproject.toml"
+                  exit 1
+              fi
 
           elif [[ -f "setup.py" ]]; then
-          # version[\ ]*=[\ ]*(?:'|")(.+)(?:'|") 
-            if [[ $(cat "setup.py") =~ version[\ ]*=[\ ]*(?:'|")(.+)(?:'|") ]]; then
-              VERSION="${BASH_REMATCH[1]}"
-              echo "[INFO] Found Version ${VERSION} in setup.py"
-            else
-              echo "[DEBUG] Did not find Version in setup.py"
-              exit 1
-            fi
+
+              if [[ $(cat "setup.py") =~ version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                  VERSION="${BASH_REMATCH[1]}"
+                  echo "[INFO] Found Version ${VERSION} in setup.py"
+              else
+                  echo "[DEBUG] Did not find Version in setup.py"
+                  exit 1
+              fi
 
           else
-            echo "No Version found inside Python Source Code."
-            echo "No Version found in pyproject.toml or setup.py either"
-            exit 1
+              echo "No Version found inside Python Source Code."
+              echo "No Version found in pyproject.toml or setup.py either"
+              exit 1
           fi
-          set +e
           echo VERSION="$VERSION" >> $GITHUB_ENV
 
       - name: Set Distro Version
