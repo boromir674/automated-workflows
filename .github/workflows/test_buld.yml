@@ -156,7 +156,20 @@ jobs:
           set -e
           if [[ -f "src/$DISTRO_NAME/__init__.py" ]]; then
             echo "[DEBUG] Found Version in src/$DISTRO_NAME/__init__.py"
-            VERSION=$(cat "src/$DISTRO_NAME/__init__.py" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
+            
+            # VERSION=$(cat "src/$DISTRO_NAME/__init__.py" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
+
+            # above fails, using decomposed statements
+
+            CONTENTS=$(cat "src/$DISTRO_NAME/__init__.py")
+            echo "[DEBUG] CONTENTS: $CONTENTS"
+
+            VERSION=$(echo "$CONTENTS" | grep -E "^version")
+            echo "[DEBUG] VERSION: $VERSION"
+
+            VERSION=$(echo "$VERSION" | sed -E "s/version = \"(.*)\"/\1/")
+            echo "[DEBUG] VERSION: $VERSION"
+
           elif [[ -f "src/$DISTRO_NAME/__version__.py" ]]; then
             echo "[DEBUG] Found Version in src/$DISTRO_NAME/__version__.py"
             VERSION=$(cat "src/$DISTRO_NAME/__version__.py" | grep -E "^version" | sed -E "s/version = \"(.*)\"/\1/")
