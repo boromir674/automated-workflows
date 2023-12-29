@@ -149,7 +149,9 @@ jobs:
       # 2. src/<distro_name>/__version__.py
       # 3. pyproject.toml
       # 4. setup.py
-      
+      - run: 'which grep || echo "grep not found"'
+        shell: bash
+
       - name: Find Version from Source
         shell: bash
         run: |
@@ -164,7 +166,10 @@ jobs:
             CONTENTS=$(cat "src/$DISTRO_NAME/__init__.py")
             echo "[DEBUG] CONTENTS: $CONTENTS"
 
-            VERSION=$(echo "$CONTENTS" | grep -E "^version")
+            # VERSION=$(echo "$CONTENTS" | grep -E "^version")
+
+            # above fails
+
             echo "[DEBUG] VERSION: $VERSION"
 
             VERSION=$(echo "$VERSION" | sed -E "s/version = \"(.*)\"/\1/")
