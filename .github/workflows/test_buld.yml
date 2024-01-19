@@ -121,7 +121,7 @@ jobs:
 
       ### EDIT MODE Tests ###
       - name: Edit Mode Tests
-        if: contains('${{ inputs.build_installation }}', 'edit')
+        if: contains(inputs.build_installation, 'edit')
         run: tox -e dev -vv -s false
 
 
@@ -210,12 +210,12 @@ jobs:
       # defaults to the    env var, which defaults to 'dist'
 
       ## Build Wheel with `build`, not `pip wheel` and Test ##
-      - if: contains('${{ inputs.build_installation }}', 'wheel')
+      - if: contains(inputs.build_installation, 'wheel')
         run: tox -e build -vv -s false
         env:
           BUILD_DEST: ${{ env.BUILD_DEST }}
 
-      - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
+      - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
         run: tox -e sdist -vv -s false --notest
 
       - name: Set Distro Version
@@ -238,28 +238,28 @@ jobs:
           echo WHEEL_FILE="$WHEEL_FILE" >> $GITHUB_OUTPUT
 
       # Pyroma: check Sdist
-      - if: contains('${{ inputs.build_installation }}', 'wheel')
+      - if: contains(inputs.build_installation, 'wheel')
         run: pyroma --file "${{ steps.distros.outputs.SDIST_FILE }}"
 
-      - if: contains('${{ inputs.build_installation }}', 'build')
+      - if: contains(inputs.build_installation, 'build')
         run: pip install twine
       
       # Twine: check Sdist
-      - if: contains('${{ inputs.build_installation }}', 'build')
+      - if: contains(inputs.build_installation, 'build')
         run: python -m twine check "${{ steps.distros.outputs.SDIST_FILE }}"
        
       # Twine: check Wheel
-      - if: contains('${{ inputs.build_installation }}', 'build')
+      - if: contains(inputs.build_installation, 'build')
         run: python -m twine check "${{ steps.distros.outputs.WHEEL_FILE }}"
 
       ## Install SDIST and TEST ##
-      - if: contains('${{ inputs.build_installation }}', 'sdist')
+      - if: contains(inputs.build_installation, 'sdist')
         run: tox -e ga -vv -s false
         env:
           ARTIFACT: '${{ steps.distros.outputs.SDIST_FILE }}[test]'
 
       ## Install WHEEL and TEST ##
-      - if: contains('${{ inputs.build_installation }}', 'wheel')
+      - if: contains(inputs.build_installation, 'wheel')
         run: tox -e ga -vv -s false
         env:
           ARTIFACT: '${{ steps.distros.outputs.WHEEL_FILE }}[test]'
@@ -306,7 +306,7 @@ jobs:
           fi
 
       ## DISTROs (SDIST, WHEEL) ARTIFACTS ##
-      - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
+      - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
         shell: bash
         run: mv ".tox/${BUILD_DEST}/*.tar.gz" "${BUILD_DEST}"
 
