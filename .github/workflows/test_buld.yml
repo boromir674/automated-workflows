@@ -3,7 +3,6 @@
 ##     Reusable Workflow     ##
 ###############################
 
-# TODO run Tests in Parallel Jobs
 # Edit Test is independent (dedicate Job)
 
 # Triggers on push to any branch, or PR to main
@@ -42,6 +41,8 @@
 # - Fully-overridable "front-end" (to the Checks), which ships by default
 
 
+# Future Work: run Tests in Parallel Jobs
+
 on:
   workflow_call:
     inputs:
@@ -49,6 +50,7 @@ on:
         required: false
         type: string
         default: "1"
+        description: "0 = Off, 1 = On, 2 = Allow Fail"
 
       # JOB_MATRIX
       job_matrix:
@@ -61,30 +63,28 @@ on:
         required: false
         type: string
         default: '1'
+        description: "0 = Off, 1 = On"
 
       # BUILD_INSTALLATION
       build_installation:
         required: false
         type: string
         default: 'edit sdist wheel'
+        description: "Code Installation Modes, for running Tests"
 
       # ARTIFACT NAME
       artifact_name:
         required: false
         type: string
         default: 'dist'
+        description: "CI Artifact Name (id / alias) for uploading Distros, such as files .tar.gz, .whl(s)"
 
     ### OUTPUTS ###
     # Map the workflow outputs to job outputs
     outputs:
       COVERAGE_ARTIFACT:
-        description: "Artifact Name (id / alias) of Coverage XML"
+        description: "CI Artifact Name (id / alias) of uploaded Coverage XML"
         value: ${{ jobs.test_build.outputs.COVERAGE_ARTIFACT }}
-
-env:
-  ## Important Branches ##
-  BRANCH_WITH_SEM_VER_TAGS: 'master'
-  CARRIER_TEMP: 'empemeral-br-ci-quick-win-test'
 
 
 jobs:
@@ -125,7 +125,6 @@ jobs:
         run: tox -e dev -vv -s false
 
 
-
       - name: Set Distro Name
         shell: bash
         run: |
@@ -141,9 +140,6 @@ jobs:
 
       ## Version from Source ##
 
-      # will parse `version = '1.0.0'` from *.py
-      # and `version = "1.0.0"` from pyproject.toml, or setup.py
-
       # We look for sem ver value from widely accepted sources
       # Priotity
       # 1. src/<distro_name>/__init__.py
@@ -151,63 +147,83 @@ jobs:
       # 3. pyproject.toml
       # 4. setup.py
 
-      - run: 'which grep || echo "grep not found"'
-        shell: bash
-
       - name: Find Version from Source
         shell: bash
         run: |
           set -e
+          if [[ -f "src/${DISTRO_NAME}/__init__.py" ]]; then
 
-          if [[ -f "src/$DISTRO_NAME/__init__.py" ]]; then
+            echo "[INFO] CHECKING src/${DISTRO_NAME}/__init__.py"
 
-              echo "[DEBUG] CHECKING src/$DISTRO_NAME/__init__.py"
+            if [[ $(cat "src/${DISTRO_NAME}/__init__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                VERSION="${BASH_REMATCH[1]}"
+                echo "[INFO] Found Version ${VERSION} in src/${DISTRO_NAME}/__init__.py"
+            else
+              echo "[INFO] Did not find Version in src/${DISTRO_NAME}/__init__.py"
+              
+              if [[ -f "src/${DISTRO_NAME}/__version__.py" ]]; then
+                echo "[INFO] CHECKING src/${DISTRO_NAME}/__version__.py"
 
-              if [[ $(cat "src/$DISTRO_NAME/__init__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
-                  VERSION="${BASH_REMATCH[1]}"
-                  echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__init__.py"
-              else
-                  echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__init__.py"
-                  exit 1
+                if [[ $(cat "src/${DISTRO_NAME}/__version__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                    VERSION="${BASH_REMATCH[1]}"
+                    echo "[INFO] Found Version ${VERSION} in src/${DISTRO_NAME}/__version__.py"
+                else
+                  echo "[INFO] Did not find Version in src/${DISTRO_NAME}/__version__.py"
+                  
+                  if [[ -f "pyproject.toml" ]]; then
+                    echo "[INFO] CHECKING pyproject.toml"
+
+                    if [[ $(cat "pyproject.toml") =~ ^version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                        VERSION="${BASH_REMATCH[1]}"
+                        echo "[INFO] Found Version ${VERSION} in pyproject.toml"
+                    else
+                      echo "[INFO] Did not find Version in pyproject.toml"
+                      if [[ -f "setup.py" ]]; then
+                        echo "[INFO] CHECKING setup.py"
+
+                        if [[ $(cat "setup.py") =~ version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                          VERSION="${BASH_REMATCH[1]}"
+                          echo "[INFO] Found Version ${VERSION} in setup.py"
+                        else
+                          echo "[DEBUG] Did not find Version in setup.py"
+                        fi
+                      fi
+                    fi
+                  fi
+                fi
               fi
-
-          elif [[ -f "src/$DISTRO_NAME/__version__.py" ]]; then
-              echo "[DEBUG] CHECKING src/$DISTRO_NAME/__version__.py"
-
-              if [[ $(cat "src/$DISTRO_NAME/__version__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
-                  VERSION="${BASH_REMATCH[1]}"
-                  echo "[INFO] Found Version ${VERSION} in src/$DISTRO_NAME/__version__.py"
-              else
-                  echo "[DEBUG] Did not find Version in src/$DISTRO_NAME/__version__.py"
-                  exit 1
-              fi
-
-          elif [[ -f "pyproject.toml" ]]; then
-
-              if [[ $(cat "pyproject.toml") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
-                  VERSION="${BASH_REMATCH[1]}"
-                  echo "[INFO] Found Version ${VERSION} in pyproject.toml"
-              else
-                  echo "[DEBUG] Did not find Version in pyproject.toml"
-                  exit 1
-              fi
-
-          elif [[ -f "setup.py" ]]; then
-
-              if [[ $(cat "setup.py") =~ version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
-                  VERSION="${BASH_REMATCH[1]}"
-                  echo "[INFO] Found Version ${VERSION} in setup.py"
-              else
-                  echo "[DEBUG] Did not find Version in setup.py"
-                  exit 1
-              fi
-
-          else
-              echo "No Version found inside Python Source Code."
-              echo "No Version found in pyproject.toml or setup.py either"
-              exit 1
+            fi
+          fi
+          if [[ -z "$VERSION" ]]; then
+            echo "[WARN] No Version found inside Python Source Code."
+            echo [ERROR] Failed to Discover Distro Version, from Source!
+            exit 1
           fi
           echo VERSION="$VERSION" >> $GITHUB_ENV
+
+
+
+      ##### Build #####
+
+      # build, avoids making wheels for our requirements / depependecies
+      # BUILD_DEST controls where the wheel and tar.gz is stored
+      # defaults to the    env var, which defaults to 'dist'
+
+      ## Build Wheel with `build`, not `pip wheel` and Test ##
+      - if: contains('${{ inputs.build_installation }}', 'wheel')
+        run: tox -e build -vv -s false
+        env:
+          BUILD_DEST: ${{ env.BUILD_DEST }}
+
+      - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
+        run: tox -e sdist -vv -s false --notest
+
+      - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
+        shell: bash
+        run: |
+          mkdir -p "${BUILD_DEST}"
+          mv ".tox/dist/*.tar.gz" "${BUILD_DEST}"
+
 
       - name: Set Distro Version
         id: distros
@@ -216,25 +232,20 @@ jobs:
           SDIST_NAME="${PEP440_DISTRO}.tar.gz"
           WHEEL_NAME="${PEP440_DISTRO}-py3-none-any.whl"
 
-          echo SDIST_FILE="$BUILD_DEST/$SDIST_NAME" >> $GITHUB_OUTPUT
-          echo WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME" >> $GITHUB_OUTPUT
+          SDIST_FILE="$BUILD_DEST/$SDIST_NAME"
+          WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME"
 
+          # if sdist, but not wheel
 
+          if [[ -f ".tox/$SDIST_FILE" ]]; then
+            SDIST_FILE=".tox/${BUILD_DEST}/${SDIST_NAME}"
+          fi
 
-      ##### Build #####
-
-      # build, avoids making wheels for our requirements / depependecies
-      # BUILD_DEST controls where the wheel and tar.gz is stored
-      # defaults to the DIST env var, which defaults to 'dist'
-
-      ## Build Wheel with `build`, not `pip wheel` and Test ##
-      - if: contains('${{ inputs.build_installation }}', 'build')
-        run: tox -e build -vv -s false
-        env:
-          BUILD_DEST: ${{ env.BUILD_DEST }}
+          echo SDIST_FILE="$SDIST_FILE" >> $GITHUB_OUTPUT
+          echo WHEEL_FILE="$WHEEL_FILE" >> $GITHUB_OUTPUT
 
       # Pyroma: check Sdist
-      - if: contains('${{ inputs.build_installation }}', 'build')
+      - if: contains('${{ inputs.build_installation }}', 'wheel')
         run: pyroma --file "${{ steps.distros.outputs.SDIST_FILE }}"
 
       - if: contains('${{ inputs.build_installation }}', 'build')
@@ -243,7 +254,7 @@ jobs:
       # Twine: check Sdist
       - if: contains('${{ inputs.build_installation }}', 'build')
         run: python -m twine check "${{ steps.distros.outputs.SDIST_FILE }}"
-      
+       
       # Twine: check Wheel
       - if: contains('${{ inputs.build_installation }}', 'build')
         run: python -m twine check "${{ steps.distros.outputs.WHEEL_FILE }}"
@@ -255,7 +266,7 @@ jobs:
           ARTIFACT: '${{ steps.distros.outputs.SDIST_FILE }}[test]'
 
       ## Install WHEEL and TEST ##
-      - if: contains('${{ inputs.build_installation }}', 'sdist')
+      - if: contains('${{ inputs.build_installation }}', 'wheel')
         run: tox -e ga -vv -s false
         env:
           ARTIFACT: '${{ steps.distros.outputs.WHEEL_FILE }}[test]'
@@ -302,6 +313,10 @@ jobs:
           fi
 
       ## DISTROs (SDIST, WHEEL) ARTIFACTS ##
+      - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
+        shell: bash
+        run: mv ".tox/${BUILD_DEST}/*.tar.gz" "${BUILD_DEST}"
+
       - name: "Upload .TAR.GZ and .WHL Distro Artifacts"
         uses: actions/upload-artifact@v3
         with:
