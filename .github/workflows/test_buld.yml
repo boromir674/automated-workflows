@@ -218,13 +218,6 @@ jobs:
       - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
         run: tox -e sdist -vv -s false --notest
 
-      - if: contains('${{ inputs.build_installation }}', 'sdist') && ! contains('${{ inputs.build_installation }}', 'wheel')
-        shell: bash
-        run: |
-          mkdir -p "${BUILD_DEST}"
-          mv ".tox/dist/*.tar.gz" "${BUILD_DEST}"
-
-
       - name: Set Distro Version
         id: distros
         run: |
