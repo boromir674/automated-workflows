@@ -102,6 +102,16 @@ jobs:
     ## PUT WHEEL file(s) in DIST FOLDER ##
     - run: ls -laR ${{ inputs.artifacts_path }}
 
+    - run: |
+        find ${{ inputs.artifacts_path }} -type f -name "${{ inputs.distro_name }}*.whl"
+        echo
+        res=$(find ${{ inputs.artifacts_path }} -type f -name "${{ inputs.distro_name }}*.whl")
+
+        for f in $res; do
+          echo "[INFO] Found Wheel Distribution: $f";
+          cp $f ${DIST_DIR}
+        done
+
     - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name \"${{ inputs.distro_name }}*.whl\")" >> $GITHUB_ENV
 
     - run: echo wheel_files_array="(${{ env.wheel_files }})" >> $GITHUB_ENV
@@ -123,6 +133,14 @@ jobs:
         done
 
     - run: ls -la ${DIST_DIR}
+
+    - if: inputs.require_wheel
+    # vebrify at least 1 wheel, copied in dist dir to upload to pypi
+      run: |
+        if [[ $(find ${DIST_DIR} -type f -name "${{ inputs.distro_name }}*.whl" | wc -l) -eq 0 ]]; then
+          echo "Error: No Wheel Distribution .whl files found!"
+          exit 1
+        fi
     ##
 
     ## PyPI Upload Command
