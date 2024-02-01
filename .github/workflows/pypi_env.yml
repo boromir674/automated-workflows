@@ -102,7 +102,7 @@ jobs:
     ## PUT WHEEL file(s) in DIST FOLDER ##
     - run: ls -laR ${{ inputs.artifacts_path }}
 
-    - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.whl)" >> $GITHUB_ENV
+    - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name \"${{ inputs.distro_name }}*.whl\")" >> $GITHUB_ENV
 
     - run: echo wheel_files_array="(${{ env.wheel_files }})" >> $GITHUB_ENV
 
