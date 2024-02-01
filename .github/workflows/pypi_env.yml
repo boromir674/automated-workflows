@@ -63,12 +63,14 @@ jobs:
       with:
         path: ${{ inputs.artifacts_path }}
 
-    - run: ls -la ${{ inputs.artifacts_path }}
+    - run: ls -laR ${{ inputs.artifacts_path }}
 
+    # Create DIST Dir folder, to Upload to PyPI
     - run: mkdir ${DIST_DIR}
 
-    ## PUT TAR.GZ file in DIST FOLDER ##
-    - name: "Copy .tar.gz Source Distribution into '${{ env.DIST_DIR }}' folder"
+    ## PUT TAR.GZ file in DIST Dir ##
+    # Every Python Release must a Source Distro Build
+    - name: "Discover .tar.gz Source Distribution, from CI Artifacts"
       run: |
         targz_files=$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.tar.gz)
         targz_files_array=($targz_files)
@@ -96,46 +98,28 @@ jobs:
         echo "SOURCE_DISTRO=$SOURCE_DISTRO" >> $GITHUB_ENV
         echo "DISTRO_FILE_NAME=$DISTRO_FILE_NAME" >> $GITHUB_ENV
 
-    - name: "Copy .tar.gz SOURCE DISTRO '${{ env.DISTRO_FILE_NAME }}' file, into '${{ env.DIST_DIR }}' folder"
+    - name: "Copy .tar.gz SOURCE Distro '${{ env.DISTRO_FILE_NAME }}' file, into '${{ env.DIST_DIR }}' folder"
       run: cp "${{ env.SOURCE_DISTRO }}" "${{ env.DIST_DIR }}"
 
-    ## PUT WHEEL file(s) in DIST FOLDER ##
-    - run: ls -laR ${{ inputs.artifacts_path }}
-
-    - run: |
+    ## PUT WHEEL file(s) in DIST Dir ##
+    # A Python Release could have one or more Wheel Builds
+    - name: "Copy .whl WHEEL Distro(s) files, into '${{ env.DIST_DIR }}' folder"
+      run: |
+        echo " -> Downloaded Wheel(s):"
         find ${{ inputs.artifacts_path }} -type f -name "${{ inputs.distro_name }}*.whl"
         echo
+
         res=$(find ${{ inputs.artifacts_path }} -type f -name "${{ inputs.distro_name }}*.whl")
 
         for f in $res; do
-          echo "[INFO] Found Wheel Distribution: $f";
-          cp $f ${DIST_DIR}
-        done
-
-    - run: echo wheel_files="$(find ${{ inputs.artifacts_path }} -type f -name \"${{ inputs.distro_name }}*.whl\")" >> $GITHUB_ENV
-
-    - run: echo wheel_files_array="(${{ env.wheel_files }})" >> $GITHUB_ENV
-
-    - name: "Verify at least one Wheel is Distributed"
-      if: inputs.require_wheel
-      run: |
-        if [[ ${#wheel_files_array[@]} -eq 0 ]]; then
-          echo "Error: No Wheel Distribution .whl files found!"
-          exit 1
-        fi
-
-    - name: "WHEEL DISTRO(s): ${{ env.wheel_files }}"
-      run: |
-        wheel_files_array=(${{ env.wheel_files }})
-        for f in "${wheel_files_array[@]}"; do
-          echo "[INFO] Copying WHEEL DISTRO: $f";
+          echo "[INFO] Copying Wheel Distribution: $f";
           cp $f ${DIST_DIR}
         done
 
     - run: ls -la ${DIST_DIR}
 
-    - if: inputs.require_wheel
-    # vebrify at least 1 wheel, copied in dist dir to upload to pypi
+    - name: Verify at least 1 Wheel Distribution, to be uploaded to PyPI
+      if: inputs.require_wheel
       run: |
         if [[ $(find ${DIST_DIR} -type f -name "${{ inputs.distro_name }}*.whl" | wc -l) -eq 0 ]]; then
           echo "Error: No Wheel Distribution .whl files found!"
