@@ -34,6 +34,11 @@ on:
         type: string
         description: 'Comma separated list of folders to watch for changes'
         default: 'docs/'
+      command:
+        required: false
+        type: string
+        default: 'tox -e docs --sitepackages -vv -s false'
+        description: 'Command to run to build and test the docs'
       ## Parametrizing Runtime Environment (ie py version)
       python_version:
         required: false
@@ -120,4 +125,5 @@ jobs:
 
       - name: Build Documentation and Test
         if: ${{ matrix.platform == 'ubuntu-latest' || matrix.python-version  != '3.6' }}
-        run: tox -e docs --sitepackages -vv -s false
+        run: ${{ inputs.command }}
+        # run: tox -e docs --sitepackages -vv -s false
