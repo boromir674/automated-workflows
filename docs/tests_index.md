@@ -10,7 +10,7 @@ There is a dedicated [`cicd-test`](https://github.com/boromir674/cicd-test) Gith
 
 The `Test Suite` consists of
 
-- a set of [**GA Workflows**](https://github.com/boromir674/cicd-test/tree/main/.github/workflows) that call our [**Docker**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/docker.yml), [**PyPI**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/pypi_env.yml), and [**Lint**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/lint_env.yml) Workflows in various 
+- a set of [**GA Workflows**](https://github.com/boromir674/cicd-test/tree/main/.github/workflows) that call our [**Docker**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/docker.yml), [**PyPI**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/pypi_env.yml), [**Lint**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/lint_env.yml), and [**Code Visualization**](https://github.com/boromir674/automated-workflows/tree/main/.github/workflows/python_imports.yml) Workflows in various 
 *Scenarios* and *Situations*
 - a set of [**Automated Tests**](https://github.com/boromir674/cicd-test/tree/main/tests), implemented with `Pytest` (Python)
 - a *Test Runner* with a CLI (`pytest -n auto`)
@@ -29,16 +29,32 @@ make the necessary assertions.
 |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_green_0001_1101.yaml/badge.svg)       |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_red_0101.yaml.yaml/badge.svg)  |
 |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_green_1110_0010.yaml/badge.svg)       |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_red_0110.yaml/badge.svg)  |
 |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_green_1111_0011.yaml/badge.svg)       |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_red_0111.yaml/badge.svg)  |
+|  [![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_test_when_tag_not_given.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/docker_test_when_tag_not_given.yaml)       |    |
 
 ## PyPI Workflow Automated Tests
 
-| expected green pass   | expected red (because scenario involves upload python dist to existing index, without allow_existing set to True) |
+| expected green pass   | expected red |
 | --- | --- |
-|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_test.yaml)    |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test_red.yaml/badge.svg)  |
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_test.yaml)    |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_env_no_wheels_test_red.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_env_no_wheels_test_red.yaml)  |  |
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_env_build_matrix_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_env_build_matrix_test.yaml)    |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_env_test_red.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_env_test_red.yaml)  |  |
+
+## Build Workflow Automated Tests
+
+| expected green pass   | expected red |
+| --- | --- |
+|  [![gg](https://github.com/boromir674/ga-python/actions/workflows/.github/workflows/build_caller_green.yaml/badge.svg)](https://github.com/boromir674/ga-python/actions/workflows/build_caller_green.yaml)    |  No tests  |
 
 
 ## Lint Workflow Automated Tests
 
 | expected green pass   | expected red |
 | --- | --- |
-|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/static_code_green.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/static_code_green.yaml)    |    |
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/static_code_green.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/static_code_green.yaml)    |  No Tests  |
+
+
+## Code Visualization Workflow Automated Tests
+
+| expected green pass   | expected red |
+| --- | --- |
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/code_viz_green.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/code_viz_green.yaml)    |  No Tests  |
+
