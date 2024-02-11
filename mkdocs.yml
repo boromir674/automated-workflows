@@ -58,11 +58,14 @@ nav:
   - Home:
     - "Quick Start": index.md
   - Guides:
-    - "CI/CD: Dockerhub": "guide_setup_cicd.md"
-    - "CI/CD: PyPI": "guide_setup_pypi.md"
+    - "CD: Dockerhub": "guide_setup_cicd.md"
+    - "CD: PyPI": "guide_setup_pypi.md"
+    - "CI: Build(s) Testing": "guide_test_build.md"
   - References:
     - "Docker": "ref_docker.md"
     - "PyPI": "ref_pypi_env.md"
+    - "Test Build": "ref_test_build.md"
+    - "Docs": "ref_docs.md"
     - "Lint": "ref_lint.md"
     - "Code Visualization": "ref_pydeps.md"
   - Topics:

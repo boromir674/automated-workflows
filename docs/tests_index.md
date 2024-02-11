@@ -37,6 +37,13 @@ make the necessary assertions.
 |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_test.yaml)    |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test_red.yaml/badge.svg)  |
 
 
+## Build Workflow Automated Tests
+
+| expected green pass   | expected red |
+| --- | --- |
+|  [![gg](https://github.com/boromir674/ga-python/actions/workflows/.github/workflows/build_caller_green.yaml/badge.svg)](https://github.com/boromir674/ga-python/actions/workflows/build_caller_green.yaml)    |  No tests  |
+
+
 ## Lint Workflow Automated Tests
 
 | expected green pass   | expected red |
