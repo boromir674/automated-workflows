@@ -29,13 +29,14 @@ make the necessary assertions.
 |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_green_0001_1101.yaml/badge.svg)       |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol1_red_0101.yaml.yaml/badge.svg)  |
 |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_green_1110_0010.yaml/badge.svg)       |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol2_red_0110.yaml/badge.svg)  |
 |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_green_1111_0011.yaml/badge.svg)       |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_pol3_red_0111.yaml/badge.svg)  |
+|  [![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/docker_test_when_tag_not_given.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/docker_test_when_tag_not_given.yaml)       |    |
 
 ## PyPI Workflow Automated Tests
 
-| expected green pass   | expected red (because scenario involves upload python dist to existing index, without allow_existing set to True) |
+| expected green pass   | expected red |
 | --- | --- |
-|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_test.yaml)    |  ![](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test_red.yaml/badge.svg)  |
-
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_test.yaml)    |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_env_no_wheels_test_red.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_env_no_wheels_test_red.yaml)  |  |
+|  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_env_build_matrix_test.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_env_build_matrix_test.yaml)    |  [![gg](https://github.com/boromir674/cicd-test/actions/workflows/.github/workflows/pypi_env_test_red.yaml/badge.svg)](https://github.com/boromir674/cicd-test/actions/workflows/pypi_env_test_red.yaml)  |  |
 
 ## Build Workflow Automated Tests
 
