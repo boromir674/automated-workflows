@@ -22,28 +22,32 @@ on:
     inputs:
       # Defaults to Policy 2 (CI/CD)
       run_policy:
-        required: false
-        type: string
         default: '2'
+        type: string
+        description: 'Policy for when to run Docs Build'
+        required: false
       dedicated_branches:
-        required: false
+        default: 'main, master, dev'
         type: string
-        default: 'main, master dev'
+        description: "Branches to always want to run Docs Build. Has effect only on Policy '2'"
+        required: false
       source_code_targets:
-        required: false
-        type: string
-        description: 'Comma separated list of folders to watch for changes'
         default: 'docs/'
-      command:
-        required: false
         type: string
+        required: false
+        description: "Comma separated list of folders to watch for changes. Has effect only on Policy '2' and '3'"
+      ## BUILD COMMAND
+      command:
         default: 'tox -e docs --sitepackages -vv -s false'
-        description: 'Command to run to build and test the docs'
+        type: string
+        description: 'Docs Build Command to run'
+        required: false
       ## Parametrizing Runtime Environment (ie py version)
       python_version:
-        required: false
-        type: string
         default: '3.10'
+        type: string
+        description: 'Python Interpreter Version to use for Docs Build Environment'
+        required: false
 
 jobs:
   docs_policy:
