@@ -314,6 +314,9 @@ jobs:
           mkdir -p "${{ env.BUILD_DEST }}"
           mv "${{ steps.distros.outputs.SDIST_FILE }}" "${BUILD_DEST}/"
 
+      - name: Artifacts to Upload
+        run: ls -l ${{ env.BUILD_DEST }}
+
       - name: "Upload .TAR.GZ and .WHL Distro Artifacts"
         uses: actions/upload-artifact@v4
         with:
