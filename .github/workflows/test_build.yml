@@ -115,7 +115,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      ### Sanity Checks ###
+      ### Sanity Check that folder is Compatible for Python Distro / Build ###
       - run: pip install pyroma
       - run: pyroma --directory .
 
@@ -287,10 +287,10 @@ jobs:
           path: ${{ env.COVERAGE_FILE }}
           if-no-files-found: error
 
-
       ## Type Checking ##
       - name: Do Type Checking
         if: inputs.typecheck_policy != 0
+        shell: bash
         run: |
           tox -e type -vv -s false || true
 
@@ -310,7 +310,7 @@ jobs:
       ## DISTROs (SDIST, WHEEL) ARTIFACTS ##
       - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
         shell: bash
-        run: mv ".tox/${BUILD_DEST}/*.tar.gz" "${BUILD_DEST}"
+        run: mv "${{ steps.distros.outputs.SDIST_FILE }}" "${BUILD_DEST}"
 
       - name: "Upload .TAR.GZ and .WHL Distro Artifacts"
         uses: actions/upload-artifact@v4
