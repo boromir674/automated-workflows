@@ -4,9 +4,13 @@ tags:
   - CI
 ---
 
-# Automated Tests
+# Continuous Integration Automated Tests
 
 There is a dedicated [`cicd-test`](https://github.com/boromir674/cicd-test) Github Repo acting as the **Test Suite** for this Project.
+
+The **CI server** of our `Automated Workflows`, checks out the Test Suite, and runs it, when triggered.
+
+[![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
 
 The `Test Suite` consists of
 
@@ -18,9 +22,12 @@ The `Test Suite` consists of
 Test Scenarios are naturally implemented as 'caller' Workflows.  
 The Tests run themselves in [Github Actions](https://github.com/boromir674/cicd-test/actions), of `cicd-test` repo.
 
-The Automated Tests, are responsible for calling our Workflows (such as `Docker` and `PyPI`), under varying conditions, and depending on the runtime parameters and events (ie Docker Policy setting, CI Tests result, etc)
-make the necessary assertions.
+The **Automated Tests**, (automatically) make all the assertions for Workflow Status being either **Green** or **Red**, depending on runtime conditions.
 
+Our **CI** runs **Tests** and Passes, if all expected Green Workflows are Green and all expected Red are Red.  
+In essence, in terms of logic, our **CI Status** [![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml) encapsulates together all our Green and Red expectations, in one Signal (pass / fail).
+
+Below is a catalog of all **Test Scenarios.**
 
 ## Docker Workflow Automated Tests
 

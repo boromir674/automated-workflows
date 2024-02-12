@@ -1,21 +1,23 @@
 # CI/CD Workflows
 
-[![Workflows Tests](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
 [![Read the Docs](https://img.shields.io/readthedocs/automated-workflows?style=plastic&logo=readthedocs&logoColor=lightblue&label=Docs&color=lightgreen&link=https%3A%2F%2Fautomated-workflows.readthedocs.io%2F)](https://automated-workflows.readthedocs.io)
-[![license](https://img.shields.io/github/license/boromir674/automated-workflows?style=plastic&)](https://github.com/boromir674/automated-workflows/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/boromir674/automated-workflows?style=plastic&)](https://github.com/boromir674/automated-workflows/blob/main/LICENSE)
 
-`Reusable Workflows` for **CI/CD Pipelines**, implemented as `Github Actions Workflows`.
+`Reusable Workflows` for **CI/CD Pipelines**, implemented in `Github Actions`.
 
-**Documentation available** at https://automated-workflows.readthedocs.io.
+> **Documentation available** at **https://automated-workflows.readthedocs.io.**
 
 - Source: https://github.com/boromir674/automated-workflows
-- CI: https://github.com/boromir674/cicd-test/actions
-- Docs: https://automated-workflows.readthedocs.io
+- CI: https://github.com/boromir674/automated-workflows/actions
+
 
 ## Workflows Overview
 
+- [**Python Build**](.github/workflows/test_build.yml): Build n Test Python Distributions.
 - [**Docker**](.github/workflows/docker.yml): Build Docker image and Push to Dockerhub.
 - [**PyPI**](.github/workflows/pypi_env.yml): Upload Python distribution to PyPI
+- [**Docs Build**](.github/workflows/policy_docs.yml): Docs Site Build with `Mkdocs` or `Sphinx`
 - [**Lint**](.github/workflows/lint.yml): Static Code Analysis
 - [**Code Visualization**](.github/workflows/python_imports.yml): Visualize Python Code as an `svg` Graph of `Module Imports`
 
