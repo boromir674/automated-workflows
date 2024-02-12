@@ -1,6 +1,44 @@
 # Changelog
 
 
+## 1.3.0 (2024-02-12)
+
+### Changes
+
+##### feature
+- allow overriding the command to run for Docs Build Reusable Workflow
+- add `Docs Build` Workflow, that builds the **Documentation Pages**, with 4 Policies
+- add sensible defaults to Workflow Inputs & improve output Console messages to CI UI
+- allow all combinations of edit, sdist, wheel
+- do NOT require Input value for PEP 440 Version
+- do NOT require Input Distro Name
+- Upload Artifacts tar.gz & whl
+- add `Test Build` Workflow, that **Builds n Test Python**, with 4 Policies
+- add `Visualize Code` Workflow, that parses Module Imports to create **SVG Graph**
+
+##### fix
+- pin dependencies and use separate envs when both sdist and wheel builds
+- use extra quotes to achieve shell glob expansion
+
+##### documentation
+- add Pages for 'Build Guide' and Refs for Build and Docs
+- document new Automated Tests implemented on CI, as Github Caller Workflows
+- add Doc Refs for 'Docs', and Doc Refs + Guide for 'Python Build'
+- catalog the Automated Tests dedicated for Testing the Code Viz Workflow
+- catalog new Module Imports, aka Pydeps, Workflow, in the Feature List of README.md
+- add Reference Page for Module Imports, aka Pydeps, Workflow, in Docs Website
+- add Reference Page for Module Imports, aka Pydeps, Workflow in Docs Website
+
+##### refactor
+- reorder Inputs key values
+- fix workflow name spelling
+- clean Workflow code
+- add more Console Ouput to assist in debugging
+
+##### ci
+- do not trigger on 'dev' branch, and add trigger for 'v*' and 'run-ci' tags
+
+
 ## 1.2.0 (2023-12-19)
 
 ### Changes

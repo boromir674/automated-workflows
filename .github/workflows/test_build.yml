@@ -1,0 +1,325 @@
+###############################
+##     Automated Build QA    ##
+##     Reusable Workflow     ##
+###############################
+
+# Edit Test is independent (dedicate Job)
+
+# Triggers on push to any branch, or PR to main
+
+#### INPUTS ####
+
+## POLICY:
+# - 0 = Off
+# - 1 = On
+
+## JOB_MATRIX:
+# eg: "{\"platform\":[\"ubuntu-latest\"], \"python-version\":[\"3.10\"]}"
+# eg: FULL_MATRIX_STRATEGY: "{\"platform\": [\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\": [\"3.7\", \"3.8\", \"3.9\", \"3.10\", \"3.11\"]}"
+
+## BUILD_INSTALLATION:
+# at least one or max all of {edit, sdist, wheel}
+
+## TOX_INI:
+# Optional file for overidding default front-end tox.ini
+
+
+## STEPS ##
+
+## 1. Create empemeral "Carrier" Branch to "put" User Changes ##
+## 2. Put User Changes (Code for Windows Test) into the "Carrier" Branch ##
+## 3. Set CI Pipeline Settings to 'Only Windows Build and Test' Mode ##
+## 4. Trigger CI Pipeline ##
+## 5. Clean Up ##
+
+
+# Features
+
+# - Configurable Platform, and Version of Runtime
+# - Testing different build installations (ie different builder, compiler, etc)
+# - On/Off switches for Checks, shipped by default
+# - Fully-overridable "front-end" (to the Checks), which ships by default
+
+
+# Future Work: run Tests in Parallel Jobs
+
+on:
+  workflow_call:
+    inputs:
+      typecheck_policy:
+        required: false
+        type: string
+        default: "1"
+        description: "0 = Off, 1 = On, 2 = Allow Fail"
+
+      # JOB_MATRIX
+      job_matrix:
+        required: false
+        type: string
+        default: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.10\"]}"
+
+      # POLICY
+      run_policy:
+        required: false
+        type: string
+        default: '1'
+        description: "0 = Off, 1 = On"
+
+      # BUILD_INSTALLATION
+      build_installation:
+        required: false
+        type: string
+        default: 'edit sdist wheel'
+        description: "Code Installation Modes, for running Tests"
+
+      # ARTIFACT NAME
+      artifact_name:
+        required: false
+        type: string
+        default: 'dist'
+        description: "CI Artifact Name (id / alias) for uploading Distros, such as files .tar.gz, .whl(s)"
+
+    ### OUTPUTS ###
+    # Map the workflow outputs to job outputs
+    outputs:
+      COVERAGE_ARTIFACT:
+        description: "CI Artifact Name (id / alias) of uploaded Coverage XML"
+        value: ${{ jobs.test_build.outputs.COVERAGE_ARTIFACT }}
+
+
+jobs:
+  # gather_info:
+  #   runs-on: ubuntu-latest
+     
+  ## TEST BUILD ##
+  test_build:
+    runs-on: ${{ matrix.platform }}
+    if: always() && inputs.run_policy != 0
+    strategy:
+      matrix: ${{fromJSON(inputs.job_matrix)}}
+    outputs:
+      COVERAGE_ARTIFACT: ${{ steps.set_coverage_artifact.outputs.COVERAGE_ARTIFACT }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SDIST_DIR: 'sdist_dir'
+      WHEEL_DIR: 'wheel_dir'
+      BUILD_DEST: 'dist'
+    steps:
+      - run: 'echo "OS: ${{ matrix.platform }}, Python: ${{ matrix.python-version }}"'
+      # Setup Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip && python -m pip install 'tox<4' tox-gh-actions
+
+      - uses: actions/checkout@v4
+
+      ### Sanity Check that folder is Compatible for Python Distro / Build ###
+      - run: pip install pyroma
+      - run: pyroma --directory .
+
+      ### EDIT MODE Tests ###
+      - name: Edit Mode Tests
+        if: contains(inputs.build_installation, 'edit')
+        run: tox -e dev -vv -s false
+
+
+      - name: Set Distro Name
+        shell: bash
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            DISTRO_NAME=$(cat pyproject.toml | grep -E "^name" | sed -E "s/name = \"(.*)\"/\1/")
+          elif [ -f "setup.py" ]; then
+            DISTRO_NAME=$(cat setup.py | grep -E "^name" | sed -E "s/name = \"(.*)\"/\1/")
+          else
+            echo "No pyproject.toml or setup.py found"
+            exit 1
+          fi
+          echo DISTRO_NAME="$DISTRO_NAME" >> $GITHUB_ENV
+
+      ## Version from Source ##
+
+      # We look for sem ver value from widely accepted sources
+      # Priotity
+      # 1. src/<distro_name>/__init__.py
+      # 2. src/<distro_name>/__version__.py
+      # 3. pyproject.toml
+      # 4. setup.py
+
+      - name: Find Version from Source
+        shell: bash
+        run: |
+          set -e
+          if [[ -f "src/${DISTRO_NAME}/__init__.py" ]]; then
+
+            echo "[INFO] CHECKING src/${DISTRO_NAME}/__init__.py"
+
+            if [[ $(cat "src/${DISTRO_NAME}/__init__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                VERSION="${BASH_REMATCH[1]}"
+                echo "[INFO] Found Version ${VERSION} in src/${DISTRO_NAME}/__init__.py"
+            else
+              echo "[INFO] Did not find Version in src/${DISTRO_NAME}/__init__.py"
+              
+              if [[ -f "src/${DISTRO_NAME}/__version__.py" ]]; then
+                echo "[INFO] CHECKING src/${DISTRO_NAME}/__version__.py"
+
+                if [[ $(cat "src/${DISTRO_NAME}/__version__.py") =~ ^__version__[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                    VERSION="${BASH_REMATCH[1]}"
+                    echo "[INFO] Found Version ${VERSION} in src/${DISTRO_NAME}/__version__.py"
+                else
+                  echo "[INFO] Did not find Version in src/${DISTRO_NAME}/__version__.py"
+                  
+                  if [[ -f "pyproject.toml" ]]; then
+                    echo "[INFO] CHECKING pyproject.toml"
+
+                    if [[ $(cat "pyproject.toml") =~ ^version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                        VERSION="${BASH_REMATCH[1]}"
+                        echo "[INFO] Found Version ${VERSION} in pyproject.toml"
+                    else
+                      echo "[INFO] Did not find Version in pyproject.toml"
+                      if [[ -f "setup.py" ]]; then
+                        echo "[INFO] CHECKING setup.py"
+
+                        if [[ $(cat "setup.py") =~ version[\ ]*=[\ ][\'\"]*([^\'\"]+)[\'\"]* ]]; then
+                          VERSION="${BASH_REMATCH[1]}"
+                          echo "[INFO] Found Version ${VERSION} in setup.py"
+                        else
+                          echo "[DEBUG] Did not find Version in setup.py"
+                        fi
+                      fi
+                    fi
+                  fi
+                fi
+              fi
+            fi
+          fi
+          if [[ -z "$VERSION" ]]; then
+            echo "[WARN] No Version found inside Python Source Code."
+            echo [ERROR] Failed to Discover Distro Version, from Source!
+            exit 1
+          fi
+          echo VERSION="$VERSION" >> $GITHUB_ENV
+
+
+
+      ##### Build #####
+
+      # build, avoids making wheels for our requirements / depependecies
+      # BUILD_DEST controls where the wheel and tar.gz is stored
+      # defaults to the    env var, which defaults to 'dist'
+
+      ## Build Wheel with `build`, not `pip wheel` and Test ##
+      - if: contains(inputs.build_installation, 'wheel')
+        run: tox -e build -vv -s false
+        env:
+          BUILD_DEST: ${{ env.BUILD_DEST }}
+
+      - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
+        run: tox -e sdist -vv -s false --notest
+
+      - name: Set Distro Version
+        id: distros
+        run: |
+          PEP440_DISTRO="${DISTRO_NAME}-${VERSION}"
+          SDIST_NAME="${PEP440_DISTRO}.tar.gz"
+          WHEEL_NAME="${PEP440_DISTRO}-py3-none-any.whl"
+
+          SDIST_FILE="$BUILD_DEST/$SDIST_NAME"
+          WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME"
+
+          # if sdist, but not wheel
+
+          if [[ -f ".tox/$SDIST_FILE" ]]; then
+            SDIST_FILE=".tox/${BUILD_DEST}/${SDIST_NAME}"
+          fi
+
+          echo SDIST_FILE="$SDIST_FILE" >> $GITHUB_OUTPUT
+          echo WHEEL_FILE="$WHEEL_FILE" >> $GITHUB_OUTPUT
+
+      # Pyroma: check Sdist
+      - if: contains(inputs.build_installation, 'sdist')
+        run: pyroma --file "${{ steps.distros.outputs.SDIST_FILE }}"
+
+      - if: contains(inputs.build_installation, 'sdist') || contains(inputs.build_installation, 'wheel')
+        run: pip install twine
+      
+      # Twine: check Sdist
+      - if: contains(inputs.build_installation, 'sdist')
+        run: python -m twine check "${{ steps.distros.outputs.SDIST_FILE }}"
+       
+      # Twine: check Wheel
+      - if: contains(inputs.build_installation, 'wheel')
+        run: python -m twine check "${{ steps.distros.outputs.WHEEL_FILE }}"
+
+      # Export Poetry Lock to Requirements (pip) format
+      - run: tox -e pin-deps -s false -- -E test
+
+      ## Install SDIST and TEST ##
+      - if: contains(inputs.build_installation, 'sdist')
+        run: tox -e ga-sdist -vv -s false
+        env:
+          ARTIFACT: '${{ steps.distros.outputs.SDIST_FILE }}[test]'
+
+      ## Install WHEEL and TEST ##
+      - if: contains(inputs.build_installation, 'wheel')
+        run: tox -e ga-wheel -vv -s false
+        env:
+          ARTIFACT: '${{ steps.distros.outputs.WHEEL_FILE }}[test]'
+
+      ##### CODE COVERAGE XML #####
+      # Combines, and converts Code Coverage results (measured during tests) into XML
+      - name: "Code Coverage, during tests, in XML: converts coverage results (ie per sdist, wheel) and formats them into XML"
+        run: tox -e coverage --sitepackages -vv -s false
+
+      - run: echo COVERAGE_FILE="coverage-${{ matrix.platform }}-${{ matrix.python-version }}.xml" >> $GITHUB_ENV
+        
+      - run: mv ./.tox/coverage.xml ${{ env.COVERAGE_FILE }}
+        shell: bash
+
+      - run: echo COVERAGE_ARTIFACT="ALL_CODE_COVERAGE" >> $GITHUB_OUTPUT
+        id: set_coverage_artifact
+
+      - name: "Upload Test Coverage as Artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_coverage_artifact.outputs.COVERAGE_ARTIFACT }}
+          path: ${{ env.COVERAGE_FILE }}
+          if-no-files-found: error
+
+      ## Type Checking ##
+      - name: Do Type Checking
+        if: inputs.typecheck_policy != 0
+        shell: bash
+        run: |
+          tox -e type -vv -s false || true
+
+          echo
+          echo "Checking Result of Type Check.."
+
+          if [ $? -eq 0 ]; then
+            echo "Type Checking Passed"
+          else
+            if [ ${{ inputs.typecheck_policy }} -eq 1 ]; then
+              echo "Type Checking Failed"
+              exit 1
+            fi
+            echo "Type Checking Failed, but continuing"
+          fi
+
+      ## DISTROs (SDIST, WHEEL) ARTIFACTS ##
+      - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
+        shell: bash
+        run: |
+          mkdir -p "${{ env.BUILD_DEST }}"
+          mv "${{ steps.distros.outputs.SDIST_FILE }}" "${BUILD_DEST}/"
+
+      - name: Artifacts to Upload
+        run: ls -l ${{ env.BUILD_DEST }}
+
+      - name: "Upload .TAR.GZ and .WHL Distro Artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ env.BUILD_DEST }}
+          if-no-files-found: error
