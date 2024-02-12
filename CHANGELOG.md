@@ -7,18 +7,17 @@
 
 ##### feature
 - allow overriding the command to run for Docs Build Reusable Workflow
-- add 'Docs Build' Workflow, supporting 4 Policies
+- add `Docs Build` Workflow, that builds the **Documentation Pages**, with 4 Policies
 - add sensible defaults to Workflow Inputs & improve output Console messages to CI UI
 - allow all combinations of edit, sdist, wheel
 - do NOT require Input value for PEP 440 Version
 - do NOT require Input Distro Name
 - Upload Artifacts tar.gz & whl
-- prototype 'Test Build' Reusable Workflow
-- add `Visualize Code` Workflow, that parses Module Imports to create SVG Graph
+- add `Test Build` Workflow, that **Builds n Test Python**, with 4 Policies
+- add `Visualize Code` Workflow, that parses Module Imports to create **SVG Graph**
 
 ##### fix
 - pin dependencies and use separate envs when both sdist and wheel builds
-- debug PyPI Env Workflow
 - use extra quotes to achieve shell glob expansion
 
 ##### documentation
@@ -37,7 +36,7 @@
 - add more Console Ouput to assist in debugging
 
 ##### ci
-- do not trigger on 'dev' branch, and add trigger for v* and run-ci tags
+- do not trigger on 'dev' branch, and add trigger for 'v*' and 'run-ci' tags
 
 
 ## 1.2.0 (2023-12-19)
