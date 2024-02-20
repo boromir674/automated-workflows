@@ -16,7 +16,7 @@ on:
         description: 'Name of the Main Branch. Example: main, master'
         required: false
     secrets:
-      github_token:
+      github_pat:
         description: 'GitHub Token, with permissions to create PRs and push to the repository'
         required: true
 
@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for tags and branches
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
-          token: '${{ secrets.github_token }}'  # PAT with permissions to create PRs
+          token: '${{ secrets.github_pat }}'  # PAT with permissions to create PRs
 
       # Find Upstream Branch, pointing to the same commit as the Pushed Tag
       - name: Discover User's Branch Name
@@ -49,7 +49,7 @@ jobs:
       ############## PR ##############
       - name: 'Open PR ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ inputs.boarding_branch }}, to classify file changes'
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.github_pat }}
         run: |
           gh pr create --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.boarding_branch }}" \
             --title "Boarding Area: Merging '${{ steps.user_branch.outputs.USER_BRANCH }}' into '${{ inputs.boarding_branch }}' Branch" \
