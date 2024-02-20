@@ -43,9 +43,11 @@ jobs:
         run: echo "[ERROR] User Branch not found. Searched for an Upstream branch, but was not found on the remote. Exiting.." && exit 1
 
       # Ensure Upstream 'Boarding' Branch exists
-      - run: git branch --track ${{ inputs.boarding_branch }} "origin/${{ inputs.boarding_branch }}" || echo PREEXISTING_BOARDING=false >> $GITHUB_ENV
+      - name: Track '${{ inputs.boarding_branch }}' Branch, if it exists on remote 'origin'
+        run: git branch --track ${{ inputs.boarding_branch }} "origin/${{ inputs.boarding_branch }}" || echo PREEXISTING_BOARDING=false >> $GITHUB_ENV
 
-      - if: env.PREEXISTING_BOARDING == 'false'
+      - name: Create '${{ inputs.boarding_branch }}' branch, if it doesn't exist
+        if: env.PREEXISTING_BOARDING == 'false'
         run: |
           git branch --track "${{ inputs.main_branch }}" "origin/${{ inputs.main_branch }}"
           git checkout -b "${{ inputs.boarding_branch }}" "${{ inputs.main_branch }}" || true
