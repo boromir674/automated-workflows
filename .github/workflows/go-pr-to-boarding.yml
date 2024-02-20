@@ -33,7 +33,7 @@ jobs:
       # Find Upstream Branch, pointing to the same commit as the Pushed Tag
       - name: Discover User's Branch Name
         id: user_branch
-        run: echo USER_BRANCH="$(git branch -a --contains "$(git rev-parse HEAD)" | sed -n '2p' | sed 's/.*origin\///')" >> $GITHUB_OUTPUT
+        run: |
           name=$(git branch -a --contains "$(git rev-parse HEAD)" | sed -n '2p' | sed 's/.*origin\///')
           echo "NAME:" $name
           echo USER_BRANCH=$name >> $GITHUB_OUTPUT
@@ -43,8 +43,13 @@ jobs:
         run: echo "[ERROR] User Branch not found. Searched for an Upstream branch, but was not found on the remote. Exiting.." && exit 1
 
       # Ensure Upstream 'Boarding' Branch exists
-      - run: git branch --track ${{ inputs.boarding_branch }} "origin/${{ inputs.boarding_branch }}" || echo "Remote Branch '${{ inputs.boarding_branch }}' does not exist"
-      - run: git checkout -b ${{ inputs.boarding_branch }} ${{ inputs.main_branch }} || true
+      - run: git branch --track ${{ inputs.boarding_branch }} "origin/${{ inputs.boarding_branch }}" || echo PREEXISTING_BOARDING=false >> $GITHUB_ENV
+
+      - if: env.PREEXISTING_BOARDING == 'false'
+        run: |
+          git branch --track "${{ inputs.main_branch }}" "origin/${{ inputs.main_branch }}"
+          git checkout -b "${{ inputs.boarding_branch }}" "${{ inputs.main_branch }}" || true
+          git push origin "${{ inputs.boarding_branch }}" || true
 
       ############## PR ##############
       - name: 'Open PR ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ inputs.boarding_branch }}, to classify file changes'
