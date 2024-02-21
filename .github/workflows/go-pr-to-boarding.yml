@@ -53,6 +53,16 @@ jobs:
           git checkout -b "${{ inputs.boarding_branch }}" "${{ inputs.main_branch }}" || true
           git push origin "${{ inputs.boarding_branch }}" || true
 
+      # Close PR, if found already open
+      - name: Close PR, if already open
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_pat }}
+        run: |
+          pr_id=$(gh pr list --state open --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.boarding_branch }}" --json number | jq -r '.[0].number')
+          if [ -n "$pr_id" ]; then
+            gh pr close $pr_id --json number
+          fi
+
       ############## PR ##############
       - name: 'Open PR ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ inputs.boarding_branch }}, to classify file changes'
         env:
@@ -79,3 +89,11 @@ jobs:
 
           - This PR is designed to **automatically merge** once all CI checks pass.
           "
+
+      # - name: 'Catch Error, if PR already exists'
+      #   if: ${{ failure() }}
+      #   run: |
+      #     echo "[WARNING] PR already exists. Skipping PR creation, making sure Job is green"
+      #     echo "## :warning: PR already exists :warning:" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "This PR already exists. Skipping PR creation, making sure Job is green" >> $GITHUB_STEP_SUMMARY
