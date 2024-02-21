@@ -60,7 +60,7 @@ jobs:
         run: |
           pr_id=$(gh pr list --state open --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.boarding_branch }}" --json number | jq -r '.[0].number')
           if [ -n "$pr_id" ]; then
-            gh pr close $pr_id --json number
+            gh pr close $pr_id -c "Closing PR, as a new PR is being opened for the same User Branch"
           fi
 
       ############## PR ##############
