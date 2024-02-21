@@ -59,7 +59,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.github_pat }}
         run: |
           pr_id=$(gh pr list --state open --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.boarding_branch }}" --json number | jq -r '.[0].number')
-          if [ -n "$pr_id" ]; then
+          if [ -n "$pr_id" ] && [ "$pr_id" != "null" ]; then
             gh pr close $pr_id -c "Closing PR, as a new PR is being opened for the same User Branch"
           fi
 
