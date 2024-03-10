@@ -55,7 +55,7 @@ jobs:
       #   auto-generated notes content
         run: |
           gh release create "${{ inputs.tag }}" ${{ (inputs.artifact && 'dist-local/*') || '' }} --verify-tag \
-            --generate-notes ${{ inputs.draft && '--prerelease' || '' }}
+            --generate-notes ${{ inputs.draft && '--prerelease' || '' }} \
             --notes "Release Notes: ${{ github.event.head_commit.message }}"
       # use  -p, --prerelease  to publish it as pre-release
       # use  -F, --notes-file file   to possibly Prepend content from file
