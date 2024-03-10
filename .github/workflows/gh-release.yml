@@ -19,6 +19,11 @@ on:
         required: false
         type: string
         description: 'Name of the Artifact to download from CI, and then bundle in the GH Release'
+    secrets:
+      gh_token:
+        required: false
+        description: 'GitHub Token, with permissions to create Releases'
+
 
 jobs:
   gh_release:
@@ -55,4 +60,4 @@ jobs:
       # use  -p, --prerelease  to publish it as pre-release
       # use  -F, --notes-file file   to possibly Prepend content from file
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.gh_token || github.token }}
