@@ -52,3 +52,5 @@ jobs:
             --notes "Release Notes: ${{ github.event.head_commit.message }}"
       # use  -p, --prerelease  to publish it as pre-release
       # use  -F, --notes-file file   to possibly Prepend content from file
+        env:
+          GH_TOKEN: ${{ github.token }}
