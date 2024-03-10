@@ -36,6 +36,8 @@ jobs:
       - run: ls -l dist-local
         if: ${{ inputs.artifact }}
 
+      - uses: actions/checkout@v4
+
       - name: Create a Github Release, from Tag on Master
       # To be consistent with already published GH Releases at time of writing (2024/01):
       # * ommit --title flag so in github UI, content start direclty below the
