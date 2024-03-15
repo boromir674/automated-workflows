@@ -63,11 +63,13 @@ nav:
     - "CI: Build(s) Testing": "guide_test_build.md"
   - References:
     - "Docker": "ref_docker.md"
+    - "Github Release": "ref_gh_release.md"
     - "PyPI": "ref_pypi_env.md"
     - "Test Build": "ref_test_build.md"
     - "Docs": "ref_docs.md"
     - "Lint": "ref_lint.md"
     - "Code Visualization": "ref_pydeps.md"
+    - "Git Ops": "ref_gitops_pr_to_boarding.md"
   - Topics:
     - "Test Suite": tests_index.md
   - tags: tags.md

@@ -1,6 +1,21 @@
 # Changelog
 
 
+## 1.4.0 (2024-03-15)
+
+**2 New Reusable Workflows:**
+- [`Make a Github Release`](./.github/workflows/gh-release.yml)
+- [`Git Ops: PR to Boarding`](./.github/workflows/go-pr-to-boarding.yml)
+
+### Changes
+
+##### feature
+- allow passing custom GH_TOKEN for gh CLI
+- add GH Release Reusable Workflow with requred input 'tag'
+- close PR if already open, and then open new one, for GitOps Pr to Boarding Workflow
+- add Reusable Workflow for opening PR 'User Branch'  -->  'Boarding'
+
+
 ## 1.3.0 (2024-02-12)
 
 ### Changes
