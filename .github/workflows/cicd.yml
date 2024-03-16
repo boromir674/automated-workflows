@@ -1,19 +1,14 @@
-name: 'Automated Workflows - CI Pipeline'
+name: 'CI/CD Pipeline'
 
 on:
   push:
     branches:
       - main
+      # exclude pushes to 'release' branch
+      - '!release'
     tags:
       - v*
       - run-ci
-  pull_request:
-    branches:
-      - main
-env:
-  # Groups Test Cases into sets of 4 and dedicate a Job, to run each set
-  # Job runs on a machine with 4 cpu threads; see pytest-xdist
-  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi_test or static_code\"]}"
 
 jobs:
   test_workflows:
@@ -35,14 +30,11 @@ jobs:
         run: pip install 'tox<4.0'
 
       - name: Pin Python Dependencies
-        run: |
-          cd cicd-test
-          tox -e pin-deps
+        working-directory: cicd-test
+        run: tox -e pin-deps
 
       - name: Run Automated Test Suite
         env:
-          GH_TOKEN: ${{ github.token }}
           CICD_TEST_GH_TOKEN: ${{ secrets.CICD_TEST_GH_TOKEN }}
-        run: |
-          cd cicd-test
-          tox -e test -vv
+        working-directory: cicd-test
+        run: tox -e test -vv
