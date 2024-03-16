@@ -35,6 +35,10 @@ jobs:
 
       - name: Run Automated Test Suite
         env:
+          # Tests code invokes gh CLI: `gh api -X GET /repos/boromir674/cicd-test/actions/workflows`
+          # which requires the GH_TOKEN env var to be set. We pass the default GITHUB_TOKEN
+          # as it is with the default permissions
+          GH_TOKEN: ${{ github.token }}
           CICD_TEST_GH_TOKEN: ${{ secrets.CICD_TEST_GH_TOKEN }}
         working-directory: cicd-test
         run: tox -e test -vv
