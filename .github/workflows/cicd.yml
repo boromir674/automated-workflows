@@ -38,12 +38,13 @@ jobs:
         run: |
           if [[ "${{ github.event.head_commit.message }}" =~ ${BOARDING_MSG} ]]; then
 
-          affected_components="${BASH_REMATCH[1]}"
-          echo "--> Detected Affected Components: $affected_components <--"
+            affected_components="${BASH_REMATCH[1]}"
+            echo "--> Detected Affected Components: $affected_components <--"
 
-          echo "AFFECTED_COMPONENTS=$affected_components" >> $GITHUB_ENV
+            echo "AFFECTED_COMPONENTS=$affected_components" >> $GITHUB_ENV
+          fi
 
-      - name: Configure Pipeline, according to Git Ops Signal
+      - name: Read Pipeline Config, from Git Ops Signal
         if: ${{ env.AFFECTED_COMPONENTS != '' }}
         id: pipe_config_from_gitops
         run: |
