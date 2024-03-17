@@ -129,8 +129,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}"
-
       # PRODUCTION RELEASE if tag was pushed on 'main' branch
       - name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BR }}' branch"
         uses: rickstaa/action-contains-tag@v1
@@ -138,6 +136,9 @@ jobs:
         with:
           reference: ${{ env.MAIN_BR }}
           tag: "${{ github.ref }}"
+
+      - if: ${{ steps.main_contains_tag.outputs.retval == 'true' }}
+        run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" || echo "Branch '${{ env.RELEASE_BR }}' was deleted in remote Origin."
 
       # TEST RELEASE if tag was pushed on 'release' branch (head branch of PR to main)
       - name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BR }}' branch"
@@ -167,12 +168,12 @@ jobs:
 
 ### Make a Github Release ###
   gh_release:
-    needs: [test_workflows, prod_or_test]
+    needs: [prod_or_test]
     if: ${{ needs.prod_or_test.outputs.AUTOMATED_DEPLOY == 'true' }}
     uses: ./.github/workflows/gh-release.yml
     with:
       tag: ${{ github.ref_name }}
       draft: ${{ needs.prod_or_test.outputs.ENVIRONMENT_NAME == 'TEST_DEPLOYMENT' }}
     secrets:
-      # passing the GH_TOKEN PAT, to render in GH as ie: 'boromir674 released this yesterday', instead of 'github-actions released this yesterday'
-      gh_token: ${{ secrets.GH_TOKEN }}
+      # pass a PAT, to render in GH as ie: 'boromir674 released this yesterday', instead of 'github-actions released this yesterday'
+      gh_token: ${{ secrets.GA_WORKFLOWS_CI_MAKE_RELEASE }}
