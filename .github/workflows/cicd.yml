@@ -12,8 +12,8 @@ on:
 
 env:
   ##### Pipeline - 1st level overrides #####
-  TESTS_PIPE_ON: "false"
-  DOCS_PIPE_ON: "false"
+  TESTS_PIPE_ON: "true"
+  DOCS_PIPE_ON: "true"
   ##########################
 
   #### TESTS Pipeline Config ####
