@@ -138,37 +138,32 @@ jobs:
           tag: "${{ github.ref }}"
 
       - if: ${{ steps.main_contains_tag.outputs.retval == 'true' }}
-        run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" || echo "Branch '${{ env.RELEASE_BR }}' was deleted in remote Origin."
+        run: echo ENVIRONMENT_NAME=PROD_DEPLOYMENT >> $GITHUB_ENV
 
       # TEST RELEASE if tag was pushed on 'release' branch (head branch of PR to main)
-      - name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BR }}' branch"
+      - if: ${{ ! env.ENVIRONMENT_NAME }}
+        name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BR }}' branch"
         uses: rickstaa/action-contains-tag@v1
         id: release_contains_tag
         with:
           reference: ${{ env.RELEASE_BR }}
           tag: "${{ github.ref }}"
 
+      - if: ${{ ! env.ENVIRONMENT_NAME }} && steps.release_contains_tag.outputs.retval == 'true'
+        run: echo ENVIRONMENT_NAME=TEST_DEPLOYMENT >> $GITHUB_ENV
+
       - name: Pick Production or Test Environment, if tag was pushed on ${{ env.MAIN_BR }} or ${{ env.RELEASE_BR }} branch
         id: set_environment_name
         run: |
-          DEPLOY=true
-          if [[ "${{ steps.main_contains_tag.outputs.retval }}" == "true" ]]; then
-            echo "ENVIRONMENT_NAME=PROD_DEPLOYMENT" >> $GITHUB_OUTPUT
-
-          elif [[ "${{ steps.release_contains_tag.outputs.retval }}" == "true" ]]; then
-            echo "ENVIRONMENT_NAME=TEST_DEPLOYMENT" >> $GITHUB_OUTPUT
-          else
-            echo "A tag was pushed but not on master or release branch. No deployment will be done."
-            DEPLOY=false
-          fi
-          echo "AUTOMATED_DEPLOY=$DEPLOY" >> $GITHUB_OUTPUT
+          echo "ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}" >> $GITHUB_OUTPUT
+          echo "AUTOMATED_DEPLOY=${{ env.ENVIRONMENT_NAME && 'true' || 'false' }}" >> $GITHUB_OUTPUT
     outputs:
       ENVIRONMENT_NAME: ${{ steps.set_environment_name.outputs.ENVIRONMENT_NAME }}
       AUTOMATED_DEPLOY: ${{ steps.set_environment_name.outputs.AUTOMATED_DEPLOY }}
 
 ### Make a Github Release ###
   gh_release:
-    needs: [prod_or_test]
+    needs: [test_workflows, prod_or_test]
     if: ${{ needs.prod_or_test.outputs.AUTOMATED_DEPLOY == 'true' }}
     uses: ./.github/workflows/gh-release.yml
     with:
