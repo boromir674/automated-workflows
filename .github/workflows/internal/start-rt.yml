@@ -1,0 +1,183 @@
+#########################
+## Start Release Train ##
+#########################
+
+### TRIGGER event ###
+# export tt='start-rt'; git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
+
+# 1. MERGE: release-train --> release
+# 2. PR: Release --> Main
+
+# Trigger only on push of a 'start-rt' tag
+on:
+  push:
+    tags:
+      - start-rt
+
+jobs:
+  start_release_train:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TRAIN: 'release-train'
+      RELEASE_BR: 'release'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 0 indicates all history for all branches and tags.
+          set-safe-directory: ''  # `git config --global --add safe.directory <path>`
+          token: '${{ secrets.GH_TOKEN }}'
+
+      # CHECKOUT 'Release' branch
+      - name: "Checkout local branch '${{ env.RELEASE_BR }}'"
+        run: |
+          UPSTREAM_RELEASE=$(git ls-remote --heads origin "${{ env.RELEASE_BR }}")
+
+          if [[ -z "${UPSTREAM_RELEASE}" ]]; then
+            echo "* Upstream '${UPSTREAM_RELEASE}' does not exist"
+            if [[ -n $(git branch --list "${{ ENV.RELEASE_BR }}") ]]; then
+              echo "* Local '${{ ENV.RELEASE_BR }}' exists"
+              # CHECKOUT
+              git checkout "${{ ENV.RELEASE_BR }}"
+            else
+              echo "* Local '${{ ENV.RELEASE_BR }}' does not exist"
+              # CHECKOUT -b
+              git checkout -b "${{ ENV.RELEASE_BR }}"
+            fi
+          else  # pull or track remote and checkout
+            echo "* Upstream '${UPSTREAM_RELEASE}' exists"
+            if [[ -n $(git branch --list "${{ ENV.RELEASE_BR }}") ]]; then
+              echo "* Local '${{ ENV.RELEASE_BR }}' exists"
+              git checkout "${{ ENV.RELEASE_BR }}"
+              # PULL Remote
+              git pull origin "${{ ENV.RELEASE_BR }}"
+            else
+              echo "* Local '${{ ENV.RELEASE_BR }}' does not exist"
+              # TRACK Upstream and CHECKOUT
+              git branch --track "${{ ENV.RELEASE_BR }}" "origin/${{ ENV.RELEASE_BR }}"
+              git checkout "${{ ENV.RELEASE_BR }}"
+            fi
+          fi
+
+      # REBASE branch 'Release' on 'Master/Main'
+      - name: "Rebase branch '${{ env.RELEASE_BR }}' on '${{ env.MAIN_BR }}'"
+        run: git rebase "${{ ENV.MAIN_BR }}"
+      # Local Release branch is ready
+
+      # TRACK Upstream branch 'Release Train'
+      - name: "Track Upstream branch '${{ env.TRAIN }}'"
+        run: git branch --track "${{ env.TRAIN }}" "origin/${{ env.TRAIN }}"
+
+      # MERGE 'Release Train' into 'Release'
+      - name: "Merge branch '${{ env.TRAIN }}' into '${{ env.RELEASE_BR }}'"
+        run: git merge "${{ env.TRAIN }}" --no-ff --no-edit
+
+      # BUMP SEM VER in Distro files (src, pyproject.toml), README, and Docs
+      - name: "Bump Sem Ver: Distro files (src, pyproject.toml), README, and Docs"
+        shell: bash
+        run: ./scripts/sem-ver-bump.sh "$VERSION"
+      - run: git diff
+      - name: "Commit on '${{ env.RELEASE_BR }}' branch"
+        run: |
+          git config --global user.name "Konstantinos Lampridis"
+          git config --global user.email "k.lampridis@hotmail.com"
+          git commit -a -m "chore(semver): bump Sem Ver of Distro files (src, pyproject.toml), README, and Docs"
+
+      #### RELEASE CANDIDATE - TESTS ####
+      
+      ## 1. CHANGE SEM VER for 'Release Candidate' in Distro files (src, pyproject.toml)
+      - name: "Prepare Release Candidate: Append '-rc' to Sem Ver"
+        run: |      
+          # append '-rc' to end of `__version__ = ['"]M.m.p["']` in __init__.py
+          sed -i -E 's/(__version__ = ['"'"'][0-9]+\.[0-9]+\.[0-9]+)('"'"'])/\1-rc\2/' src/cookiecutter_python_package/__init__.py
+
+          # append '-rc' to end of `version = ['"]M.m.p["']` in pyproject.toml
+          sed -i -E 's/(version = ['"'"'][0-9]+\.[0-9]+\.[0-9]+)('"'"'])/\1-rc\2/' pyproject.toml
+      - run: git diff
+      - name: "Set Release Candidate, '-rc', commit message"
+        run: 'echo RC_MSG="chore(semver): add -rc (release candidate) to Source and Distro versions" >> $GITHUB_OUTPUT'
+        id: rc_msg
+      - name: "Commit on '${{ env.RELEASE_BR }}' branch"
+        run: |
+          git config --global user.name "Konstantinos Lampridis"
+          git config --global user.email "k.lampridis@hotmail.com"
+          git commit -a -m "${{ steps.rc_msg.outputs.RC_MSG }}"
+
+      # Local Release branch is ready for RC Test/Release
+
+      ## 2. GIT OPS - Trigger Release Candidate - Tests
+      - name: "Git Ops: Trigger Release Candidate - Tests"
+        run: |
+          rc_tag="v$(./scripts/parse_version.py)-rc"
+
+          echo "[STEP]: Tag Commit: ${rc_tag}"
+          git tag "$rc_tag"
+
+          echo "[STEP]: Delete Remote Tag ${rc_tag}, if exists"
+          (git push origin --delete "$rc_tag" && echo "* Deleted Remote tag $rc_tag") || echo "* Remote Tag ${rc_tag} does not exist"
+
+          echo "[STEP]: Push Tag: $rc_tag"
+          git push origin "$rc_tag"
+          echo
+          echo "## TRIGGERED RELEASE CANDIDATE - TESTS ##"
+          echo
+
+          echo " -> Pushed tag $rc_tag"
+
+      ## Set Release branch to Prod state
+      - run: echo commit_sha="$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        id: commit_sha
+
+      # Revert to Production Sem Ver
+      - name: "Revert to Production Sem Ver, from Release Candidate, '-rc"
+        run: |
+          git revert "$commit_sha" --no-commit
+          git commit -m "revert: ${{ steps.rc_msg.outputs.RC_MSG }}\n\nThis reverts commit $commit_sha."
+
+      - run: git push origin "${{ env.RELEASE_BR }}"
+
+
+      ############## PR ##############
+      - name: 'Create PR   ${{ env.RELEASE_BR }}  -->  ${{ env.MAIN_BR }}'
+        # --head is the branch where the changes were developed
+        # --base is the branch you want to merge the changes into
+        run: |
+          gh pr create --head "${{ env.RELEASE_BR }}" --base "${{ env.MAIN_BR }}" \
+            --title "Releasing to '${{ env.MAIN_BR }}' Branch - Production Release" \
+            --body "## :rocket: Production Release to '${{ env.MAIN_BR }}' :rocket:
+
+          This PR represents a key step in our deployment process, marking the release of new features and updates to the **${{ env.MAIN_BR }}** branch, our production environment.
+
+          ### What's Included in This Release?
+
+          - All the changes, enhancements, and bug fixes that have been thoroughly tested and are now ready to be delivered to our users.
+          - This merge signifies a significant milestone in our continuous delivery pipeline.
+
+          ### :warning: Attention Required :warning:
+
+          - Please review the changes included in this release carefully.
+          - Any additional checks or approvals required for production deployment should be completed.
+
+          ### :white_check_mark: Automatic Deployment :white_check_mark:
+
+          - Upon successful completion of all required CI checks and approvals, this PR will be merged automatically.
+          - Our CI pipeline ensures that only thoroughly tested and verified changes make it to production.
+
+          ### :busts_in_silhouette: Team Collaboration
+
+          - Your inputs and reviews have been instrumental in reaching this stage.
+          - For any final adjustments or critical issues, please coordinate promptly.
+
+          ### :hourglass_flowing_sand: Next Steps
+
+          - Post-merge, the changes will be deployed to our production environment.
+          - The team should be ready to monitor the release and address any immediate post-deployment issues.
+          "
+
+      ############## Merge ##############
+      # - name: 'Merge PR   ${{ env.BOARDING }}  -->  ${{ env.TRAIN }}'
+      #   run: gh pr merge "${{ env.BOARDING }}" --auto --delete-branch --squash
+
+        # HEAD is now at ${{ env.TRAIN }}

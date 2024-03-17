@@ -1,22 +1,76 @@
-name: 'Automated Workflows - CI Pipeline'
+name: 'CI/CD Pipeline'
 
 on:
   push:
     branches:
       - main
+      # exclude pushes to 'release' branch
+      - '!release'
     tags:
       - v*
       - run-ci
-  pull_request:
-    branches:
-      - main
+
 env:
-  # Groups Test Cases into sets of 4 and dedicate a Job, to run each set
-  # Job runs on a machine with 4 cpu threads; see pytest-xdist
-  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi_test or static_code\"]}"
+  ##### Pipeline - 1st level overrides #####
+  TESTS_PIPE_ON: "true"
+  DOCS_PIPE_ON: "true"
+  ##########################
+
+  #### TESTS Pipeline Config ####
+  TESTS_ALWAYS: "false"  # 2nd level override
+  TESTS_JOB_POLICY: '1'  # accept all for Test (only 1 policy supported atm)
+
+  #### DOCS Pipeline Config ####
+  DOCS_ALWAYS: "false"   # 2nd level override
+  DOCS_JOB_POLICY: '2'  # {2, 3}
+  DOCS_PY_VERSION: "3.11"
+
 
 jobs:
+  configure_pipeline:
+    runs-on: ubuntu-latest
+    env:
+      # Git Ops Signal for dynamic Pipeline Configuration
+      BOARDING_MSG: "Auto Merging '[^']+' carrying '([^']+)' Changes"
+    steps:
+      - name: Check for Git Ops Signal in Commit Message
+        # interpret Commit Message: if head_commit.message matches BOARDING_MSG regex
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" =~ ${BOARDING_MSG} ]]; then
+
+          affected_components="${BASH_REMATCH[1]}"
+          echo "--> Detected Affected Components: $affected_components <--"
+
+          echo "AFFECTED_COMPONENTS=$affected_components" >> $GITHUB_ENV
+
+      - name: Configure Pipeline, according to Git Ops Signal
+        if: ${{ env.AFFECTED_COMPONENTS != '' }}
+        id: pipe_config_from_gitops
+        run: |
+          if [[ "${{ env.AFFECTED_COMPONENTS }}" =~ "Source" ]]; then
+            echo PIPE_TESTS_GITOPS_POLICY='1' >> $GITHUB_ENV
+          fi
+          if [[ "${{ env.AFFECTED_COMPONENTS }}" =~ "Docs" ]]; then
+            echo PIPE_DOCS_GITOPS_POLICY='1' >> $GITHUB_ENV
+          fi
+
+      # Configure Pipeline, while respecting Higher level overrides
+      - name: Configure Pipeline
+        id: set_pipe_config
+        run: |
+          echo PIPE_TESTS_POLICY="${{ (env.TESTS_PIPE_ON != 'true' && '0') || (env.TESTS_ALWAYS == 'true' && '1') || (env.PIPE_TESTS_GITOPS_POLICY == '1' && '1') || env.TESTS_JOB_POLICY }}" >> $GITHUB_OUTPUT
+          echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.PIPE_DOCS_GITOPS_POLICY == '1' && '1') || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
+          echo PIPE_DOCS_PY="${{ env.DOCS_PY_VERSION }}" >> $GITHUB_OUTPUT
+    outputs:
+    ## TESTS - Pipeline Settings ##
+      PIPE_TESTS_POLICY: ${{ steps.set_pipe_config.outputs.PIPE_TESTS_POLICY }}
+    ## DOCS - Pipeline Settings ##
+      PIPE_DOCS_POLICY: ${{ steps.set_pipe_config.outputs.PIPE_DOCS_POLICY }}
+      PIPE_DOCS_PY: ${{ steps.set_pipe_config.outputs.PIPE_DOCS_PY }}
+
   test_workflows:
+    needs: configure_pipeline
+    if: ${{ needs.configure_pipeline.outputs.PIPE_TESTS_POLICY == '1' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the Automated Test Suite
@@ -35,14 +89,89 @@ jobs:
         run: pip install 'tox<4.0'
 
       - name: Pin Python Dependencies
-        run: |
-          cd cicd-test
-          tox -e pin-deps
+        working-directory: cicd-test
+        run: tox -e pin-deps
 
       - name: Run Automated Test Suite
         env:
+          # Tests code invokes gh CLI: `gh api -X GET /repos/boromir674/cicd-test/actions/workflows`
+          # which requires the GH_TOKEN env var to be set. We pass the default GITHUB_TOKEN
+          # as it is with the default permissions
           GH_TOKEN: ${{ github.token }}
           CICD_TEST_GH_TOKEN: ${{ secrets.CICD_TEST_GH_TOKEN }}
+        working-directory: cicd-test
+        run: tox -e test -vv
+
+
+### DOCS BUILD/TEST - DOCUMENTATION SITE ###
+  docs:
+    name: Build Documentation
+    needs: configure_pipeline
+    # bafaa2c2a014758a4421fe9b5c02ba66dbfdbef6
+    uses: boromir674/automated-workflows/.github/workflows/policy_docs.yml@test
+    with:
+      run_policy: '${{ needs.configure_pipeline.outputs.PIPE_DOCS_POLICY }}'
+      python_version: ${{ needs.configure_pipeline.outputs.PIPE_DOCS_PY }}
+      command: "tox -e pin-deps -- -E docs && tox -e docs --sitepackages -vv -s false"
+      # command: "tox -e docs --sitepackages -vv -s false"
+
+  prod_or_test:
+    name: 'Check which Git Branch we are on'
+    if: ${{ startsWith(github.event.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    env:
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+      RELEASE_BR: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+    steps:
+      # Fetch 'Main' and 'Release' branches
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}"
+
+      # PRODUCTION RELEASE if tag was pushed on 'main' branch
+      - name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BR }}' branch"
+        uses: rickstaa/action-contains-tag@v1
+        id: main_contains_tag
+        with:
+          reference: ${{ env.MAIN_BR }}
+          tag: "${{ github.ref }}"
+
+      # TEST RELEASE if tag was pushed on 'release' branch (head branch of PR to main)
+      - name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BR }}' branch"
+        uses: rickstaa/action-contains-tag@v1
+        id: release_contains_tag
+        with:
+          reference: ${{ env.RELEASE_BR }}
+          tag: "${{ github.ref }}"
+
+      - name: Pick Production or Test Environment, if tag was pushed on ${{ env.MAIN_BR }} or ${{ env.RELEASE_BR }} branch
+        id: set_environment_name
         run: |
-          cd cicd-test
-          tox -e test -vv
+          DEPLOY=true
+          if [[ "${{ steps.main_contains_tag.outputs.retval }}" == "true" ]]; then
+            echo "ENVIRONMENT_NAME=PROD_DEPLOYMENT" >> $GITHUB_OUTPUT
+
+          elif [[ "${{ steps.release_contains_tag.outputs.retval }}" == "true" ]]; then
+            echo "ENVIRONMENT_NAME=TEST_DEPLOYMENT" >> $GITHUB_OUTPUT
+          else
+            echo "A tag was pushed but not on master or release branch. No deployment will be done."
+            DEPLOY=false
+          fi
+          echo "AUTOMATED_DEPLOY=$DEPLOY" >> $GITHUB_OUTPUT
+    outputs:
+      ENVIRONMENT_NAME: ${{ steps.set_environment_name.outputs.ENVIRONMENT_NAME }}
+      AUTOMATED_DEPLOY: ${{ steps.set_environment_name.outputs.AUTOMATED_DEPLOY }}
+
+### Make a Github Release ###
+  gh_release:
+    needs: [test_workflows, prod_or_test]
+    if: ${{ needs.prod_or_test.outputs.AUTOMATED_DEPLOY == 'true' }}
+    uses: ./.github/workflows/gh-release.yml
+    with:
+      tag: ${{ github.ref_name }}
+      draft: ${{ needs.prod_or_test.outputs.ENVIRONMENT_NAME == 'TEST_DEPLOYMENT' }}
+    secrets:
+      # passing the GH_TOKEN PAT, to render in GH as ie: 'boromir674 released this yesterday', instead of 'github-actions released this yesterday'
+      gh_token: ${{ secrets.GH_TOKEN }}
