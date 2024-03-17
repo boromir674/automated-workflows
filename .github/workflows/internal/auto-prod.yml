@@ -1,5 +1,5 @@
 #############################
-## Merge Release in Master ##
+## Merge Release into Main ##
 #############################
 
 # Triggered on tag 'auto-prod' push
@@ -10,7 +10,7 @@
 #### Does the following:
 #  1. Triggers 'Release' Stress Tests
 #  2. if Tests and Code Review OK
-#  3. Merge PR 'release' -->  'Master'
+#  3. Merge PR 'Release' -->  'Main'
 ####
 
 on:
@@ -19,12 +19,12 @@ on:
       - auto-prod
 
 jobs:
-  merge_release_in_master:
+  merge_release_into_main:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE: 'release'
-      MAIN_BR: 'master'
+      RELEASE_BR: 'release'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
     steps:
       - uses: actions/checkout@v4
         with:

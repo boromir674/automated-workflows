@@ -12,7 +12,7 @@ name: Merge RT in Release
 
 # OR
 
-# WHEN a tag 'start-train' is pushed t branch 'release-train'
+# WHEN a tag 'start-train' is pushed to branch 'release-train'
 
 # THEN
 #   1. Open PR: 'release-train' --> 'release'
