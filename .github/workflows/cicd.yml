@@ -12,7 +12,7 @@ on:
 
 env:
   ##### Pipeline - 1st level overrides #####
-  TESTS_PIPE_ON: "true"
+  TESTS_PIPE_ON: "false"
   DOCS_PIPE_ON: "true"
   ##########################
 
@@ -21,7 +21,7 @@ env:
   TESTS_JOB_POLICY: '1'  # accept all for Test (only 1 policy supported atm)
 
   #### DOCS Pipeline Config ####
-  DOCS_ALWAYS: "false"   # 2nd level override
+  DOCS_ALWAYS: "true"   # 2nd level override
   DOCS_JOB_POLICY: '2'  # {2, 3}
   DOCS_PY_VERSION: "3.11"
 
