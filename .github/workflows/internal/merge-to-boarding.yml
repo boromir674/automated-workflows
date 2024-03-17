@@ -1,0 +1,168 @@
+name: Merge into Boarding
+
+on:
+  pull_request:  # PR:  <Head Branch>  -->  <Base Branch>
+    types: [labeled]
+    branches:   # Base Branches (aka Target)
+      - boarding-auto  # signals automatic release immediately after boarding
+      - boarding-auto*
+      - board-n-release  # signals to just board train (potentially along with others)
+      - board-n-release*
+
+
+jobs:
+  boarding_train:
+    if: github.event.label.name == 'boarding_auto'
+    runs-on: ubuntu-latest
+    env:
+      MAIN_BRANCH: ${{ vars.MAIN_BRANCH || 'main' }}
+      DIRECT_ONBOARDING_BR: direct-onboarding
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 0 indicates all history for all branches and tags.
+          set-safe-directory: ''  # `git config --global --add safe.directory <path>`
+          token: '${{ secrets.GH_TOKEN }}'
+
+      - run: echo "PR_ID=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+
+      ## DYNAMIC REQUIRED CHECKS, leveraging our CI Pipe and GH Branch Protection Rules ##
+      - name: 'Derive intermediate Protected Branch, and CI config matching Required Checks'
+
+        ### Dynamic configuration of CI Jobs, based on PR Labels
+        ### Dynamic selection of follow-up (GitOps) PR Target Branch, based on PR Labels
+
+        ### The configured CI Jobs should trigger Checks that are a
+        ### super set of the follow-up PR's Required Checks
+
+        ## Requirements/Pre-requisites:
+        ## - admin must setup a Protected Branch per Set of Required Checks
+        ## - The Required Checks need to be maintained to be in sync with the CI Jobs that the Workflow can realize (spawn)
+
+        ## EG Protected Branches: 'test-distro', 'test-docs', 'test-distro-docs'
+
+        ## Todo: use https://github.com/marketplace/actions/alls-green to infer Required Checks from CI configuration
+        ## this will eclipse the need to maintain the Required Checks on github repo settings
+
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TOPICAL_BR: ${{ github.event.pull_request.head.ref }}
+
+        # Recognized labels:
+        # if 'docs' label -> Docs Tests
+        # if 'business_logic|template_logic|test|stubs' label -> Cross-Platform Tests
+        run: |
+          # Fetch PR labels
+          PR_LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
+          echo "PR Labels: $PR_LABELS"
+
+          # Variables to track changes
+          buffer_string=""
+          branch_name_buffer=""
+          recognized_changes=false
+          detected_need_for_distro_tests=false
+
+          # Check if PR labels are in the list of recognized labels
+          for label in $PR_LABELS; do
+            case $label in
+              business_logic|template_logic|test|stubs)
+                if [ "$detected_need_for_distro_tests" = false ]; then
+                  buffer_string="Distro${buffer_string:+ AND $buffer_string}"
+                  branch_name_buffer="distro-${branch_name_buffer}"
+                  recognized_changes=true
+                  detected_need_for_distro_tests=true
+                fi
+                ;;
+              docs)
+                buffer_string="${buffer_string:+$buffer_string AND }Docs"
+                branch_name_buffer="${branch_name_buffer}docs-"
+                recognized_changes=true
+                ;;
+              *)
+                # Append other recognized labels here, following the same pattern as 'docs'
+                ;;
+            esac
+          done
+
+          # Finalize branch name buffer by trimming trailing hyphen
+          branch_name_buffer=${branch_name_buffer%-}
+
+          # Handling based on recognized changes: empty buffer -> no changes classified
+          if [ -z "$buffer_string" ]; then
+            # Fallback logic
+            echo "## Did not find Recognized Label" >> $GITHUB_STEP_SUMMARY
+            echo "Fallback to \"few\" CI Jobs and Target Branch with \"few to none\" Required Checks." >> $GITHUB_STEP_SUMMARY
+            TARGET_BRANCH="${DIRECT_ONBOARDING_BR}"
+            MERGE_MSG="Merge '${TOPICAL_BR}' into ${TARGET_BRANCH} with minimal checks."
+          else
+            # Dynamic logic based on recognized labels
+            MERGE_MSG="Auto Merging '${TOPICAL_BR}' carrying '${buffer_string}' Changes."
+            TARGET_BRANCH="test-${branch_name_buffer}"
+            echo "## Recognized Changes from Labels: ${buffer_string}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Summary and output
+          echo "Commit Message: ${MERGE_MSG}" >> $GITHUB_STEP_SUMMARY
+          echo "Target Branch: ${TARGET_BRANCH}" >> $GITHUB_STEP_SUMMARY
+          echo "MERGE_MSG=${MERGE_MSG}" >> $GITHUB_OUTPUT
+          echo "TARGET_BRANCH=${TARGET_BRANCH}" >> $GITHUB_OUTPUT
+        id: merge_msg
+
+      - run: echo "_USER_BR=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+      - run: echo "_BOARDING_BR=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+
+      ## MERGE PR 'User/Topic Branch'  -->  'boarding-auto', with Custom Commit Message
+      - name: 'Merge PR   ${{ env._USER_BR }}  -->  ${{ env._BOARDING_BR }}'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          BOARDING_MSG: ${{ steps.merge_msg.outputs.MERGE_MSG }}
+        run: "gh pr merge \"${{ env.PR_ID }}\" --merge --subject \"${{ env.BOARDING_MSG }}\""
+
+      ## PICK PROTECTED BRANCH
+      # DETERMINES what will the Required Checks be, while PR is on `Auto Merge`
+
+      # Does NOT Trigger later the 'Merge RT in Release' Workflow
+      - if: startsWith(env._BOARDING_BR, 'boarding-auto')
+        run: echo TARGET_BRANCH="${{ steps.merge_msg.outputs.TARGET_BRANCH }}-${{ env._USER_BR }}" >> $GITHUB_ENV
+
+      # Triggers later the 'Merge RT in Release' Workflow
+      - if: startsWith(env._BOARDING_BR, 'board-n-release')
+        run: echo TARGET_BRANCH="${{ steps.merge_msg.outputs.TARGET_BRANCH }}" >> $GITHUB_ENV
+
+      - name: Ensure '${{ env.TARGET_BRANCH }}' Branch is on Remote origin
+        run: git branch --track ${{ env.TARGET_BRANCH }} "origin/${{ env.TARGET_BRANCH }}" || git checkout -b ${{ env.TARGET_BRANCH }} "origin/${{ env.MAIN_BRANCH }}" && git push origin ${{ env.TARGET_BRANCH }}
+
+      ### Open PR 'boarding-auto'  -->   Branch with `Required Checks`; github Protection Rules
+      - name: 'Open PR ${{ env._BOARDING_BR }}  -->  ${{ env.TARGET_BRANCH }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          gh pr create --head "${{ env._BOARDING_BR }}" --base "${{ env.TARGET_BRANCH }}" \
+            --title "Dynamic Automated Checks: Merging '${{ env._BOARDING_BR }}' into '${{ env.TARGET_BRANCH }}' Branch" \
+            --body "## :test_tube: Dynamic Automated Checks :test_tube:
+
+          This PR is automatically generated by a GitHub Action workflow. It's part of the process of 'Testing before Accepting onto the Train', setting the stage for the next steps in our GitOps journey.
+
+          ### What's Happening Here?
+
+          - We're merging changes from `${{ env._BOARDING_BR }}` into the `${{ env.TARGET_BRANCH }}` branch.
+          - The Head branch '${{ env._BOARDING_BR }}' commit message, was derived from the PR labels of previous GitOps PR (aka phase).
+          - This message dynamically configure the CI/CD Pipeline
+
+          - The Base branch ${{ env.TARGET_BRANCH }} was derived from the PR labels of previous GitOps PR (aka phase).
+          - This PR expects the Head branch to have a set of Required Checks, as per GitHub Protection Rules.
+
+          ### :white_check_mark: Automatic Merging :white_check_mark:
+
+          - This PR is designed to **automatically merge** once all CI checks pass.
+          - The assumption is that the CI/CD Pipeline will run the same set of checks as the Required Checks on the Target Branch!
+          "
+
+      ## Auto Merge PR 'boarding-auto'  -->  env.TARGET_BRANCH  Branch with `Required Checks` ##
+      - name: 'Enable Auto Merge'
+      ## The CI Tests derived from commit message, must match the `Required Checks`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          # DETERMINES what Job Matrix our CI/CD Pipeline, will run
+          BOARDING_MSG: ${{ steps.merge_msg.outputs.MERGE_MSG }}
+        run: "gh pr merge \"${{ env._BOARDING_BR }}\" --auto --delete-branch --merge"
