@@ -1,0 +1,123 @@
+#############################
+## Merge Release into Main ##
+#############################
+
+# Triggered on tag 'auto-prod' push
+
+# export tt='auto-prod'
+# git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
+#### Does the following:
+#  1. Triggers 'Release' Stress Tests
+#  2. if Tests and Code Review OK
+#  3. Merge PR 'Release' -->  'Main'
+####
+
+on:
+  push:
+    tags:
+      - auto-prod-*
+
+jobs:
+  merge_release_into_main:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_BR: 'release'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+      COMMIT_MSG_ON_RELEASE_BR: 'Release Candidate - CI Pipeline'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 0 indicates all history for all branches and tags.
+          set-safe-directory: ''  # `git config --global --add safe.directory <path>`
+          token: '${{ secrets.GH_TOKEN }}'
+
+      - run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" 
+
+      - name: "Check if tag is on '${{ env.RELEASE_BR }}' branch"
+        uses: rickstaa/action-contains-tag@v1
+        id: tag_on_release
+        with:
+          tag: "${{ github.ref }}"
+          reference: "${{ env.RELEASE_BR }}"  # the branch to check if the tag is on
+
+      # REQUIRE Tag to be on Release Branch, else Exit with Error
+      - if: ${{ steps.tag_on_release.outputs.retval == 'false' }}
+        name: "Exit if '${{ github.ref }}' NOT on '${{ env.RELEASE_BR }}' branch"
+        run: echo "Tag '${{ github.ref }}' on '${{ env.RELEASE_BR }}' = ${{ steps.tag_on_release.outputs.retval }}" && exit 1
+
+      # Parse SOURCE Sem Ver
+      # - run: echo SEMVER=$(grep -E -o '^version\s*=\s*\".*\"' pyproject.toml | cut -d'"' -f2) >> $GITHUB_OUTPUT
+      #   id: sem_ver
+
+      # Find latest tag on MAIN_BR and derive Sem Ver
+      - name: "Search tags on MAIN_BR, filter out those not matching v* and find latest"
+        run: |
+          LATEST_PROD_GIT_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
+          echo "[INFO]: Latest Prod Git Tag: $LATEST_PROD_GIT_TAG"
+
+          LATEST_PROD_SEM_VER=${LATEST_PROD_GIT_TAG:1}"
+          echo "**Discovered Sem Ver, previously published: $LATEST_PROD_SEM_VER**" >> $GITHUB_STEP_SUMMARY
+
+      # READ NEW SEM VER from pushed git tag, ie '1.2.0' from 'auto-prod-1.2.0'
+      - name: Read New Sem Ver from Tag
+        id: sem_ver
+        run: |
+          NEW_SEMVER=$(echo "${{ github.ref }}" | cut -d'-' -f3)
+          echo "[INFO]: New Sem Ver: $NEW_SEMVER"
+          echo "**New Sem Ver: $NEW_SEMVER**" >> $GITHUB_STEP_SUMMARY
+          echo SEMVER=$NEW_SEMVER >> $GITHUB_OUTPUT
+
+      # Find if it is a PROD (Public API) or DEV (ie internal changes, only docs, etc)
+      - name: "Check if it is a PROD or DEV Release"
+        id: prod_or_dev
+        run: |
+          if [[ "${{ steps.sem_ver.outputs.SEMVER }}" == *dev* ]]; then
+            echo "PROD_OR_DEV=DEV" >> $GITHUB_OUTPUT
+          else
+            echo "PROD_OR_DEV=PROD" >> $GITHUB_OUTPUT
+          fi
+
+      # Derive Git Tag that will trigger 'Release Candidate - CI Pipeline'
+      - name: 'Create Git Tag, by appending -rc to PROD Sem Ver'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
+        run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV'
+
+      - name: 'Create Git Tag, using DEV Sem Ver'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
+        run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}" >> $GITHUB_ENV'
+
+      - name: "Trigger Release Candidate - Stress Tests"
+        run: |
+          echo "[STEP]: Tag Local: ${RC_TAG}"
+          git tag -d "$RC_TAG" || echo "Ensured Local Tag $RC_TAG does not exist"
+          git tag "$RC_TAG"
+          echo
+          echo "[STEP]: Tag Remote: ${RC_TAG}"
+          git push --delete origin "$RC_TAG" || echo "Ensured Remote Tag $RC_TAG does not exist"
+          git push origin "$RC_TAG"
+          echo
+          echo " -> Pushed tag $RC_TAG"
+          echo
+          echo "## TRIGGERED RELEASE CANDIDATE - TESTS ##"
+          echo
+
+      # Derive Commit subject for PR Merge, based on PROD or DEV
+      - name: 'Create Commit Message: [NEW] ${{ env.COMMIT_MSG_ON_RELEASE_BR }} v${{ steps.sem_ver.outputs.SEMVER }} Release'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
+        run: 'echo CM_MSG="[NEW] ${{ env.COMMIT_MSG_ON_RELEASE_BR }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
+
+      - name: 'Create Commit Message: [DEV] ${{ env.COMMIT_MSG_ON_RELEASE_BR }} v${{ steps.sem_ver.outputs.SEMVER }} Release'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
+        run: 'echo CM_MSG="[DEV] ${{ env.COMMIT_MSG_ON_RELEASE_BR }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
+
+      # LABEL PR for Auto Deploy, to trigger 'Tag Prod' Workflow after merge
+      - name: "Label PR for Auto Deploy"
+        run: gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
+
+      ### Merge PR, when CI Pass + Human Review OK ###
+      - name: "Merge PR   'head': ${{ env.RELEASE_BR }}  -->  'base': ${{ env.MAIN_BR }}"
+        run: gh pr merge "${{ env.RELEASE_BR }}" --auto --delete-branch --merge --subject "${{ env.CM_MSG }}"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

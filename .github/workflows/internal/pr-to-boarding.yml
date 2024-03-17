@@ -1,0 +1,21 @@
+#############################
+## PR to Boarding - GitOps ##
+#############################
+
+# export tt='board-request'; git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
+on:
+  push:
+    tags:
+      - board-request   # Request to be included in next Release
+      - board-n-release  # Request to be included in next Release and create a Release
+
+jobs:
+  pr_to_boarding:
+    uses: ./.github/workflows/go-pr-to-boarding.yml@test
+    with:
+      # pass tag to PR from <user_branch>  -->  <github.ref>-<user_branch>
+      board_tag: "${{ github.ref_name }}"
+      main_branch: ${{ vars.MAIN_BRANCH || 'main' }}
+    secrets:
+      github_pat: ${{ secrets.GH_TOKEN }}
