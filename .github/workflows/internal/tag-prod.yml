@@ -35,20 +35,38 @@ jobs:
       - name: Ensure we are on '${{ env.MAIN_BR }}' branch
         run: git checkout "${{ env.MAIN_BR }}"
 
-      # Parse SOURCE Sem Ver
-      - run: echo SEMVER=$(grep -E -o '^version\s*=\s*\".*\"' pyproject.toml | cut -d'"' -f2) >> $GITHUB_ENV
+      # Derive SEM VER from most recent tag
+      - name: "Search tags, filter out those not matching v* and find latest"
+        run: |
+          LATEST_GIT_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
+          echo "[INFO]: Latest Git Tag: $LATEST_GIT_TAG"
+          echo "**Latest Git Tag: $LATEST_GIT_TAG**" >> $GITHUB_STEP_SUMMARY
 
-      # Exit if SOURCE Sem Ver is empty
+          # if tag ends with '-rc' strip it and store remaining string
+          if [[ $LATEST_GIT_TAG == *"-rc" ]]; then
+            PROD_SEM_VER=${LATEST_GIT_TAG:1:${#LATEST_GIT_TAG}-3}
+          # else if dev substring is found then store as it is
+          elif [[ $LATEST_GIT_TAG == *"dev"* ]]; then
+            PROD_SEM_VER=$LATEST_GIT_TAG
+          else
+            echo "[INFO] Unexpected Git Tag: $LATEST_GIT_TAG"
+            echo "Exiting .."
+            exit 1
+          fi
+
+          echo "- Using Sem Ver: $PROD_SEM_VER" >> $GITHUB_STEP_SUMMARY
+          echo SEMVER=$PROD_SEM_VER >> $GITHUB_ENV
+
+      # Exit if Sem Ver is empty
       - name: "Exit if SOURCE Sem Ver is empty"
         run: |
           if [ -z "${{ env.SEMVER }}" ]; then
             echo "SEMVER is empty. Exiting .."
-            echo "SEMVER is empty: '${{ env.SEMVER }}'" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
-      # Derive Prod Git Tag
-      - name: 'Derive Git Tag: v${{ env.SEMVER }}'
+      # Prepen 'v' to the Sem Ver
+      - name: 'Create Git Tag: v${{ env.SEMVER }}'
         run: echo "PROD_TAG=v${{ env.SEMVER }}" >> $GITHUB_ENV
 
       # Trigger CI/CD for 'Production Release'
