@@ -1,8 +1,10 @@
 
 # Automatically, Publish a Production Tag
 
-# RUNS on PR  'release' --> 'main/master' MERGED
-# implies closed, and excludes 'close without merge'
+# RUNS when a PR  'release' --> 'main/master' Merges AND PR has label 'auto-deploy'
+
+# - if PR was closed without a merge of code it does NOT run
+
 
 on:
   pull_request:
@@ -20,6 +22,8 @@ jobs:
     if: github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'release' &&
       contains(github.event.pull_request.labels.*.name, 'auto-deploy')
+    env:
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
     steps:
       - name: "Checkout Code"
         uses: actions/checkout@v4
@@ -28,9 +32,8 @@ jobs:
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
           token: '${{ secrets.GH_TOKEN }}'
 
-      # by checkout we should probably be at master (by default)
-      - name: Ensure we are on 'master' branch
-        run: git checkout master
+      - name: Ensure we are on '${{ env.MAIN_BR }}' branch
+        run: git checkout "${{ env.MAIN_BR }}"
 
       # Parse SOURCE Sem Ver
       - run: echo SEMVER=$(grep -E -o '^version\s*=\s*\".*\"' pyproject.toml | cut -d'"' -f2) >> $GITHUB_ENV

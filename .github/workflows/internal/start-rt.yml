@@ -7,24 +7,14 @@
 
 
 # 1. MERGE: release-train --> release
-# 2. PR: release --> master
-# 3. 
+# 2. PR: Release --> Main
 
-# Trigger only on push of an 'start-rt' tag
+# Trigger only on push of a 'start-rt' tag
 on:
   push:
     tags:
       - start-rt
-  # Trigger when called from another workflow
-  # Aka parent/caller workflow calls the child/"called" workflow
-  workflow_call:
-    inputs:
-      DOCKER_USER:
-        required: true
-        type: string
-      image_slug:
-        required: true
-        type: string
+
 jobs:
   start_release_train:
     runs-on: ubuntu-latest
@@ -32,7 +22,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TRAIN: 'release-train'
       RELEASE_BR: 'release'
-      MAIN_BR: 'master'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
     steps:
       - uses: actions/checkout@v4
         with:

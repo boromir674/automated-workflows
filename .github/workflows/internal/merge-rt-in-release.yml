@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MAIN_BR: 'master'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
       RELEASE_BR: 'release'
     steps:
       - uses: actions/checkout@v4
@@ -48,8 +48,9 @@ jobs:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
           token: '${{ secrets.GH_TOKEN }}'
-      # track remote master, since this Workflow triggers on push tag or pull request activity
-      - name: Track Remote Master
+
+      # track remote Main branch, since this Workflow triggers on push tag or pull request activity
+      - name: Track Remote Main branch
         run: git branch --track "${{ env.MAIN_BR }}" "origin/${{ env.MAIN_BR }}"
 
       - name: Ensure Release Branch exists and is rebased on Main Branch, before PR
@@ -93,23 +94,16 @@ jobs:
 
             ### Ensuring Quality and Preparing for Release:
 
-            - Our focus now shifts to **stress testing** and executing a CI job matrix to rigorously evaluate our changes under varied conditions.
-            - We'll also handle essential chores, like **semantic versioning bumps** across source/distribution files and updating the changelog with details of the imminent release.
+            - Our focus now shifts to **stress testing** and on CI.
+            - We'll also handle essential chores, like updating the changelog with a new entry dedicated for the imminent release.
 
             ### :bulb: Next Steps in Our Journey:
 
-            - Following the successful merge of this PR, we'll initiate the next phase, which involves merging the `${{ env.RELEASE_BR }}` into the **Main/Master** branch.
-            - This next PR will continue the narrative we're building here, ensuring a smooth transition and a consistent story from development to final release.
-
-            ### :handshake: Collaborative Efforts:
-
-            - Your reviews, insights, and contributions have brought us to this stage. Let's keep up the momentum as we move closer to our goal.
-            - Please coordinate for any final adjustments or critical issues that need addressing before the merge.
+            - Following the successful merge of this PR, we'll initiate the next phase, which involves merging the `${{ env.RELEASE_BR }}` into the **${{ env.MAIN_BR }}** branch.
 
             ### :hourglass_flowing_sand: Looking Ahead:
 
             - Once merged, our changes are set for the final stage of release preparation.
-            - The team should be prepared to monitor and address any issues in the subsequent phase of merging into the Main/Master branch.
             "
       ##### Auto Merge: Train --> Release #####
       - name: 'Merge PR   ${{ env.TRAIN }}  -->  ${{ env.RELEASE_BR }}'

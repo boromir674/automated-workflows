@@ -2,10 +2,10 @@
 ## Open PR to Main/Master ##
 ############################
 
-name: Open PR to Master
+name: Open PR to Main
 
-# WHEN a PR 'release-train' --> 'release' is merged
-# THEN Open PR: 'release' --> 'master'
+# WHEN a PR 'release-train' --> 'release' is closed with code merge
+# THEN Open PR: 'release' --> 'Main'
 
 on:
   pull_request:
@@ -14,12 +14,12 @@ on:
       - release
 
 jobs:
-  open_pr_to_master:
+  open_pr_to_main:
     if: github.event.pull_request.merged == true && contains(fromJSON('["release-train"]'), github.head_ref)
     runs-on: ubuntu-latest
     env:
       RELEASE: 'release'
-      MAIN_BR: 'master'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
     steps:
       - uses: actions/checkout@v4
         with:

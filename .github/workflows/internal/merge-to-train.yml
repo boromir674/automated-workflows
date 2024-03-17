@@ -30,7 +30,7 @@ jobs:
       RELEASE_BR: 'release'
       # BOARDING: ${{ github.event.pull_request.base.ref == 'boarding-auto' && 'boarding-auto' || 'boarding' }}
       # BOARDING: ${{ (github.event.pull_request.base.ref == 'boarding-auto' || github.event.ref == 'refs/tags/auto-release') && 'boarding-auto' || 'boarding' }}
-      MAIN_BR: 'master'
+      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +49,7 @@ jobs:
       # - name: Track Protected Branch '${{ env.INCOMING_BR }}' with local counterpart
       #   run: git branch --track "${{ env.INCOMING_BR }}" "origin/${{ env.INCOMING_BR }}"
 
-      # create a Train branch on top of master unless its Upstream exists (just track it)
+      # create a Train branch on top of Main unless its Upstream exists (just track it)
       - run: git branch --track "${{ env.TRAIN }}" "origin/${{ env.TRAIN }}" || (git checkout -b ${{ env.TRAIN }} ${{ env.MAIN_BR }} && git push origin ${{ env.TRAIN }})
 
       - name: Sanity Check that '${{ env.INCOMING_BR }}' and '${{ env.TRAIN }}' branches exist
