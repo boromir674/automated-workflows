@@ -168,35 +168,12 @@ jobs:
 
 ### Make a Github Release ###
   gh_release:
-    runs-on: ubuntu-latest
     needs: [prod_or_test]
     if: ${{ needs.prod_or_test.outputs.AUTOMATED_DEPLOY == 'true' }}
-    # uses: ./.github/workflows/gh-release.yml
-    # with:
-    #   tag: ${{ github.ref_name }}
-    #   draft: ${{ needs.prod_or_test.outputs.ENVIRONMENT_NAME == 'TEST_DEPLOYMENT' }}
-    # secrets:
-    #   # passing the GH_TOKEN PAT, to render in GH as ie: 'boromir674 released this yesterday', instead of 'github-actions released this yesterday'
-    #   gh_token: ${{ secrets.GH_TOKEN }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Create a Github Release, from Tag on Master
-      # To be consistent with already published GH Releases at time of writing (2024/01):
-      # * ommit --title flag so in github UI, content start direclty below the
-      #   git tag, which is rendered as the top section rendered as clickable link
-      # * use --generate-notes to generate the automatic content
-      # * ommit --notes-start-tag string param
-
-      # * fails if tag not pushed on remote
-      # * here we Prepend some content passed as --notes string param above the
-      #   auto-generated notes content
-        run: |
-          gh release create "${{ inputs.tag }}" ${{ (inputs.artifact && 'dist-local/*') || '' }} --verify-tag \
-            --generate-notes ${{ inputs.draft && '--prerelease' || '' }} \
-            --notes "Release Notes: ${{ github.event.head_commit.message }}"
-      # use  -p, --prerelease  to publish it as pre-release
-      # use  -F, --notes-file file   to possibly Prepend content from file
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    uses: ./.github/workflows/gh-release.yml
+    with:
+      tag: ${{ github.ref_name }}
+      draft: ${{ needs.prod_or_test.outputs.ENVIRONMENT_NAME == 'TEST_DEPLOYMENT' }}
+    secrets:
+      # pass a PAT, to render in GH as ie: 'boromir674 released this yesterday', instead of 'github-actions released this yesterday'
+      gh_token: ${{ secrets.GA_WORKFLOWS_CI_MAKE_RELEASE }}
