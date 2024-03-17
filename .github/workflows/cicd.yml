@@ -163,7 +163,7 @@ jobs:
 
 ### Make a Github Release ###
   gh_release:
-    needs: [prod_or_test]
+    needs: [test_workflows, prod_or_test]
     if: ${{ needs.prod_or_test.outputs.AUTOMATED_DEPLOY == 'true' }}
     uses: ./.github/workflows/gh-release.yml
     with:
