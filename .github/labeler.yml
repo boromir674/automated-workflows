@@ -1,0 +1,127 @@
+## Pull Request Labeler Configuration ##
+# https://github.com/actions/labeler
+
+
+####### LABELS based on FILE CHANGES #######
+
+# Here, we declare Rules for Labeling PR based on the file changes
+
+# Each Label is added, when their Rule(s) are True
+# - 'any' block is True, if any of the conditions are True
+# - 'all' block is True, if all of the conditions are True
+
+# Typically a Label, only features one of 'any' or 'all' block
+
+# Each label declares Rules that are mutually exclusive, in boolean logic.
+# Thus, the set of matching file paths are non-overlapping, across the labels.
+
+### SRC - Reusable Workflows ###
+rw_docker:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/docker.yml'
+rw_test_python:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/test_build.yml'
+rw_pypi:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/pypi_env.yml'
+        - '.github/workflows/pypi.yml'
+rw_gh_release:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/gh-release.yml'
+rw_go_pr_to_boarding:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/internal/go-pr-to-boarding.yml'
+rw_docs:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/policy_docs.yml'
+rw_lint:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/lint.yml'
+rw_pydeps:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - '.github/workflows/python_imports.yml'
+
+### DOCS ###
+# Any change within the 'docs' dir, or the '.readthedocs.yml' file
+docs:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - 'mkdocs.yml'
+        - 'docs/*'
+        - 'docs/**/*'
+        - '.readthedocs.yml'
+        - 'README.md'
+
+### Internal Workflows ###
+ci:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file:
+        - '.github/workflows/_*'
+  # exclude the .github/workflows/_labeler.yml file
+  - all:
+    - changed-files:
+      - all-globs-to-all-files:
+        - '!*.github/workflows/_labeler.yml'
+
+pr_labeler:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file:
+        - '.github/labeler.yml'
+        - '.github/workflows/_labeler.yml'
+
+### Poetry ###
+poetry:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - 'pyproject.toml'
+        - 'poetry.lock'
+
+### TOX ###
+tox:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 
+        - 'tox.ini'
+
+
+####### LABELS based on BRANCH NAME #######
+
+## Pull Request Labeling Rules based Base Branch
+
+# Add 'release' label to any PR that is opened against the `main` branch
+release:
+  - base-branch: 'main'
+
+# Add 'boarding_auto' label to any PR that is opened against a 'Boarding Branch'
+# [GITOPS]: This should act as a signal, ie for a Listener Workflow to Merge the PR
+# We recognize 2 types of 'Boarding Branches'
+boarding_auto:
+  - base-branch: ['^boarding-auto', 'boarding-auto']
+  - base-branch: ['^board-n-release', 'board-n-release']
+
+
+# Add 'feature' label to any PR where the head branch name starts with
+# `feature` or has a `feature` section in the name
+feature:
+  - head-branch: ['^feature', 'feature']
