@@ -12,7 +12,7 @@ on:
 
 jobs:
   pr_to_boarding:
-    uses: ./.github/workflows/go-pr-to-boarding.yml@test
+    uses: ./.github/workflows/go-pr-to-boarding.yml
     with:
       # pass tag to PR from <user_branch>  -->  <github.ref>-<user_branch>
       board_tag: "${{ github.ref_name }}"

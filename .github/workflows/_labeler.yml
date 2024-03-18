@@ -11,5 +11,7 @@ jobs:
       # HANDLER 1: Label PR, given file changes and Labeling Rules in '.github/labeler.yml'
       - uses: actions/labeler@v5
         with:
-          # PAT with permission for label creation events to trigger other Workflows
-          repo-token: ${{ secrets.GA_WORKFLOWS_CI_TRIGGER_WORKFLOW }}
+          # PAT with 2 permissions for:
+          # - 'Pull requests' -> 'create labels': to allow this Action to create labels
+          # - 'Actions' -> 'Workflows': to enable triggering other Workflows (listening to label creation events)
+          repo-token: ${{ secrets.GA_WORKFLOWS_CI_LABELER }}
