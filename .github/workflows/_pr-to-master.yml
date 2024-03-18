@@ -25,12 +25,12 @@ jobs:
         with:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
-          token: '${{ secrets.GH_TOKEN }}'
+          token: '${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}'
 
       ##### Open PR: Release  -->  Main/Master #####
       - name: "Open PR  'head': ${{ env.RELEASE }} --> 'base': ${{ env.MAIN_BR }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
         run: |
           gh pr create --head "${{ env.RELEASE }}" --base "${{ env.MAIN_BR }}" \
             --title "Release Version '${{ steps.sem_ver.outputs.SEMVER }}' into '${{ env.MAIN_BR }}' Branch" \

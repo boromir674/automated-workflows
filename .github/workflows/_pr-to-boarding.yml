@@ -18,4 +18,4 @@ jobs:
       board_tag: "${{ github.ref_name }}"
       main_branch: ${{ vars.MAIN_BRANCH || 'main' }}
     secrets:
-      github_pat: ${{ secrets.GH_TOKEN }}
+      github_pat: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
