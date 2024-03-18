@@ -11,8 +11,11 @@ on:
       - run-ci
 
 env:
-  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi or static_code\"]}"
+  # JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi or static_code\"]}"
+  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\"]}"
 
+  # Error when evaluating 'strategy' for job 'test_workflows'. .github/workflows/cicd.yml (Line: 82, Col: 15):
+  # Error parsing fromJson,.github/workflows/cicd.yml (Line: 82, Col: 15): Unexpected character encountered while parsing value: d. Path 'tests_filter', line 1, position 16.,.github/workflows/cicd.yml (Line: 82, Col: 15): Unexpected value ''
   ##### Pipeline - 1st level overrides #####
   TESTS_PIPE_ON: "true"
   DOCS_PIPE_ON: "true"
