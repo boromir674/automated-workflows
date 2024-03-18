@@ -11,6 +11,8 @@ on:
       - run-ci
 
 env:
+  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi\". \"go_pr_ or static_code\"]}"
+
   ##### Pipeline - 1st level overrides #####
   TESTS_PIPE_ON: "true"
   DOCS_PIPE_ON: "true"
@@ -62,7 +64,10 @@ jobs:
           echo PIPE_TESTS_POLICY="${{ (env.TESTS_PIPE_ON != 'true' && '0') || (env.TESTS_ALWAYS == 'true' && '1') || (env.PIPE_TESTS_GITOPS_POLICY == '1' && '1') || env.TESTS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.PIPE_DOCS_GITOPS_POLICY == '1' && '1') || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_PY="${{ env.DOCS_PY_VERSION }}" >> $GITHUB_OUTPUT
+          echo JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_OUTPUT
     outputs:
+    ## TEST MATRIX ##
+      matrix: ${{ steps.set_pipe_config.outputs.JOB_MATRIX }}
     ## TESTS - Pipeline Settings ##
       PIPE_TESTS_POLICY: ${{ steps.set_pipe_config.outputs.PIPE_TESTS_POLICY }}
     ## DOCS - Pipeline Settings ##
@@ -73,6 +78,10 @@ jobs:
     needs: configure_pipeline
     if: ${{ needs.configure_pipeline.outputs.PIPE_TESTS_POLICY == '1' }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJSON(needs.configure_pipeline.outputs.matrix)}}
+      # matrix:
+      #   tests_filter: ['docker_pol0 or docker_pol1', 'docker_pol2 or docker_pol3', 'code_viz or docker_test_when_tag_not_given', 'pypi or static_code']
     steps:
       - name: Checkout the Automated Test Suite
         uses: actions/checkout@v4
@@ -101,8 +110,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CICD_TEST_GH_TOKEN: ${{ secrets.CICD_TEST_GH_TOKEN }}
         working-directory: cicd-test
-        run: tox -e test -vv
-
+        run: tox -e test -vv -- -n auto -vvs -k '${{ matrix.tests_filter }}'
 
 ### DOCS BUILD/TEST - DOCUMENTATION SITE ###
   docs:
