@@ -1,0 +1,29 @@
+services:
+  # docker-compose run --rm --build --service-ports docs_dev
+  # expect service at localhost:8020
+  # specify host.docker.internal:8020 in browser
+  # equivalen in docker: http://host.docker.internal:8020
+  docs_dev:
+    # Run the mkdocs builtin development server, with hot-reloading
+    container_name: ga_workflows_docs_dev_server
+    build:
+      context: .
+      target: docs_live
+    volumes:
+      - ./docs/:/docs/
+      - ./mkdocs.yml:/mkdocs.yml
+      # tox cache
+      # - ./.tox/docs-live/:/.tox/docs-live/
+    ports:
+      - "${GA_WORKFLOWS_DOCS_SERVER_PORT:-8020}:${_GA_DOCS_PORT:-8020}"
+    command:
+      - /root/.local/bin/tox
+      - -e
+      - docs-live
+      - '--'
+      - '-w'
+      - 'docs/'
+      - '-w'
+      - 'mkdocs.yml'
+      - -a
+      - '0.0.0.0:${_GA_DOCS_PORT:-8020}'
