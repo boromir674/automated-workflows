@@ -58,10 +58,11 @@ nav:
   - Home:
     - "Quick Start": index.md
   - Guides:
-    - "CD: Dockerhub": "guide_setup_cicd.md"
-    - "CD: PyPI": "guide_setup_pypi.md"
-    - "CI: Build(s) Testing": "guide_test_build.md"
+    - "CD: Dockerhub": "guides/guide_setup_cicd.md"
+    - "CD: PyPI": "guides/guide_setup_pypi.md"
+    - "CI: Build(s) Testing": "guides/guide_test_build.md"
   - References:
+    # Build, CD
     - "Docker": "ref_docker.md"
     - "Github Release": "ref_gh_release.md"
     - "PyPI": "ref_pypi_env.md"
@@ -70,8 +71,11 @@ nav:
     - "Lint": "ref_lint.md"
     - "Code Visualization": "ref_pydeps.md"
     - "Git Ops": "ref_gitops_pr_to_boarding.md"
+    - "Single Status": "api/ref_single_status.md"
   - Topics:
-    - "Test Suite": tests_index.md
+    - "Test Suite": topics/tests_index.md
+    - "Workflow 'go-single-status.yml'": "topics/workflow_single_status_idea.md"
+
   - tags: tags.md
 
 
