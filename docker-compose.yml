@@ -16,14 +16,28 @@ services:
       # - ./.tox/docs-live/:/.tox/docs-live/
     ports:
       - "${GA_WORKFLOWS_DOCS_SERVER_PORT:-8020}:${_GA_DOCS_PORT:-8020}"
+    # docker command is not stable, so we override
     command:
-      - /root/.local/bin/tox
-      - -e
-      - docs-live
-      - '--'
+      - /.tox/docs-live/bin/python
+      - '-m'
+      - mkdocs
+      - serve
       - '-w'
       - 'docs/'
       - '-w'
       - 'mkdocs.yml'
       - -a
       - '0.0.0.0:${_GA_DOCS_PORT:-8020}'
+
+
+  docs_gen:
+    # docker-compose run --rm --build docs_gen
+    container_name: ga_workflows_docs_gen
+    build:
+      context: .
+      target: docs_gen
+    volumes:
+      - ./docs/:/docs/
+      - ./scripts/:/scripts/
+      - ./.github/workflows/:/.github/workflows/
+    entrypoint: /scripts/gen-docs-refs.sh
