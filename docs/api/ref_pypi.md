@@ -1,8 +1,8 @@
-# Workflow pypi_env.yml
+# Workflow pypi.yml
 
 ### Trigger Events
 
-If any of the below events occur, the `pypi_env.yml` workflow will be triggered.
+If any of the below events occur, the `pypi.yml` workflow will be triggered.
 
 - workflow_call
 
@@ -18,13 +18,19 @@ Event Trigger: `workflow_call`
 
 #### Required Inputs
 
+- `TWINE_USERNAME`
+    - type: _string_
+    - Description: 
+- `artifacts_path`
+    - type: _string_
+    - Description: 
 - `distro_name`
     - type: _string_
     - Description: 
 - `distro_version`
     - type: _string_
     - Description: 
-- `pypi_env`
+- `pypi_server`
     - type: _string_
     - Description: 
 - `should_trigger`
@@ -33,27 +39,15 @@ Event Trigger: `workflow_call`
 
 #### Optional Inputs
 
-- `allow_existing`
-    - type: _boolean_
-    - Description: Continue uploading files, if one already exists, instead of Erroring
-    - Default: `True`
-- `artifacts_path`
-    - type: _string_
-    - Description: Where to download CI Artifacts into
-    - Default: `downloaded-artifacts`
 - `dist_folder`
     - type: _string_
     - Description: 
-- `require_wheel`
-    - type: _boolean_
-    - Description: Require at least one Wheel Distribution to be uploaded
-    - Default: `True`
 
 ### Secrets
 
 - `TWINE_PASSWORD`
     - type: _string_
-    - Required: False
+    - Required: True
     - Description: 
 
 ### Outputs
