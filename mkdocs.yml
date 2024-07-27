@@ -62,7 +62,6 @@ nav:
     - "CD: PyPI": "guides/guide_setup_pypi.md"
     - "CI: Build(s) Testing": "guides/guide_test_build.md"
   - References:
-    # Build, CD
     - "Docker": "api/ref_docker.md"
     - "Github Release": "api/ref_gh_release.md"
     - "PyPI": "api/ref_pypi_env.md"
