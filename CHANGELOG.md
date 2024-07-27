@@ -1,6 +1,30 @@
 # Changelog
 
 
+## 1.5.0
+
+New **`Single Status`** Workflow for **Git Ops**,
+
+### Changes
+
+##### feature
+- improve step.name content
+- add 'Single Status' Workflow for Git Ops
+
+##### build
+- add docker and compose files for docs_dev server
+
+##### git ops
+- pass in PAT with PR r/w and Actions r/w; change logic of Pipe Config based on Gitops Signal
+
+##### docs
+- add all current User Facing Worklflows in Site Navigation
+- redesign README.md with better sections and collapsible content
+- add 'topic' about go-single-status.yml workflow idea
+- automatically generate API Ref Pages and Add them to Site Navigation, if missing
+- do not generate Ref Pages during Read The Docs Builds
+
+
 ## 1.4.0 (2024-03-15)
 
 **2 New Reusable Workflows:**
