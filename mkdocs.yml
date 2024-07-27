@@ -55,17 +55,15 @@ nav:
       - "Github Release": "api/ref_gh_release.md"
       - "PyPI": "api/ref_pypi_env.md"
       - "Test Build": "api/ref_test_build.md"
-      - "Docs": "api/ref_docs.md"
+      - "Docs": "api/ref_policy_docs.md"
       - "Lint": "api/ref_lint.md"
-      - "Code Visualization": "api/ref_pydeps.md"
+      - "Code Visualization": "api/ref_python_imports.md"
       - "Git Ops": "api/ref_gitops_pr_to_boarding.md"
       - "Single Status": "api/ref_single_status.md"
-      - gh-release.yml: api/ref_gh-release.md
-      - go-pr-to-boarding.yml: api/ref_go-pr-to-boarding.md
-      - go-single-status.yml: api/ref_go-single-status.md
-      - policy_docs.yml: api/ref_policy_docs.md
+      - "Github Release": api/ref_gh-release.md
+      - "PR to Boarding": api/ref_go-pr-to-boarding.md
+      - "Single Job Status": api/ref_go-single-status.md
       - pypi.yml: api/ref_pypi.md
-      - python_imports.yml: api/ref_python_imports.md
   - Topics:
       - "Test Suite": topics/tests_index.md
       - "Workflow 'go-single-status.yml'": "topics/workflow_single_status_idea.md"
