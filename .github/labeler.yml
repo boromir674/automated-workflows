@@ -76,11 +76,20 @@ ci:
     - changed-files:
       - any-glob-to-any-file:
         - '.github/workflows/_*'
+
   # exclude the .github/workflows/_labeler.yml file
   - all:
     - changed-files:
       - all-globs-to-all-files:
         - '!*.github/workflows/_labeler.yml'
+
+  # OPTION 2
+  # ci:
+  # - all:
+  #     - changed-files:
+  #     - any-glob-to-any-file:
+  #       - '.github/workflows/_*'
+  #     - all-globs-to-all-files: '!.github/workflows/_labeler.yml'
 
 pr_labeler:
   - any:

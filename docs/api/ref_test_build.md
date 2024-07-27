@@ -9,13 +9,6 @@ If any of the below events occur, the `test_build.yml` workflow will be triggere
 Since there is a `workflow_call` _trigger_event_, this workflow can be triggered (called) by another (caller) workflow.
 > Thus, it is a `Reusable Workflow`.
 
-- BRANCH_WITH_SEM_VER_TAGS: master
-
-## Environment Variables
-
-Environment variables set in the workflow's `env` section:
-
-- CARRIER_TEMP: empemeral-br-ci-quick-win-test
 
 ## Reusable Workflow
 
@@ -31,11 +24,11 @@ None
 
 - `artifact_name`
     - type: _string_
-    - Description: 
+    - Description: CI Artifact Name (id / alias) for uploading Distros, such as files .tar.gz, .whl(s)
     - Default: `dist`
 - `build_installation`
     - type: _string_
-    - Description: 
+    - Description: Code Installation Modes, for running Tests
     - Default: `edit sdist wheel`
 - `job_matrix`
     - type: _string_
@@ -43,11 +36,11 @@ None
     - Default: `{"platform": ["ubuntu-latest"], "python-version": ["3.10"]}`
 - `run_policy`
     - type: _string_
-    - Description: 
+    - Description: 0 = Off, 1 = On
     - Default: `1`
 - `typecheck_policy`
     - type: _string_
-    - Description: 
+    - Description: 0 = Off, 1 = On, 2 = Allow Fail
     - Default: `1`
 
 ### Secrets
@@ -59,4 +52,4 @@ None
 - `COVERAGE_ARTIFACT`
     - type: _string_
     - Value: ${{ jobs.test_build.outputs.COVERAGE_ARTIFACT }}
-    - Description: Artifact Name (id / alias) of Coverage XML
+    - Description: CI Artifact Name (id / alias) of uploaded Coverage XML

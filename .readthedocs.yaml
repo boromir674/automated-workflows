@@ -26,12 +26,14 @@ build:
       - python -m poetry export -o req-docs.txt -E docs
     # post_install:
     #   - python -m pip install -e .
-    pre_build:
-      - chmod +x ./scripts/gen-workflow-ref.py
-      - ./scripts/gen-workflow-ref.py ./.github/workflows/docker.yml > ./docs/ref_docker.md
-      - ./scripts/gen-workflow-ref.py ./.github/workflows/pypi_env.yml > ./docs/ref_pypi_env.md
-      - ./scripts/gen-workflow-ref.py ./.github/workflows/lint.yml > ./docs/ref_lint.md
-      - ./scripts/gen-workflow-ref.py ./.github/workflows/python_imports.yml > ./docs/ref_pydeps.md
+
+    # Ref Pages are kept up-to-date with scripts/gen-docs-refs.sh, so we do not pre_build
+    # pre_build:
+    #   - chmod +x ./scripts/gen-workflow-ref.py
+      # - ./scripts/gen-workflow-ref.py ./.github/workflows/docker.yml > ./docs/ref_docker.md
+      # - ./scripts/gen-workflow-ref.py ./.github/workflows/pypi_env.yml > ./docs/ref_pypi_env.md
+      # - ./scripts/gen-workflow-ref.py ./.github/workflows/lint.yml > ./docs/ref_lint.md
+      # - ./scripts/gen-workflow-ref.py ./.github/workflows/python_imports.yml > ./docs/ref_pydeps.md
 
 
 # Build documentation in the "docs/" directory with mkdocs

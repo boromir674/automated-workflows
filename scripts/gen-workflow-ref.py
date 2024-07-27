@@ -171,12 +171,12 @@ def generate_markdown(
     ## Workflow Outputs ##
     markdown_content += f"{'#' * (max_mk_level + 1)} Outputs\n\n"
     if not outputs:
-        markdown_content += f"None\n"
+        markdown_content += f"None"
     for output_name, output_details in sorted(outputs.items(), key=lambda x: x[0]):
         markdown_content += f"- `{output_name}`\n"
         markdown_content += f"    - type: _{output_details.get('type', 'string')}_\n"
         markdown_content += f"    - Value: {output_details.get('value', '')}\n"
-        markdown_content += f"    - Description: {output_details.get('description', '')}\n"
+        markdown_content += f"    - Description: {output_details.get('description', '')}"
     # omit last \n
     # markdown_content += "\n"
 

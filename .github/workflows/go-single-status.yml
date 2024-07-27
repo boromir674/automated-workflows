@@ -1,0 +1,62 @@
+###########################
+## Required Jobs Success ##
+###########################
+
+### Features
+# single Status to simplify populating and maintaining Github Required Checks
+
+# To simplify adding "Job Statuses" to Github Required Checks, provide just this
+# Job to Github Required Checks and declare your "Job Statuses" as job.needs of
+# a caller of this.
+
+# To require ALL "Job Statuses" GREEN, from caller's job.needs, supply
+# only the 'needs_json' input, with '${{ toJSON(needs) }}' as value
+
+# To have the "logic" of the 'Status Signal' be configurable at runtime for
+# each of your CI/CD Pipeline runs, add the maximal set of available/implemented
+# QA CI Jobs (ie unit-test, lint, e2e-test, integration-tests, audit, etc) in
+# this caller's job.needs section and then control "severity" using the 
+# 'allowed-failures' and 'allowed-skips' Workflow inputs.
+
+# If you have separate CI and CD Workflows, then add this to the CI Workflow.
+
+# Useful when populating and maintaining Github Required Checks, which involve many
+# "Job Statuses", as for example if you do Git Ops involving Github Auto Merge
+
+# Useful to dynamically control the Acceptance Criteria of PR Auto Merge
+
+on:
+  workflow_call:
+    inputs:
+      needs_json:
+        type: string
+        description: "Always supply \\$\\{\\{ toJSON(needs) \\}\\} as value. It's a JSON array of caller job.needs."
+        required: true
+    ## OPTIONAL INPUTS
+      allowed-failures:
+        description: 'Job names that are allowed to fail and not affect the outcome, as a comma-separated list or serialized as a JSON string (ie with toJSON)'
+        default: >-
+          []
+        type: string
+        required: false
+      allowed-skips:
+        description: >-
+          Job names that are allowed to be skipped and not affect the outcome,
+          as a comma-separated list or serialized as a JSON string
+        default: >-
+          []
+        type: string
+        required: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Emit Acceptance Signal as Job Status
+      # uses: re-actors/alls-green@cf9edfcf932a0ed6b431433fa183829c68b30e3f
+      uses: boromir674/ga-acceptance@dev
+      with:
+        # only jobs, means ALL Jobs Green
+        allowed-failures: ${{ inputs.allowed-failures }}
+        allowed-skips: ${{ inputs.allowed-skips }}
+        jobs: ${{ inputs.needs_json }}

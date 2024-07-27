@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
-          token: '${{ secrets.GH_TOKEN }}'
+          token: '${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}'
 
       # CHECKOUT 'Release' branch
       - name: "Checkout local branch '${{ env.RELEASE_BR }}'"

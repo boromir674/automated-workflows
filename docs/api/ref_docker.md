@@ -56,5 +56,3 @@ Event Trigger: `workflow_call`
     - type: _string_
     - Value: ${{ jobs.docker_build.outputs.IMAGE_REF }}
     - Description: Docker Image reference
-
-

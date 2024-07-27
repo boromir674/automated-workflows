@@ -2,11 +2,9 @@ site_name: 'CI/CD Workflows'
 site_url: https://automated-workflows.readthedocs.io/
 site_description: CI/CD Wokflows Project Documentation.
 site_author: Konstantinos Lampridis
-
 repo_url: https://github.com/boromir674/automated-workflows/
 repo_name: boromir674/automated-workflows
 edit_uri: blob/main/docs/
-
 theme:
   # 1
   name: material
@@ -15,7 +13,6 @@ theme:
     previous: fontawesome/solid/angle-left
     next: fontawesome/solid/angle-right
     default: material/tag
-
   # favicon: images/favicon.png
   features:
     - navigation.path
@@ -25,8 +22,7 @@ theme:
   # navigation.instant break mermaid
   # features:
   #   - navigation.tracking
-
-    # - navigation.instant
+# - navigation.instant
 
 plugins:
   # Enable jinja inside your markdown files
@@ -35,45 +31,41 @@ plugins:
 
   # Authors need installation
   # - git-authors
-
   - tags:
       tags_file: tags.md
-
   # BASIC SEARCH PLUGIN
   - search
-
   # MERMAID Render Support
   - mermaid2
-
   # - literate-nav:
   #     nav_file: SUMMARY.md
-
   - section-index
-
 markdown_extensions:
   - pymdownx.highlight
-  
 nav:
   # each item in the list, renders a left side navigation item/page
   - Home:
-    - "Quick Start": index.md
+      - "Quick Start": index.md
   - Guides:
-    - "CD: Dockerhub": "guide_setup_cicd.md"
-    - "CD: PyPI": "guide_setup_pypi.md"
-    - "CI: Build(s) Testing": "guide_test_build.md"
+      - "CD: Dockerhub": "guides/guide_setup_cicd.md"
+      - "CD: PyPI": "guides/guide_setup_pypi.md"
+      - "CI: Build(s) Testing": "guides/guide_test_build.md"
   - References:
-    - "Docker": "ref_docker.md"
-    - "Github Release": "ref_gh_release.md"
-    - "PyPI": "ref_pypi_env.md"
-    - "Test Build": "ref_test_build.md"
-    - "Docs": "ref_docs.md"
-    - "Lint": "ref_lint.md"
-    - "Code Visualization": "ref_pydeps.md"
-    - "Git Ops": "ref_gitops_pr_to_boarding.md"
+      - "Docker": "api/ref_docker.md"
+      - "Github Release": "api/ref_gh-release.md"
+      - "PyPI": "api/ref_pypi_env.md"
+      - "Test Build": "api/ref_test_build.md"
+      - "Docs": "api/ref_policy_docs.md"
+      - "Lint": "api/ref_lint.md"
+      - "Code Visualization": "api/ref_python_imports.md"
+      - "Git Ops": "api/ref_gitops_pr_to_boarding.md"
+      - "Single Status": "api/ref_single_status.md"
+      - "PR to Boarding": api/ref_go-pr-to-boarding.md
+      - "Single Job Status": api/ref_go-single-status.md
+      - pypi.yml: api/ref_pypi.md
   - Topics:
-    - "Test Suite": tests_index.md
+      - "Test Suite": topics/tests_index.md
+      - "Workflow 'go-single-status.yml'": "topics/workflow_single_status_idea.md"
   - tags: tags.md
-
-
 extra:
   generator: false
