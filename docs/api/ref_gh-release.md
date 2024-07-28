@@ -41,4 +41,3 @@ Event Trigger: `workflow_call`
 ### Outputs
 
 None
-

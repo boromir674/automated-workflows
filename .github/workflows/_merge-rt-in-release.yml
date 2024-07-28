@@ -47,7 +47,7 @@ jobs:
         with:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
-          token: '${{ secrets.GH_TOKEN }}'
+          token: '${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}'
 
       # track remote Main branch, since this Workflow triggers on push tag or pull request activity
       - name: Track Remote Main branch
@@ -109,4 +109,4 @@ jobs:
       - name: 'Merge PR   ${{ env.TRAIN }}  -->  ${{ env.RELEASE_BR }}'
         run: gh pr merge "${{ env.TRAIN }}" --auto --delete-branch --merge
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # allow event to trigger "listener" Workflows
+          GITHUB_TOKEN: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}  # allow event to trigger "listener" Workflows

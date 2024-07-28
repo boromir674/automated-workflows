@@ -11,7 +11,7 @@ on:
       - run-ci
 
 env:
-  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi\", \"go_pr_ or static_code\"]}"
+  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi\", \"go_pr_ or static_code or go_single_status\"]}"
 
   ##### Pipeline - 1st level overrides #####
   TESTS_PIPE_ON: "true"
@@ -50,6 +50,8 @@ jobs:
         if: ${{ env.AFFECTED_COMPONENTS != '' }}
         id: pipe_config_from_gitops
         run: |
+          echo PIPE_TESTS_GITOPS_POLICY='0' >> $GITHUB_ENV
+          echo PIPE_DOCS_GITOPS_POLICY='0' >> $GITHUB_ENV
           if [[ "${{ env.AFFECTED_COMPONENTS }}" =~ "Source" ]]; then
             echo PIPE_TESTS_GITOPS_POLICY='1' >> $GITHUB_ENV
           fi
@@ -61,8 +63,8 @@ jobs:
       - name: Configure Pipeline
         id: set_pipe_config
         run: |
-          echo PIPE_TESTS_POLICY="${{ (env.TESTS_PIPE_ON != 'true' && '0') || (env.TESTS_ALWAYS == 'true' && '1') || (env.PIPE_TESTS_GITOPS_POLICY == '1' && '1') || env.TESTS_JOB_POLICY }}" >> $GITHUB_OUTPUT
-          echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.PIPE_DOCS_GITOPS_POLICY == '1' && '1') || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
+          echo PIPE_TESTS_POLICY="${{ (env.TESTS_PIPE_ON != 'true' && '0') || (env.TESTS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_TESTS_GITOPS_POLICY) || env.TESTS_JOB_POLICY }}" >> $GITHUB_OUTPUT
+          echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_DOCS_GITOPS_POLICY) || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_PY="${{ env.DOCS_PY_VERSION }}" >> $GITHUB_OUTPUT
           echo JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_OUTPUT
     outputs:

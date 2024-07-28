@@ -1,8 +1,8 @@
-# Workflow pypi_env.yml
+# Workflow python_imports.yml
 
 ### Trigger Events
 
-If any of the below events occur, the `pypi_env.yml` workflow will be triggered.
+If any of the below events occur, the `python_imports.yml` workflow will be triggered.
 
 - workflow_call
 
@@ -18,42 +18,35 @@ Event Trigger: `workflow_call`
 
 #### Required Inputs
 
-- `artifacts_path`
-    - type: _string_
-    - Description: 
-- `distro_name`
-    - type: _string_
-    - Description: 
-- `distro_version`
-    - type: _string_
-    - Description: 
-- `pypi_env`
-    - type: _string_
-    - Description: 
-- `should_trigger`
-    - type: _boolean_
-    - Description: 
+None
 
 #### Optional Inputs
 
-- `allow_existing`
-    - type: _boolean_
-    - Description: 
-- `dist_folder`
+- `artifacts_dir`
     - type: _string_
     - Description: 
-- `require_wheel`
-    - type: _boolean_
+    - Default: `dependency-graphs`
+- `branches`
+    - type: _string_
     - Description: 
+    - Default: `master, main, dev`
+- `python_version`
+    - type: _string_
+    - Description: 
+    - Default: `3.10`
+- `run_policy`
+    - type: _string_
+    - Description: 
+    - Default: `2`
+- `source_code_targets`
+    - type: _string_
+    - Description: 
+    - Default: `src`
 
 ### Secrets
 
-- `TWINE_PASSWORD`
-    - type: _string_
-    - Required: False
-    - Description: 
+None
 
 ### Outputs
 
-
-
+None

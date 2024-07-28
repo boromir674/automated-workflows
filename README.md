@@ -14,17 +14,25 @@
 
 ## Workflows Overview
 
-- [**Python Build**](.github/workflows/test_build.yml): Build n Test Python Distributions.
-- [**Docker**](.github/workflows/docker.yml): Build Docker image and Push to Dockerhub.
-- [**PyPI**](.github/workflows/pypi_env.yml): Upload Python distribution to PyPI
-- [**Docs Build**](.github/workflows/policy_docs.yml): Docs Site Build with `Mkdocs` or `Sphinx`
-- [**Lint**](.github/workflows/lint.yml): Static Code Analysis
-- [**Code Visualization**](.github/workflows/python_imports.yml): Visualize Python Code as an `svg` Graph of `Module Imports`
+- **CI/CD**
+  - [**Docker**](.github/workflows/docker.yml): Build Docker image and Push to Dockerhub.
+  - [**Python Build**](.github/workflows/test_build.yml): Build n Test Python Distributions.
+  - [**PyPI**](.github/workflows/pypi_env.yml): Upload Python distribution to PyPI
+  - [**Docs Build**](.github/workflows/policy_docs.yml): Docs Site Build with `Mkdocs` or `Sphinx`
+  - [**Lint**](.github/workflows/lint.yml): Static Code Analysis
+  - [**Code Visualization**](.github/workflows/python_imports.yml): Visualize Python Code as an `svg` Graph of `Module Imports`
+- **Git Ops**
+  - [**Open PR to Boarding**](.github/workflows/go-pr-to-boarding.yml): Open a PR on a **Boarding Branch**
+  - [**Acceptance as Single Job Status**](.github/workflows/go-single-status.yml): Model **Git Ops Acceptance** as one Job
+
+
+### Docker
+
+Continuously **Publish to Dockerhub** using [`docker.yml`](.github/workflows/docker.yml).
+
+[//]: <> (Style text in <summary> .)
 
 #### Prerequisites
-
-
-List any prerequisites that users need before using your workflows. For example:
 
 - GitHub account.
 - Access to a repository.
@@ -33,7 +41,13 @@ List any prerequisites that users need before using your workflows. For example:
 
 ### `Use Case 1: CI/Continuous Deployment`
 
-"We publish to Dockerhub only tested builds"
+"We publish to Dockerhub **only Tested Builds**"
+
+<details>
+<!-- summary text in style of 'fancy text' -->
+<summary>
+  <span style="display: inline; font-weight: bold; color: #0074d9;">Quick-start</span>
+</summary>
 
 ```mermaid
 graph LR
@@ -69,12 +83,22 @@ jobs:
     secrets:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
+</details>
+
 
 ### `Use Case 2: CI/Continuous Delivery`
 
-We publish to Dockerhub tested builds.  
-Not tested builds (ie when CI Test Job is skipped for any reason), are still treated as eligible for Docker Publish.  
-Useful to trigger Docker Job, without waiting for Tests.
+- "Publish to Dockerhub Builds bearing a **'Tests Passed'** or a **'Tests Skipped'**"
+
+
+<details>
+<!-- summary text in style of 'fancy text' -->
+<summary>
+  <span style="display: inline; font-weight: bold; color: #0074d9;">Quick-start</span>
+</summary>
+
+- Not tested builds (ie when CI Test Job is skipped for any reason), are still treated as eligible for Docker Publish.
+- Useful to trigger Docker Job, without waiting for Tests.
 
 ```mermaid
 graph LR
@@ -110,6 +134,8 @@ jobs:
     secrets:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
+
+</details>
 
 ## License
 
