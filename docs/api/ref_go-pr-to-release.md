@@ -28,7 +28,10 @@ None
 
 ### Secrets
 
-None
+- `github_pat`
+    - type: _string_
+    - Required: True
+    - Description: GitHub Token, with read/write permissions to PRs and read/write permissions to Github Actions Workflows
 
 ### Outputs
 
