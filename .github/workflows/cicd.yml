@@ -159,7 +159,13 @@ jobs:
           reference: ${{ env.RELEASE_BR }}
           tag: "${{ github.ref }}"
 
-      - if: ${{ ! env.ENVIRONMENT_NAME }} && steps.release_contains_tag.outputs.retval == 'true'
+      - if: ${{ ! env.ENVIRONMENT_NAME }}
+        run: echo 'SANITY CHECK -> this must NOT run'
+
+      - if: ${{ steps.release_contains_tag.outputs.retval == 'true' }}
+        run: echo 'SANITY CHECK -> Is Tag on Release? ${{ steps.release_contains_tag.outputs.retval == 'true' }}'
+
+      - if: ${{ (! env.ENVIRONMENT_NAME) && steps.release_contains_tag.outputs.retval == 'true' }}
         run: echo ENVIRONMENT_NAME=TEST_DEPLOYMENT >> $GITHUB_ENV
 
       - name: Pick Production or Test Environment, if tag was pushed on ${{ env.MAIN_BR }} or ${{ env.RELEASE_BR }} branch
