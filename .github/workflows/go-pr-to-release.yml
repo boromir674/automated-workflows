@@ -52,7 +52,7 @@ jobs:
         if: steps.user_branch.outputs.USER_BRANCH == ''
         run: echo "[ERROR] User Branch not found. Searched for an Upstream branch, but was not found on the remote. Exiting.." && exit 1
 
-      - run: git track "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}"
+      - run: git branch --track "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}"
 
       # - name: 'Derive name for Boarding target PR (ehad) branch: ${{ inputs.board_tag }}-${{ steps.user_branch.outputs.USER_BRANCH }}'
       #   run: echo "BOARDING_BR=${{ inputs.board_tag }}-${{ steps.user_branch.outputs.USER_BRANCH }}" >> $GITHUB_ENV
