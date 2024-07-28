@@ -23,7 +23,10 @@ on:
         default: 'release'
         type: string
       # Head Branch
-
+    secrets:
+      github_pat:
+        description: 'GitHub Token, with read/write permissions to PRs and read/write permissions to Github Actions Workflows'
+        required: true
 
 jobs:
   pr_to_release:
@@ -108,7 +111,7 @@ jobs:
 
             - Once merged, our changes are set for the final stage of release preparation.
             "
-      ##### Auto Merge: Train --> Release #####
+      ##### Auto Merge: User Branch --> Release #####
       - name: 'Merge PR   ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ env.RELEASE_BR }}'
         run: gh pr merge "${{ steps.user_branch.outputs.USER_BRANCH }}" --auto --delete-branch --merge
         env:
