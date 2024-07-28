@@ -1,0 +1,133 @@
+##################################
+## Open Pull Request to Release ##
+##       Reusable Workflow      ##
+##################################
+
+# name: 'Open PR on Release'
+
+# User Branch -- PR --> Release Branch
+# - ASSUMES Caller's Workflow was triggered on pushed tag ref event!
+# - designed to be called when 'release-me' tag is pushed (or 'board-n-relase')
+
+# Indicates all intented for Release changes have been picked/selected
+# (ie which feature/fix branches will be included)
+
+
+on:
+  workflow_call:
+    inputs:
+      # Base Branch
+      release_branch:
+        description: 'Branch to release'
+        required: true
+        default: 'release'
+        type: string
+      # Head Branch
+    secrets:
+      github_pat:
+        description: 'GitHub Token, with read/write permissions to PRs and read/write permissions to Github Actions Workflows'
+        required: true
+
+jobs:
+  pr_to_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for tags and branches
+          set-safe-directory: ''  # `git config --global --add safe.directory <path>`
+          token: '${{ secrets.github_pat }}'  # PAT with permissions to create PRs
+
+      # Find Upstream Branch, pointing to the same commit as the Pushed Tag
+      # ASSUMES Caller was triggered on pushed tag ref event
+      - name: Discover User's Branch Name
+        id: user_branch
+        run: |
+          name=$(git branch -a --contains "$(git rev-parse HEAD)" | sed -n '2p' | sed 's/.*origin\///')
+          echo "[INFO] Discovered User Branch: $name"
+          echo USER_BRANCH=$name >> $GITHUB_OUTPUT
+          echo "Discovered **User Branch**: $name" >> $GITHUB_STEP_SUMMARY
+
+      - name: "Exit Job, if User Branch is empty: '${{ steps.user_branch.outputs.USER_BRANCH }}'"
+        if: steps.user_branch.outputs.USER_BRANCH == ''
+        run: echo "[ERROR] User Branch not found. Searched for an Upstream branch, but was not found on the remote. Exiting.." && exit 1
+
+      # Ensure Upstream Release Branch exists
+      - run: git branch --track "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}" || (git checkout -b "${{ inputs.release_branch }}" && git push -u origin ${{ inputs.release_branch }})
+
+      # - run: git branch --track "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}" || git checkout -b "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}"
+
+      # - name: 'Derive name for Boarding target PR (ehad) branch: ${{ inputs.board_tag }}-${{ steps.user_branch.outputs.USER_BRANCH }}'
+      #   run: echo "BOARDING_BR=${{ inputs.board_tag }}-${{ steps.user_branch.outputs.USER_BRANCH }}" >> $GITHUB_ENV
+
+      # Ensure Upstream 'Boarding' Branch exists
+      # - name: Track '${{ env.BOARDING_BR }}' Branch, if it exists on remote 'origin'
+      #   run: git branch --track ${{ env.BOARDING_BR }} "origin/${{ env.BOARDING_BR }}" || echo PREEXISTING_BOARDING=false >> $GITHUB_ENV
+
+      # - name: Create '${{ env.BOARDING_BR }}' branch, if it doesn't exist
+      #   if: env.PREEXISTING_BOARDING == 'false'
+      #   run: |
+      #     git branch --track "${{ inputs.main_branch }}" "origin/${{ inputs.main_branch }}"
+      #     git checkout -b "${{ env.BOARDING_BR }}" "${{ inputs.main_branch }}" || true
+      #     git push origin "${{ env.BOARDING_BR }}" || true
+
+      # Close PR User Br --> Release, if found already open
+      - name: Close PR, if already open
+        # GH_TOKEN: ${{ secrets.github_pat }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_pat }}
+        run: |
+          pr_id=$(gh pr list --state open --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.release_branch }}" --json number | jq -r '.[0].number')
+          if [ -n "$pr_id" ] && [ "$pr_id" != "null" ]; then
+            gh pr close $pr_id -c "Closing PR, to open new as ${{ steps.user_branch.outputs.USER_BRANCH }} --> ${{ inputs.release_branch }}"
+          fi
+
+
+      ####### PR: User Branch --> Release #######
+      - name: "Create PR  'head': ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  'base': ${{ inputs.release_branch }}"
+        env:
+          GH_TOKEN: ${{ secrets.github_pat }}
+        run: |
+          gh pr create --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.release_branch }}" \
+            --title "[GITOPS] - Merging '${{ steps.user_branch.outputs.USER_BRANCH }}' in '${{ inputs.release_branch }}' - Initiate Release Process" \
+            --body "## :rocket: Initiating Release Process :rocket:
+
+            This PR marks a pivotal moment in our deployment cycle, signaling that all changes on the **Release Train (RT)** are deemed ready for release. It represents the collective decision of our developers that the changes bundled in the RT are suitable to be released together.
+
+            ### What's Happening in This PR?
+
+            - We are merging the `${{ steps.user_branch.outputs.USER_BRANCH }}` branch into the `${{ inputs.release_branch }}` branch.
+            - This action is a critical step, transitioning us from the development phase to the release phase.
+
+            ### :white_check_mark: Automatic Merging Upon CI Checks :white_check_mark:
+
+            - This PR is configured to **automatically merge** once all CI checks successfully pass.
+            - These checks include running our comprehensive test suite on the RT branch to ensure a minimum standard of quality, covering sanity checks, QA, and unit tests.
+
+            ### Ensuring Quality and Preparing for Release:
+
+            - Our focus now shifts to **stress testing** and on CI.
+            - We'll also handle essential chores, like updating the changelog with a new entry dedicated for the imminent release.
+
+            ### :bulb: Next Steps in Our Journey:
+
+            - Following the successful merge of this PR, we'll initiate the next phase, which involves merging the `${{ inputs.release_branch }}` into the **${{ env.MAIN_BR }}** branch.
+
+            ### :hourglass_flowing_sand: Looking Ahead:
+
+            - Once merged, our changes are set for the final stage of release preparation.
+            "
+      ##### Auto Merge: User Branch --> Release #####
+      - name: 'Merge PR   ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ inputs.release_branch }}'
+        run: gh pr merge "${{ steps.user_branch.outputs.USER_BRANCH }}" --auto --delete-branch --merge
+        env:
+          # To allow "listener" Workflows to trigger, pass pat with read/write to Actions
+          GH_TOKEN: ${{ secrets.github_pat }}
+
+      # - name: 'Catch Error, if PR already exists'
+      #   if: ${{ failure() }}
+      #   run: |
+      #     echo "[WARNING] PR already exists. Skipping PR creation, making sure Job is green"
+      #     echo "## :warning: PR already exists :warning:" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "This PR already exists. Skipping PR creation, making sure Job is green" >> $GITHUB_STEP_SUMMARY

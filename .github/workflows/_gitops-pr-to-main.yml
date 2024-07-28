@@ -1,0 +1,25 @@
+##########################
+## PR to Main  - GitOps ##
+##########################
+
+# Part of 'release-me' Git Ops Process: User Br -> release -> main
+
+# Triggers on PR to release Closed with Code Merge and when PR title starts with '[GITOPS]'
+
+on:
+  pull_request:
+    types: [closed]
+    branches:  # ALLOWED Base Branches
+      - release
+
+jobs:
+  open_pr_to_main:
+    if: github.event.pull_request.merged == true && (
+      startsWith(github.event.pull_request.title, '[GITOPS]')
+      )
+    uses: ./.github/workflows/go-pr-to-main.yml
+    with:
+      main_branch: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+      release_branch: ${{ vars.GITOPS_RELEASE_BRANCH || 'release' }}
+    secrets:
+      PR_RW_AND_ACTIONS_RW: '${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}'

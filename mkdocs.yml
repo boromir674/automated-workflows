@@ -63,6 +63,8 @@ nav:
       - "PR to Boarding": api/ref_go-pr-to-boarding.md
       - "Single Job Status": api/ref_go-single-status.md
       - pypi.yml: api/ref_pypi.md
+      - go-pr-to-main.yml: api/ref_go-pr-to-main.md
+      - go-pr-to-release.yml: api/ref_go-pr-to-release.md
   - Topics:
       - "Test Suite": topics/tests_index.md
       - "Workflow 'go-single-status.yml'": "topics/workflow_single_status_idea.md"
