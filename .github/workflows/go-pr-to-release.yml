@@ -68,6 +68,7 @@ jobs:
 
       # Close PR User Br --> Release, if found already open
       - name: Close PR, if already open
+        # GH_TOKEN: ${{ secrets.github_pat }}
         env:
           GITHUB_TOKEN: ${{ secrets.github_pat }}
         run: |
@@ -78,19 +79,19 @@ jobs:
 
 
       ####### PR: User Branch --> Release #######
-      - name: "Create PR  'head': ${{ env.TRAIN }}  -->  'base': ${{ env.RELEASE_BR }}"
+      - name: "Create PR  'head': ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  'base': ${{ inputs.release_branch }}"
         env:
-          BR: ${{ steps.user_branch.outputs.USER_BRANCH }}
+          GH_TOKEN: ${{ secrets.github_pat }}
         run: |
-          gh pr create --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ env.RELEASE_BR }}" \
-            --title "[GITOPS] - Merging '${{ steps.user_branch.outputs.USER_BRANCH }}' in '${{ env.RELEASE_BR }}' - Initiate Release Process" \
+          gh pr create --head "${{ steps.user_branch.outputs.USER_BRANCH }}" --base "${{ inputs.release_branch }}" \
+            --title "[GITOPS] - Merging '${{ steps.user_branch.outputs.USER_BRANCH }}' in '${{ inputs.release_branch }}' - Initiate Release Process" \
             --body "## :rocket: Initiating Release Process :rocket:
 
             This PR marks a pivotal moment in our deployment cycle, signaling that all changes on the **Release Train (RT)** are deemed ready for release. It represents the collective decision of our developers that the changes bundled in the RT are suitable to be released together.
 
             ### What's Happening in This PR?
 
-            - We are merging the `${{ steps.user_branch.outputs.USER_BRANCH }}` branch into the `${{ env.RELEASE_BR }}` branch.
+            - We are merging the `${{ steps.user_branch.outputs.USER_BRANCH }}` branch into the `${{ inputs.release_branch }}` branch.
             - This action is a critical step, transitioning us from the development phase to the release phase.
 
             ### :white_check_mark: Automatic Merging Upon CI Checks :white_check_mark:
@@ -105,17 +106,18 @@ jobs:
 
             ### :bulb: Next Steps in Our Journey:
 
-            - Following the successful merge of this PR, we'll initiate the next phase, which involves merging the `${{ env.RELEASE_BR }}` into the **${{ env.MAIN_BR }}** branch.
+            - Following the successful merge of this PR, we'll initiate the next phase, which involves merging the `${{ inputs.release_branch }}` into the **${{ env.MAIN_BR }}** branch.
 
             ### :hourglass_flowing_sand: Looking Ahead:
 
             - Once merged, our changes are set for the final stage of release preparation.
             "
       ##### Auto Merge: User Branch --> Release #####
-      - name: 'Merge PR   ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ env.RELEASE_BR }}'
+      - name: 'Merge PR   ${{ steps.user_branch.outputs.USER_BRANCH }}  -->  ${{ inputs.release_branch }}'
         run: gh pr merge "${{ steps.user_branch.outputs.USER_BRANCH }}" --auto --delete-branch --merge
         env:
-          GITHUB_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}  # allow event to trigger "listener" Workflows
+          # To allow "listener" Workflows to trigger, pass pat with read/write to Actions
+          GH_TOKEN: ${{ secrets.github_pat }}
 
       # - name: 'Catch Error, if PR already exists'
       #   if: ${{ failure() }}
