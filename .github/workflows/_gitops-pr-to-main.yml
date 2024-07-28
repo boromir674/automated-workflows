@@ -17,7 +17,7 @@ jobs:
     if: github.event.pull_request.merged == true && (
       startsWith(github.event.pull_request.title, '[GITOPS]')
       )
-    uses: boromir674/automated-workflows/.github/workflows/go-pr-to-main.yml@dev-branch
+    uses: ./.github/workflows/go-pr-to-main.yml
     with:
       main_branch: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
       release_branch: ${{ vars.GITOPS_RELEASE_BRANCH || 'release' }}
