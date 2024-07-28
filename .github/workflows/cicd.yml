@@ -11,7 +11,7 @@ on:
       - run-ci
 
 env:
-  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi\", \"go_pr_ or static_code or go_single_status\"]}"
+  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"test_release_me_gitops_phase_1 or code_viz or docker_test_when_tag_not_given\", \"pypi\", \"go_pr_ or static_code or go_single_status\"]}"
 
   ##### Pipeline - 1st level overrides #####
   TESTS_PIPE_ON: "true"
