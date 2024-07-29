@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 1.6.2 (2024-07-30)
+
+Document **Git Ops** and `release-me` **Git Ops Process** in Docs Website.
+- Add `Guide` Page for `How-to` setup a new `release-me` **Git Ops Process**
+
+
 ## 1.6.0 (2024-07-29)
 
 Support for **`Git Ops 'release-me'` Phase 1 Process, through 2 Reusable Workflows.
