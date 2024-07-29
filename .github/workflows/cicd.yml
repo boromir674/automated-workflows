@@ -38,10 +38,19 @@ jobs:
       # Git Ops Signal for dynamic Pipeline Configuration
       BOARDING_MSG: "Auto Merging '[^']+' carrying '([^']+)' Changes"
     steps:
+      # escape parethesis in commit message to prepare next step regex match
+      # escape should also handle multiline commit messages from ${{ github.event.head_commit.message }}
+      - name: Escape parethesis in head commit's Commit Message
+        run: |
+          HEAD_COMMIT_MSG="$(echo "${{ github.event.head_commit.message }}" | sed 's/(/\\(/g' | sed 's/)/\\)/g')"
+          echo "HEAD_COMMIT_MSG=$HEAD_COMMIT_MSG" >> $GITHUB_ENV
+          echo "**Head Commit Message**:" >> $GITHUB_STEP_SUMMARY
+          echo "$HEAD_COMMIT_MSG" >> $GITHUB_STEP_SUMMARY
+
       - name: Check for Git Ops Signal in Commit Message
         # interpret Commit Message: if head_commit.message matches BOARDING_MSG regex
         run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ${BOARDING_MSG} ]]; then
+          if [[ "${{ env.HEAD_COMMIT_MSG }}" =~ ${BOARDING_MSG} ]]; then
 
             affected_components="${BASH_REMATCH[1]}"
             echo "--> Detected Affected Components: $affected_components <--"
