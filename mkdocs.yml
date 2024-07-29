@@ -50,6 +50,9 @@ nav:
       - "CD: Dockerhub": "guides/guide_setup_cicd.md"
       - "CD: PyPI": "guides/guide_setup_pypi.md"
       - "CI: Build(s) Testing": "guides/guide_test_build.md"
+      - "Git Ops":
+        - guides/gitops/index.md
+        - "Setup Process - Release Me": "guides/gitops/guide_setup_gitops_release_me.md"
   - References:
       - "Docker": "api/ref_docker.md"
       - "Github Release": "api/ref_gh-release.md"
@@ -66,8 +69,12 @@ nav:
       - go-pr-to-main.yml: api/ref_go-pr-to-main.md
       - go-pr-to-release.yml: api/ref_go-pr-to-release.md
   - Topics:
+      - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
+      - "Git Ops":
+        - "topics/gitops/index.md"
+        - "Process - Release Me": "topics/gitops/release-me-process.md"
+      
       - "Test Suite": topics/tests_index.md
-      - "Workflow 'go-single-status.yml'": "topics/workflow_single_status_idea.md"
   - tags: tags.md
 extra:
   generator: false
