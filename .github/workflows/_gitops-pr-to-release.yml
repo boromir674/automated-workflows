@@ -1,0 +1,22 @@
+############################################
+## PR to Release with Auto Merge - GitOps ##
+############################################
+
+# export tt='release-me'; git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
+# - Triggers on tag 'release-me'
+
+# - Part of 'release-me' Git Ops Process: User Br -> release -> main
+
+on:
+  push:
+    tags:
+      - release-me  # Request to be included in next Release and create a Release
+jobs:
+  pr_to_release:
+    uses: ./.github/workflows/go-pr-to-release.yml
+    with:
+      release_branch: ${{ vars.GITOPS_RELEASE_BRANCH || 'release' }}
+    secrets:
+      # since job does auto merge pat needs read/write to PRs and to Actions
+      github_pat: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}

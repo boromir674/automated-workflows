@@ -11,9 +11,10 @@ on:
       - run-ci
 
 env:
-  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi\", \"go_pr_ or static_code or go_single_status\"]}"
+  JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"test_release_me_gitops_phase_1 or code_viz or docker_test_when_tag_not_given\", \"pypi\", \"static_code or go_single_status\"]}"
 
   ##### Pipeline - 1st level overrides #####
+  # set to false to guarantee Job Skip
   TESTS_PIPE_ON: "true"
   DOCS_PIPE_ON: "true"
   ##########################
@@ -23,9 +24,11 @@ env:
   TESTS_JOB_POLICY: '1'  # accept all for Test (only 1 policy supported atm)
 
   #### DOCS Pipeline Config ####
+  # set to true to guarantee Job Run, and skip any other conditions (ie specific code changes)
   DOCS_ALWAYS: "false"   # 2nd level override
+
   DOCS_JOB_POLICY: '2'  # {2, 3}
-  DOCS_PY_VERSION: "3.11"
+  DOCS_PY_VERSION: "3.12"
 
 
 jobs:
@@ -35,10 +38,19 @@ jobs:
       # Git Ops Signal for dynamic Pipeline Configuration
       BOARDING_MSG: "Auto Merging '[^']+' carrying '([^']+)' Changes"
     steps:
+      # escape parethesis in commit message to prepare next step regex match
+      # escape should also handle multiline commit messages from ${{ github.event.head_commit.message }}
+      - name: Escape parethesis in head commit's Commit Message
+        run: |
+          HEAD_COMMIT_MSG="$(echo "${{ github.event.head_commit.message }}" | sed 's/(/\\(/g' | sed 's/)/\\)/g')"
+          echo "HEAD_COMMIT_MSG=$HEAD_COMMIT_MSG" >> $GITHUB_ENV
+          echo "**Head Commit Message**:" >> $GITHUB_STEP_SUMMARY
+          echo "$HEAD_COMMIT_MSG" >> $GITHUB_STEP_SUMMARY
+
       - name: Check for Git Ops Signal in Commit Message
         # interpret Commit Message: if head_commit.message matches BOARDING_MSG regex
         run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ${BOARDING_MSG} ]]; then
+          if [[ "${{ env.HEAD_COMMIT_MSG }}" =~ ${BOARDING_MSG} ]]; then
 
             affected_components="${BASH_REMATCH[1]}"
             echo "--> Detected Affected Components: $affected_components <--"
@@ -119,11 +131,11 @@ jobs:
     name: Build Documentation
     needs: configure_pipeline
     # bafaa2c2a014758a4421fe9b5c02ba66dbfdbef6
-    uses: boromir674/automated-workflows/.github/workflows/policy_docs.yml@test
+    uses: ./.github/workflows/policy_docs.yml
     with:
       run_policy: '${{ needs.configure_pipeline.outputs.PIPE_DOCS_POLICY }}'
       python_version: ${{ needs.configure_pipeline.outputs.PIPE_DOCS_PY }}
-      command: "tox -e pin-deps -- -E docs && tox -e docs --sitepackages -vv -s false"
+      command: "export PIP_CONSTRAINT=constraints.txt && tox -e pin-deps -- -E docs && tox -e docs --sitepackages -vv -s false"
       # command: "tox -e docs --sitepackages -vv -s false"
 
   prod_or_test:
@@ -159,7 +171,13 @@ jobs:
           reference: ${{ env.RELEASE_BR }}
           tag: "${{ github.ref }}"
 
-      - if: ${{ ! env.ENVIRONMENT_NAME }} && steps.release_contains_tag.outputs.retval == 'true'
+      - if: ${{ ! env.ENVIRONMENT_NAME }}
+        run: echo 'SANITY CHECK -> this must NOT run'
+
+      - if: ${{ steps.release_contains_tag.outputs.retval == 'true' }}
+        run: echo 'SANITY CHECK -> Is Tag on Release? ${{ steps.release_contains_tag.outputs.retval == 'true' }}'
+
+      - if: ${{ (! env.ENVIRONMENT_NAME) && steps.release_contains_tag.outputs.retval == 'true' }}
         run: echo ENVIRONMENT_NAME=TEST_DEPLOYMENT >> $GITHUB_ENV
 
       - name: Pick Production or Test Environment, if tag was pushed on ${{ env.MAIN_BR }} or ${{ env.RELEASE_BR }} branch

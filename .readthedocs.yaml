@@ -19,17 +19,33 @@ build:
   jobs:
     # post_system_dependencies:
     #   - python3 -m pip install --user poetry
+
+    # V2
+    # post_create_environment:
+    #   # Install poetry
+    #   # https://python-poetry.org/docs/#installing-manually
+    #   - pip install poetry
+    # # V2
+    # post_install:
+    #   # Install dependencies with 'docs' dependency group
+    #   # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
+    #   # VIRTUAL_ENV needs to be set manually for now.
+    #   # See https://github.com/readthedocs/readthedocs.org/pull/11152/
+    #   - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install -E docs
+
+    # V1
     pre_install:
       - python --version
       # generate compatible and pinned dependencies in pip format, for python3.10
       - python -m pip install poetry
+      - python -m pip install setuptools==71.0.0
       - python -m poetry export -o req-docs.txt -E docs
-    # post_install:
-    #   - python -m pip install -e .
+      - python -m pip install --no-build-isolation -r req-docs.txt
 
     # Ref Pages are kept up-to-date with scripts/gen-docs-refs.sh, so we do not pre_build
-    # pre_build:
-    #   - chmod +x ./scripts/gen-workflow-ref.py
+    pre_build:
+      - python -m pip install setuptools==71.0.0
+      # - chmod +x ./scripts/gen-workflow-ref.py
       # - ./scripts/gen-workflow-ref.py ./.github/workflows/docker.yml > ./docs/ref_docker.md
       # - ./scripts/gen-workflow-ref.py ./.github/workflows/pypi_env.yml > ./docs/ref_pypi_env.md
       # - ./scripts/gen-workflow-ref.py ./.github/workflows/lint.yml > ./docs/ref_lint.md
@@ -41,6 +57,7 @@ mkdocs:
   configuration: mkdocs.yml
 
 
+# V1
 # Optional but recommended, declare the Python requirements required
 # to build your documentation
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html

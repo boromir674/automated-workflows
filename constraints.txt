@@ -1,0 +1,2 @@
+# Workaround for https://github.com/pypa/setuptools/issues/4519.
+setuptools<72.0.0

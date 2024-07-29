@@ -1,6 +1,25 @@
 # Changelog
 
 
+## 1.6.0 (2024-07-29)
+
+Support for **`Git Ops 'release-me'` Phase 1 Process, through 2 Reusable Workflows.
+
+### Changes
+
+##### feature
+- implement pr to release and main as building blocks for Git Ops
+- enable 'release' PR auto merge, in go-pr-to-release
+
+##### ci
+- dedicate 2 _gitops-pr-to-{release,main}.yml Workflows for release-me Git Ops Process phase 1
+- run release-me automated Test Cases from Test Suite, in Job Matrix
+
+##### docs
+- update automatic ref pages
+- docs: update site with Git Ops Ref Pages for release and main PRs
+
+
 ## 1.5.0
 
 New **`Single Status`** Workflow for **Git Ops**,
