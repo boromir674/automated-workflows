@@ -40,17 +40,25 @@ jobs:
     steps:
       # escape parethesis in commit message to prepare next step regex match
       # escape should also handle multiline commit messages from ${{ github.event.head_commit.message }}
+      # HEAD_COMMIT_MSG="$(echo "${{ github.event.head_commit.message }}" | sed 's/(/\\(/g' | sed 's/)/\\)/g')"
+
       - name: Escape parethesis in head commit's Commit Message
         run: |
-          HEAD_COMMIT_MSG="$(echo "${{ github.event.head_commit.message }}" | sed 's/(/\\(/g' | sed 's/)/\\)/g')"
-          echo "HEAD_COMMIT_MSG=$HEAD_COMMIT_MSG" >> $GITHUB_ENV
-          echo "**Head Commit Message**:" >> $GITHUB_STEP_SUMMARY
-          echo "$HEAD_COMMIT_MSG" >> $GITHUB_STEP_SUMMARY
+          echo "### **Head Commit Message**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
+
+          # keep only first line (in case there are multiple)
+          COMMIT_MSG_HEADER=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
+
+          echo "### **Head Commit Message Header (1st line)**:" >> $GITHUB_STEP_SUMMARY
+          echo "${COMMIT_MSG_HEADER}" >> $GITHUB_STEP_SUMMARY
+
+          echo "COMMIT_MSG_HEADER=$COMMIT_MSG_HEADER" >> $GITHUB_ENV
 
       - name: Check for Git Ops Signal in Commit Message
         # interpret Commit Message: if head_commit.message matches BOARDING_MSG regex
         run: |
-          if [[ "${{ env.HEAD_COMMIT_MSG }}" =~ ${BOARDING_MSG} ]]; then
+          if [[ "${{ env.COMMIT_MSG_HEADER }}" =~ ${BOARDING_MSG} ]]; then
 
             affected_components="${BASH_REMATCH[1]}"
             echo "--> Detected Affected Components: $affected_components <--"
