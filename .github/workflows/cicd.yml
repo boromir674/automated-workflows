@@ -44,14 +44,14 @@ jobs:
 
       - name: Escape parethesis in head commit's Commit Message
         run: |
-          echo "### **Head Commit Message**" >> $GITHUB_STEP_SUMMARY
-          echo "${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
-
           # keep only first line (in case there are multiple)
           COMMIT_MSG_HEADER=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
 
           echo "### **Head Commit Message Header (1st line)**:" >> $GITHUB_STEP_SUMMARY
           echo "${COMMIT_MSG_HEADER}" >> $GITHUB_STEP_SUMMARY
+
+          echo "### **Head Commit Message**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
 
           echo "COMMIT_MSG_HEADER=$COMMIT_MSG_HEADER" >> $GITHUB_ENV
 
