@@ -1,20 +1,22 @@
 [tool.poetry]
 name = "ga-workflows"
 version = "0.1.0"
-description = ""
+description = "Automated Workflows - Documentation Site"
 authors = ["konstantinos <boromir674@hotmail.com>"]
 readme = "README.md"
 packages = [{include = "ga_workflows"}]
 license = "AGPL-3.0-only"
 
 [tool.poetry.dependencies]
+# Python >=3.10.0 <4.0.0
 python = "^3.10"
 
-mkdocs = {version = "^1.5.3", optional = true}
-mkdocs-macros-plugin = {version = "^1.0.5", optional = true}
-mkdocs-material = {version = "^9.4.14", optional = true}
-mkdocs-mermaid2-plugin = {version = "^1.1.1", optional = true}
+mkdocs = { version = "^1.5.3", optional = true }
+mkdocs-macros-plugin = { version = "^1.0.5", optional = true }
+mkdocs-material = { version = "^9.4.14", optional = true }
+mkdocs-mermaid2-plugin = { version = "^1.1.1", optional = true }
 mkdocs-section-index = {version = "^0.3.8", optional = true}
+setuptools = "71.0.0"
 
 
 [tool.poetry.extras]

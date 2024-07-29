@@ -14,6 +14,7 @@ env:
   JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"test_release_me_gitops_phase_1 or code_viz or docker_test_when_tag_not_given\", \"pypi\", \"static_code or go_single_status\"]}"
 
   ##### Pipeline - 1st level overrides #####
+  # set to false to guarantee Job Skip
   TESTS_PIPE_ON: "true"
   DOCS_PIPE_ON: "true"
   ##########################
@@ -23,9 +24,11 @@ env:
   TESTS_JOB_POLICY: '1'  # accept all for Test (only 1 policy supported atm)
 
   #### DOCS Pipeline Config ####
+  # set to true to guarantee Job Run, and skip any other conditions (ie specific code changes)
   DOCS_ALWAYS: "false"   # 2nd level override
+
   DOCS_JOB_POLICY: '2'  # {2, 3}
-  DOCS_PY_VERSION: "3.11"
+  DOCS_PY_VERSION: "3.12"
 
 
 jobs:
@@ -119,11 +122,11 @@ jobs:
     name: Build Documentation
     needs: configure_pipeline
     # bafaa2c2a014758a4421fe9b5c02ba66dbfdbef6
-    uses: boromir674/automated-workflows/.github/workflows/policy_docs.yml@test
+    uses: ./.github/workflows/policy_docs.yml
     with:
       run_policy: '${{ needs.configure_pipeline.outputs.PIPE_DOCS_POLICY }}'
       python_version: ${{ needs.configure_pipeline.outputs.PIPE_DOCS_PY }}
-      command: "tox -e pin-deps -- -E docs && tox -e docs --sitepackages -vv -s false"
+      command: "export PIP_CONSTRAINT=constraints.txt && tox -e pin-deps -- -E docs && tox -e docs --sitepackages -vv -s false"
       # command: "tox -e docs --sitepackages -vv -s false"
 
   prod_or_test:
