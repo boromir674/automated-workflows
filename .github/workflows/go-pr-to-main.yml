@@ -10,12 +10,10 @@ name: Open PR to Main
 
 # - designed to be triggered as part of 'release-me' tag event
 
+# Participates in `release-me` GitOps Process:
+#  User Br --PR -> Release --PR -> main 
+
 on:
-  # pull_request:
-  #   types: [closed]
-  #   branches:  # ALLOWED Base Branches
-  #     - release
-  # if: github.event.pull_request.merged == true && contains(fromJSON('["release-train"]'), github.head_ref)
   workflow_call:
     inputs:
       # Head Branch
