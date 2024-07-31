@@ -1,5 +1,9 @@
 # Workflow go-pr-to-release.yml
 
+| Git Ops Process | Phase 1a | Phase 1b |
+| - | - | - |
+| `release-me` | THIS | |
+
 ### Trigger Events
 
 If any of the below events occur, the `go-pr-to-release.yml` workflow will be triggered.
