@@ -46,14 +46,15 @@ nav:
   # each item in the list, renders a left side navigation item/page
   - Home:
       - "Quick Start": index.md
-  - Guides:
+  - How-to Guides:
       - "CD: Dockerhub": "guides/guide_setup_cicd.md"
       - "CD: PyPI": "guides/guide_setup_pypi.md"
       - "CI: Build(s) Testing": "guides/guide_test_build.md"
       - "Git Ops":
-        - guides/gitops/index.md
-        - "Setup Process - Release Me": "guides/gitops/guide_setup_gitops_release_me.md"
-  - References:
+          - guides/gitops/index.md
+          - "Setup Release Me - Phase 1": "guides/gitops/guide_setup_gitops_release_me.md"
+          - "Setup Release Me - Phase 2": "guides/gitops/guide_setup_gitops_release_me_phase_2.md"
+  - API References:
       - "Docker": "api/ref_docker.md"
       - "Github Release": "api/ref_gh-release.md"
       - "PyPI": "api/ref_pypi_env.md"
@@ -61,20 +62,23 @@ nav:
       - "Docs": "api/ref_policy_docs.md"
       - "Lint": "api/ref_lint.md"
       - "Code Visualization": "api/ref_python_imports.md"
-      - "Git Ops": "api/ref_gitops_pr_to_boarding.md"
+      - "Git Ops - Boarding": "api/ref_gitops_pr_to_boarding.md"
       - "Single Status": "api/ref_single_status.md"
       - "PR to Boarding": api/ref_go-pr-to-boarding.md
       - "Single Job Status": api/ref_go-single-status.md
       - pypi.yml: api/ref_pypi.md
-      - go-pr-to-main.yml: api/ref_go-pr-to-main.md
-      - go-pr-to-release.yml: api/ref_go-pr-to-release.md
+      - "Git Ops - PR to Release": api/ref_go-pr-to-release.md
+      - "Git Ops - PR to Main": api/ref_go-pr-to-main.md
+      - "Git Ops - Auto Merge to Main": api/ref_go-auto-merge-main.md
   - Topics:
       - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
       - "Git Ops":
-        - "topics/gitops/index.md"
-        - "Process - Release Me": "topics/gitops/release-me-process.md"
-      
+          - "topics/gitops/index.md"
+          - "Process - Release Me": "topics/gitops/release-me-process.md"
+          - "Process - Auto Prod": "topics/gitops/release-me-process_phase_2.md"
       - "Test Suite": topics/tests_index.md
+      - "Semantic Release": topics/semantic-release.md
+  - "Development": topics/dev/dev-notes.md
   - tags: tags.md
 extra:
   generator: false
