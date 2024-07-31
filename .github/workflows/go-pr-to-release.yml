@@ -124,7 +124,7 @@ jobs:
           echo BACKWORDS_COMPATIBILITY='' >> $GITHUB_ENV
 
       ####### PR: User Branch --> Release #######
-      #  LABEL_FLAG="${{ env.BACKWORDS_COMPATIBILITY && '--label env.BACKWORDS_COMPATIBILITY' || '' }}"
+
       - name: "Create PR  'head': ${{ env.USER_BRANCH }}  -->  'base': ${{ inputs.release_branch }}"
         env:
           GH_TOKEN: ${{ secrets.github_pat }}
@@ -159,36 +159,10 @@ jobs:
 
             - Once merged, our changes are set for the final stage of release preparation.
             "
+
       ##### Auto Merge: User Branch --> Release #####
       - name: 'Merge PR   ${{ env.USER_BRANCH }}  -->  ${{ inputs.release_branch }}'
         run: gh pr merge "${{ env.USER_BRANCH }}" --auto --delete-branch --merge
         env:
           # To allow "listener" Workflows to trigger, pass pat with read/write to Actions
           GH_TOKEN: ${{ secrets.github_pat }}
-
-      # - name: 'Catch Error, if PR already exists'
-      #   if: ${{ failure() }}
-      #   run: |
-      #     echo "[WARNING] PR already exists. Skipping PR creation, making sure Job is green"
-      #     echo "## :warning: PR already exists :warning:" >> $GITHUB_STEP_SUMMARY
-      #     echo "" >> $GITHUB_STEP_SUMMARY
-      #     echo "This PR already exists. Skipping PR creation, making sure Job is green" >> $GITHUB_STEP_SUMMARY
-
-
-# LEGACY CODE
-
-      # - run: git branch --track "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}" || git checkout -b "${{ inputs.release_branch }}" "origin/${{ inputs.release_branch }}"
-
-      # - name: 'Derive name for Boarding target PR (ehad) branch: ${{ inputs.board_tag }}-${{ env.USER_BRANCH }}'
-      #   run: echo "BOARDING_BR=${{ inputs.board_tag }}-${{ env.USER_BRANCH }}" >> $GITHUB_ENV
-
-      # Ensure Upstream 'Boarding' Branch exists
-      # - name: Track '${{ env.BOARDING_BR }}' Branch, if it exists on remote 'origin'
-      #   run: git branch --track ${{ env.BOARDING_BR }} "origin/${{ env.BOARDING_BR }}" || echo PREEXISTING_BOARDING=false >> $GITHUB_ENV
-
-      # - name: Create '${{ env.BOARDING_BR }}' branch, if it doesn't exist
-      #   if: env.PREEXISTING_BOARDING == 'false'
-      #   run: |
-      #     git branch --track "${{ inputs.main_branch }}" "origin/${{ inputs.main_branch }}"
-      #     git checkout -b "${{ env.BOARDING_BR }}" "${{ inputs.main_branch }}" || true
-      #     git push origin "${{ env.BOARDING_BR }}" || true
