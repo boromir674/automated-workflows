@@ -1,6 +1,11 @@
-# CI/CD Workflows
+# Automated Workflows
 
-Reusable Workflows for `CI/CD Pipelines`, implemented as `Github Actions Workflows`.
+Implement `CI/CD` and `Git Ops`, with `Github Actions Reusable Workflows`.
+
+[![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=CI%20Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
+
+- Features a dedicated **Automated Test Suite** implemented in a separate [`cicd-test`](https://github.com/boromir674/cicd-test) Github Repo.
+- **CI** checks out the `Test Suite`, and runs Test Scenarios against the `Reusable Workflows`
 
 ## Quick-start
 

@@ -1,5 +1,25 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+This project adheres to [Semantic Versioning](https://semver.org/).
+
+## 1.7.0 (2024-08-03)
+
+`Phase 2` of `release-me` **Git Ops Process**
+- Offers `Reusable Workflow`
+- Offers `How-to` setup **Guide**
+
+### Changes
+
+##### feature
+- add `.github/workflows/go-auto-merge-main.yml` Reusable Workflow
+- allow declaring backwords-compatibility (or not) in `release-me' *Phase 2*
+
+##### docs
+- add Ref Page, Topics and Guide in Docs Site
+- improve Git Ops Ref Pages
+
 
 ## 1.6.2 (2024-07-30)
 

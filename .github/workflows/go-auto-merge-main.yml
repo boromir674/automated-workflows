@@ -1,0 +1,161 @@
+#############################
+## Merge Release into Main ##
+#############################
+
+# Triggered on pushed tags auto-prod-* ie auto-prod-1.0.0
+# last part is Sem Ver to use for new Release
+
+# export tt='auto-prod-1.0.0'
+# git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
+#### Does the following:
+#  1. Triggers 'Release' Stress Tests
+#  2. if Tests and Code Review OK
+#  3. Merge PR 'Release' -->  'Main'
+####
+
+# idea: support input for doing sem ver parse from source code/files instead of from git tags
+
+on:
+  # push:
+  #   tags:
+  #     - auto-prod-*
+  workflow_call:
+    inputs:
+      commit_message:
+        description: >
+          "Merge Commit Message on main branch, when PR auto merges.
+          Eg if 'My Shiny Python Package' is the input, then the
+          commit message will be '[NEW] My Shiny Python Package v<semver>'
+          for tag events with Sem Ver like 'auto-prod-1.2.0'
+          commit message will be '[DEV] My Shiny Python Package v<semver>'
+          for tag events with Sem Ver like 'auto-prod-1.2.0-dev'
+          "
+        required: true
+        type: string
+      main_branch:
+        description: 'Name of the Main Branch. Example: main, master'
+        required: false
+        type: string
+        default: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+      release_branch:
+        description: 'Name of Branch with Relase Purpose; dedicated for Sem Ver bump, Changelog updates, making RC Releases, deploying to Staging, etc'
+        required: false
+        type: string
+        default: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+    secrets:
+      pat_token:
+        description: >
+          "Personal Access (aka fine-grained) GitHub Token, with read/write permissions to PRs
+          and optionally read/write permissions to Github Actions Workflows.
+          "
+        required: true
+
+jobs:
+  merge_release_into_main:
+    runs-on: ubuntu-latest
+    env:
+      # aliases of some inputs for shorter code
+      MAIN_BR: ${{ inputs.main_branch }}
+      RELEASE_BR: ${{ inputs.release_branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 0 indicates all history for all branches and tags.
+          set-safe-directory: ''  # `git config --global --add safe.directory <path>`
+          token: '${{ secrets.pat_token }}'
+
+      - run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" 
+
+      # Assumes called from Workflow triggered on tag event
+      - name: "Check if tag is on '${{ env.RELEASE_BR }}' branch"
+        uses: rickstaa/action-contains-tag@v1
+        id: tag_on_release
+        with:
+          tag: "${{ github.ref }}"
+          reference: "${{ env.RELEASE_BR }}"  # the branch to check if the tag is on
+
+      # REQUIRE Tag to be on Release Branch, else Exit with Error
+      - if: ${{ steps.tag_on_release.outputs.retval == 'false' }}
+        name: "Exit if '${{ github.ref }}' NOT on '${{ env.RELEASE_BR }}' branch"
+        run: echo "Tag '${{ github.ref }}' on '${{ env.RELEASE_BR }}' = ${{ steps.tag_on_release.outputs.retval }}" && exit 1
+
+      # READ NEW SEM VER from trigger tag event, ie '1.2.0' from 'auto-prod-1.2.0'
+      - name: Read New Sem Ver from Tag
+        id: sem_ver
+        run: |
+          NEW_SEMVER=$(echo "${{ github.ref }}" | cut -d'-' -f3)
+          echo "[INFO]: New Sem Ver: $NEW_SEMVER"
+          echo "**New Sem Ver: $NEW_SEMVER**" >> $GITHUB_STEP_SUMMARY
+          echo SEMVER=$NEW_SEMVER >> $GITHUB_OUTPUT
+
+      # PROD at least one of major, minor, or patch bump happened
+      # DEV ie internal changes, only docs, ci, tests, etc
+      - name: "Mark as PROD (major, minor, or patch happened) Release, unless explicit 'dev' in Sem Ver"
+      #  explicitly DEV Release if dev in Sem Ver string, elsek if it is a PROD or DEV Release"
+      # todo: shorten code by combining this with below steps
+        id: prod_or_dev
+        run: |
+          if [[ "${{ steps.sem_ver.outputs.SEMVER }}" == *dev* ]]; then
+            echo "PROD_OR_DEV=DEV" >> $GITHUB_OUTPUT
+          else
+            echo "PROD_OR_DEV=PROD" >> $GITHUB_OUTPUT
+          fi
+
+      # Derive Git Tag for RC type of Release
+      # expect to trigger Staging Deployment
+
+      # ie 1.0.1-> v1.0.1-rc
+      - name: 'Derive RC Git Tag from PROD Release: prepend v and append -rc to Sem Ver'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
+        run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV'
+
+      # ie 1.0.1-dev-> v1.0.1-dev
+      - name: 'Derive RC Git Tag from DEV Release: prepend v and use rest of Sem Ver'      
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
+        run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}0" >> $GITHUB_ENV'
+
+      - name: "Push RC Tag - potentially triggering Deployment into Staging"
+        run: |
+          echo "[STEP]: Tag Local: ${RC_TAG}"
+          git tag -d "$RC_TAG" || echo "Ensured Local Tag $RC_TAG does not exist"
+          git tag "$RC_TAG"
+          echo
+          echo "[STEP]: Tag Remote: ${RC_TAG}"
+          git push --delete origin "$RC_TAG" || echo "Ensured Remote Tag $RC_TAG does not exist"
+          git push origin "$RC_TAG"
+          echo
+          echo " -> Pushed tag $RC_TAG"
+          echo
+
+      # Derive Commit subject for PR Merge, based on PROD or DEV
+
+      # Public API got backwords compatible patches
+      # Public API got new backwords compatible features
+      # Public API got backwords incompatible changes (either features or fixes, but breaking changes)
+
+      # [NEW] maps to PROD -> At least Major, minor, or patch Sem Ver Bump happened
+      - name: 'Derive Merge Commit Message: [NEW] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
+        run: 'echo CM_MSG="[NEW] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
+    
+      # [DEV] maps to DEV -> Sem Ver like 1.2.0-dev happened, with only ci, tests, docs, etc internal changes
+      - name: 'Create Commit Message: [DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release'
+        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
+        run: 'echo CM_MSG="[DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
+
+      # LABEL PR for Auto Deploy, to trigger 'Tag Prod' Workflow after merge
+      - name: "Add 'auto-deploy' PR label to trigger Git Tagging Workflow, after merge"
+        run: |
+          gh label create auto-deploy --force --description "Branch Ready for Prod/Main Deployment" --color 2ea44f
+          gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}
+
+      ### Merge PR, when CI Pass + Human Review OK + Webhook Statuses Green + etc ###
+      - name: "Merge PR   'head': ${{ env.RELEASE_BR }}  -->  'base': ${{ env.MAIN_BR }}"
+        run: |
+          git checkout "${{ env.RELEASE_BR }}"
+          gh pr merge "${{ env.RELEASE_BR }}" --auto --delete-branch --merge --subject "${{ env.CM_MSG }}"
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}

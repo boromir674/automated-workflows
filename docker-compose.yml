@@ -29,6 +29,11 @@ services:
       - -a
       - '0.0.0.0:${_GA_DOCS_PORT:-8020}'
 
+# docker build --target docs_live -t ga_workflows_docs_dev_server .
+# docker run --rm -it -v $(pwd)/docs:/docs/ -v $(pwd)/mkdocs.yml:/mkdocs.yml \
+#   -p "${DOCS_HOST_PORT:-8020}:${_GA_DOCS_PORT:-8020}" \
+#   ga_workflows_docs_dev_server /.tox/docs-live/bin/python \
+#   -m mkdocs serve -w docs/ -w mkdocs.yml -a "0.0.0.0:${_GA_DOCS_PORT:-8020}"
 
   docs_gen:
     # docker-compose run --rm --build docs_gen

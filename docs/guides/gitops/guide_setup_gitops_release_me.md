@@ -4,9 +4,25 @@ tags:
   - guide
 ---
 
-# Setup a `release-me` Git Ops Process, for your project
+# Setup Phase 1 of `release-me` Git Ops Process
 
-## Prequisites
+This is a `how-to` Guide, with everything you need, to setup  
+`release-me` *Phase 1* **Git Ops Process**:
+
+```mermaid
+---
+title: Git Flow
+---
+graph LR;
+  A[User Branch]
+  A --Open PR with Auto Merge --> B[Release]
+  B--Open PR --> C[Main]
+```
+
+For more on *Phase 1* of this **Git Ops Process**, see the [*Release Me Phase 1* Topics Page](../../topics/gitops/release-me-process.md).
+
+
+## Prerequisites
 - a `github repository`
 - **Auto Merge** is ON, on Github Repository Settings
 
@@ -29,7 +45,7 @@ jobs:
       github_pat: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
 ```
 
-to trigger **PR to release** on `release-me` git tag events.
+to automatically open **PR to release**, when `release-me` git tag events happen.
 
 
 ### 2. Add Workflow that opens PR into main, when Git Ops PR merges to release
@@ -54,7 +70,7 @@ jobs:
     secrets:
       PR_RW_AND_ACTIONS_RW: '${{ secrets.PR_RW_AND_ACTIONS_RW }}'
 ```
-to trigger **PR to main** when all below events happen:
+to automatically open **PR to main**, when events satisfying all below conditions, happen:
 - PR merged to `release`
 - PR title starts with '[GITOPS]' string
 
@@ -69,19 +85,9 @@ to trigger **PR to main** when all below events happen:
      2. Set **Repository Secret** `value` the **PAT**
 
 
-## Congratulations
+## Congratulations!
 
-Now you should have implemented the `release-me` **Git Ops Process**!
-
-```mermaid
----
-title: Git Flow
----
-graph LR;
-  A[User Branch]
-  A --PR --> B[Release]
-  B--PR --> C[Main]
-```
+You should have the **required Workflows** for implementing **Phase 1** of the  `release-me` **Git Ops Process**!
 
 ### Try out
 
