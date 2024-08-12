@@ -24,16 +24,16 @@ Event Trigger: `workflow_call`
 
 
 #### Optional Inputs
-
+{% raw %}
 - `main_branch`
     - type: _string_
     - Description: Name of the Main Branch. Example: main, master
-    - Default: `${{ vars.GIT_MAIN_BRANCH || 'main' }}`
+    - Default: `${{ "{{" }} vars.GIT_MAIN_BRANCH || 'main' {{ "}}" }}`
 - `release_branch`
     - type: _string_
     - Description: Name of Branch with Relase Purpose; dedicated for Sem Ver bump, Changelog updates, making RC Releases, deploying to Staging, etc
-    - Default: `${{ vars.GIT_RELEASE_BRANCH || 'release' }}`
-
+    - Default: `${{ "{{" }} vars.GIT_RELEASE_BRANCH || 'release' {{ "}}" }}`
+{% endraw %}
 ### Secrets
 
 - `pat_token`
