@@ -16,6 +16,7 @@
 
 Add the following `Job` into your `workflow config` yaml file, under the `jobs` document key:
 
+{% raw %}
 ```yaml
 jobs:
   call_docker_job:
@@ -23,15 +24,16 @@ jobs:
     if: always()
     uses: boromir674/automated-workflows/.github/workflows/docker.yml@v1.1.1
     with:
-      DOCKER_USER: ${{ vars.DOCKER_USER }}
+      DOCKER_USER: ${{ "{{" }} vars.DOCKER_USER {{ "}}" }}
       acceptance_policy: 2
       image_slug: "my_app_name"
       image_tag: "1.0.0"
-      tests_pass: ${{ needs.build_n_test.result == 'success' }}
-      tests_run: ${{ !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) }}
+      tests_pass: ${{ "{{" }} needs.build_n_test.result == 'success' {{ "}}" }}
+      tests_run: ${{ "{{" }} !contains(fromJSON('["skipped", "cancelled"]'), needs.build_n_test.result) {{ "}}" }}
     secrets:
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_PASSWORD: ${{ "{{" }} secrets.DOCKER_PASSWORD {{ "}}" }}
 ```
+{% endraw %}
 
 ## 8. Replace references with your Test Job
 

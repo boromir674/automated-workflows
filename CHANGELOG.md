@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.7.1-dev (2024-09-13)
+
+Adding `Documentation` Content for **Git Ops Process**
+- How-to Guides
+  - Setup `Automatic Acceptance` to protect your `main` branch
+  - Setup `Manual Acceptance` to add manual intervention as merge requirement
+
+### Changes
+
+##### docs
+- add Guide Page for 'Protecting Branch' with Auto QA
+- update README.md to match CI/CD and Git Ops features
+- add 'Setup Manual Acceptance' How-to Guide, of 'release-me' Git Ops Process
+
+
 ## 1.7.0 (2024-08-03)
 
 `Phase 2` of `release-me` **Git Ops Process**

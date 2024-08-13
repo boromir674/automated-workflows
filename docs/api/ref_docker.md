@@ -51,8 +51,9 @@ Event Trigger: `workflow_call`
     - Description: 
 
 ### Outputs
-
+{% raw %}
 - `IMAGE_REF`
     - type: _string_
-    - Value: ${{ jobs.docker_build.outputs.IMAGE_REF }}
+    - Value: {{ "{{" }} jobs.docker_build.outputs.IMAGE_REF {{ "}}" }}
     - Description: Docker Image reference
+{% endraw %}

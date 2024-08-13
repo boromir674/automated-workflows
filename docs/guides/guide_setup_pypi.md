@@ -14,6 +14,7 @@
 
 Add the following `Job` into your `workflow config` yaml file, under the `jobs` document key:
 
+{% raw %}
 ```yaml
 jobs:
   pypi_publ:
@@ -23,14 +24,15 @@ jobs:
     with:
       distro_name: "my_python_package_name"
       distro_version: "1.0.0"
-      should_trigger: ${{ vars.AUTOMATED_DEPLOY != 'false' }}
+      should_trigger: ${{ "{{" }} vars.AUTOMATED_DEPLOY != 'false' {{ "}}" }}
       pypi_env: "PYPI_TEST"
       artifacts_path: distro_artifacts
       require_wheel: false
       allow_existing: true
     secrets:
-      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      TWINE_PASSWORD: ${{ "{{" }} secrets.TWINE_PASSWORD {{ "}}" }}
 ```
+{% endraw %}
 
 ## 8. Replace `test_job` reference with your Test Job
 

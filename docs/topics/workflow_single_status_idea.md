@@ -30,7 +30,7 @@ requiring to maintain only **one Job** (on *Github Required Checks*).
 
 > [!TIP]
 > To require ALL "Job Statuses" GREEN, from caller's job.needs, supply only the  
-> 'needs_json' input, with '${{ toJSON(needs) }}' as value.
+> 'needs_json' input, with {% raw %}'${{ "{{" }} toJSON(needs) {{ "}}" }}'{% endraw %} as value.
 
 > [!TIP]
 > To have the "logic" of the 'Status Signal' be configurable at runtime for
