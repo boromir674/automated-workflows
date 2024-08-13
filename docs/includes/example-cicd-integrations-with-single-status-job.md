@@ -28,12 +28,12 @@
                     steps:
                       - run: echo "Deploy Finished :)"
 
-                    ### Git Ops: Check PR Acceptance ###
+                  ### Git Ops: Check PR Acceptance ###
                   qa_signal:
                     needs: test
                     uses: boromir674/automated-workflows/.github/workflows/go-single-status.yml@ffac270355ffe73cb8ab2bd2477ce6b20efca912  # v1.7.0
                     with:
-                      needs_json: {% raw %}'${{ "{{" }} toJson(needs) {{ "}}" }}'{% endraw %}
+                      needs_json: '${{ "{{" }} toJson(needs) {{ "}}" }}'
             ```
 
         === "B -> Parallel T -> D"
@@ -71,12 +71,12 @@
                     steps:
                       - run: echo "Deploy Finished :)"
 
-                    ### Git Ops: Check PR Acceptance ###
+                  ### Git Ops: Check PR Acceptance ###
                   qa_signal:
                     needs: [test, integration_tests]
                     uses: boromir674/automated-workflows/.github/workflows/go-single-status.yml@ffac270355ffe73cb8ab2bd2477ce6b20efca912  # v1.7.0
                     with:
-                      needs_json: {% raw %}'${{ "{{" }} toJson(needs) {{ "}}" }}'{% endraw %}
+                      needs_json: '${{ "{{" }} toJson(needs) {{ "}}" }}'
             ```
 
         === "B -> T Matrix -> D"
@@ -100,7 +100,7 @@
                     strategy:
                       matrix: ['py311', 'py312']
                     steps:
-                      - run: echo "Test {% raw %}${{ "{{" }} strategy.matrix {{ "}}" }}{% endraw %} Finished :)"
+                      - run: echo "Test {% raw %}${{ strategy.matrix }}{% endraw %} Finished :)"
 
                   integration_tests:
                     needs: build
@@ -114,12 +114,12 @@
                     steps:
                       - run: echo "Deploy Finished :)"
 
-                    ### Git Ops: Check PR Acceptance ###
+                  ### Git Ops: Check PR Acceptance ###
                   qa_signal:
                     needs: [test, integration_tests]
                     uses: boromir674/automated-workflows/.github/workflows/go-single-status.yml@ffac270355ffe73cb8ab2bd2477ce6b20efca912  # v1.7.0
                     with:
-                      needs_json: {% raw %}'${{ "{{" }} toJson(needs) {{ "}}" }}'{% endraw %}
+                      needs_json: '{% raw %}${{ toJson(needs) }}{% endraw %}'
             ```
 
         === "T1 -> B -> T2 -> D"
@@ -131,18 +131,18 @@
                 on:
                   push:
                     branches:
-                        - main
+                      - main
                 jobs:
                   test_1:
                     runs-on: ubuntu-latest
                     steps:
-                        - run: echo "Test 1 Finished :)"
+                      - run: echo "Test 1 Finished :)"
 
                   build:
                     needs: test_1
                     runs-on: ubuntu-latest
                     steps:
-                        - run: echo "Build Finished :)"
+                      - run: echo "Build Finished :)"
 
                   test_2:
                     needs: build
@@ -150,7 +150,7 @@
                     strategy:
                       matrix: ['py311', 'py312']
                     steps:
-                      - run: echo "Test {% raw %}${{ "{{" }} strategy.matrix {{ "}}" }}{% endraw %} Finished :)"
+                      - run: echo "Test {% raw %}${{ strategy.matrix }}{% endraw %} Finished :)"
 
                   deploy:
                     needs: test_2
@@ -158,12 +158,12 @@
                     steps:
                       - run: echo "Deploy Finished :)"
 
-                    ### Git Ops: Check PR Acceptance ###
+                  ### Git Ops: Check PR Acceptance ###
                   qa_signal:
                     needs: [test_1, test_2]
                     uses: boromir674/automated-workflows/.github/workflows/go-single-status.yml@ffac270355ffe73cb8ab2bd2477ce6b20efca912  # v1.7.0
                     with:
-                      needs_json: {% raw %}'${{ "{{" }} toJson(needs) {{ "}}" }}'{% endraw %}
+                      needs_json: '{% raw %}${{ toJson(needs) }}{% endraw %}'
             ```
 
         > Above shorthands `B`, `T`, `D` correspond to typical `Build`, `Test`, `Deploy` CI/CD Jobs

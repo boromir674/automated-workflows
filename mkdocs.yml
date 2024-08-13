@@ -83,6 +83,7 @@ nav:
           - "Setup Release Me - Phase 1": "guides/gitops/guide_setup_gitops_release_me.md"
           - "Setup Release Me - Phase 2": "guides/gitops/guide_setup_gitops_release_me_phase_2.md"
           - "Automated Acceptance": "guides/gitops/guide_setup_main_automated_acceptance.md"
+          - "Manual Acceptance": "guides/gitops/guide_setup_main_manual_acceptance.md"
   - API References:
       - "Docker": "api/ref_docker.md"
       - "Github Release": "api/ref_gh-release.md"
@@ -98,7 +99,7 @@ nav:
       - pypi.yml: api/ref_pypi.md
       - "Git Ops - PR to Release": api/ref_go-pr-to-release.md
       - "Git Ops - PR to Main": api/ref_go-pr-to-main.md
-      - "Git Ops - Auto Merge to Main": api/ref_go-auto-merge-main.md
+      - "Git Ops - Auto Merge to Main": "api/ref_go-auto-merge-main.md"
   - Topics:
       - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
       - "Git Ops":

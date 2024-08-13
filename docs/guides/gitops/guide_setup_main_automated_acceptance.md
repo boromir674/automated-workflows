@@ -45,14 +45,18 @@ This is a `how-to` Guide, with everything you need, to "protect" your
 
     ![Github Repo Navigation](github-repo-navigation.png)
 
-2. Ensure there is `Rule` that matches the `main` name pattern
+2. Click `branches` under `Code and Automation`
 
-2. Allow code merges in `main` only via PR
+    ![Code and Automation -> Branches](github-repos-settings-branches.png)
+
+3. Ensure there is `Rule` that matches the `main` name pattern
+
+4. Allow code merges in `main` only via PR
 
     [//]: # (Require PR)
     ![alt text](require-pr-before-merging.png)
 
-3. Allow merges in `main` only if latest commit (of head Branch) passed QA on CI
+5. Allow merges in `main` only if latest commit (of head Branch) passed QA on CI
 
     1. Require (CI) Status Check on most recent commit
 
