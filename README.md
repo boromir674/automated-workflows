@@ -1,18 +1,18 @@
 # CI/CD Workflows
 
-[![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=CI%20Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
 [![Read the Docs](https://img.shields.io/readthedocs/automated-workflows?style=plastic&logo=readthedocs&logoColor=lightblue&label=Docs&color=lightgreen&link=https%3A%2F%2Fautomated-workflows.readthedocs.io%2F)](https://automated-workflows.readthedocs.io)
 [![License](https://img.shields.io/github/license/boromir674/automated-workflows?style=plastic&)](https://github.com/boromir674/automated-workflows/blob/main/LICENSE)
 
 `Reusable Workflows` for **CI/CD Pipelines**, implemented in `Github Actions`.
 
-> **Documentation available** at **https://automated-workflows.readthedocs.io.**
+> **Live Documentation** at **https://automated-workflows.readthedocs.io.**
 
 - Source: https://github.com/boromir674/automated-workflows
 - CI: https://github.com/boromir674/automated-workflows/actions
 
 
-## Workflows Overview
+## Reusable Workflows
 
 - **CI/CD**
   - [**Docker**](.github/workflows/docker.yml): Build Docker image and Push to Dockerhub.
@@ -25,6 +25,17 @@
   - [**Open PR to Boarding**](.github/workflows/go-pr-to-boarding.yml): Open a PR on a **Boarding Branch**
   - [**Acceptance as Single Job Status**](.github/workflows/go-single-status.yml): Model **Git Ops Acceptance** as one Job
 
+
+> [!NOTE]
+> See the **API** `References` in the [Documentation](https://automated-workflows.readthedocs.io/en/main/) for all the `Reusable Workflows`.
+
+## Git Ops Processes
+- [**`release-me`**](https://automated-workflows.readthedocs.io/en/main/topics/gitops/): Ship your Branch to `main` with 2 Steps/PRs
+
+> [!NOTE]
+> See the [`how-to` **Guides**](https://automated-workflows.readthedocs.io/en/main/guides/gitops/) for implementing your **Git Ops Processes**.
+
+## Quickstart
 
 ### Docker
 

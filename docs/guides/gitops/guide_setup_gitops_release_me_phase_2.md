@@ -28,6 +28,7 @@ graph LR;
 ### 1. Add Workflow that triggers on 'auto-prod-*' tag events
 
 Populate file `.github/workflows/gitops-auto-merge-main.yml` with content:
+{% raw %}
 ```yaml
 on:
   push:
@@ -40,12 +41,12 @@ jobs:
     with:
       commit_message: 'My Shiny Software Package'
       # Optional inputs
-      main_branch: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
-      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+      main_branch: ${{ "{{" }} vars.GIT_MAIN_BRANCH || 'main' {{ "}}" }}
+      release_branch: ${{ "{{" }} vars.GIT_RELEASE_BRANCH || 'release' {{ "}}" }}
     secrets:
-      pat_token: ${{ secrets.GH_TOKEN_PR_RW }}
+      pat_token: ${{ "{{" }} secrets.GH_TOKEN_PR_RW {{ "}}" }}
 ```
-
+{% endraw %}
 and set the `commit_message` input value to a sensible message for your project case.
 
 ### 2. Grant required Permissions to manipulate PRs and trigger Workflows

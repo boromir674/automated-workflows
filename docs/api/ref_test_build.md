@@ -48,8 +48,9 @@ None
 None
 
 ### Outputs
-
+{% raw %}
 - `COVERAGE_ARTIFACT`
     - type: _string_
-    - Value: ${{ jobs.test_build.outputs.COVERAGE_ARTIFACT }}
+    - Value: ${{ "{{" }} jobs.test_build.outputs.COVERAGE_ARTIFACT {{ "}}" }}
     - Description: CI Artifact Name (id / alias) of uploaded Coverage XML
+{% endraw %}

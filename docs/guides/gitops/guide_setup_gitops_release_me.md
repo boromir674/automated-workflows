@@ -31,6 +31,7 @@ For more on *Phase 1* of this **Git Ops Process**, see the [*Release Me Phase 1*
 ### 1. Add Workflow that triggers on `release-me` git tag events
 
 Populate file `.github/workflows/gitops-pr-to-release.yml` with content:
+{% raw %}
 ```yaml
 on:
   push:
@@ -40,17 +41,18 @@ jobs:
   pr_to_release:
     uses: boromir674/automated-workflows/.github/workflows/go-pr-to-release.yml@fda3c758fa361c49e056977b1aeb0b2be01c99f1  # v1.6.1
     with:
-      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+      release_branch: ${{ "{{" }} vars.GIT_RELEASE_BRANCH || 'release' {{ "}}" }}
     secrets:
-      github_pat: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
+      github_pat: ${{ "{{" }} secrets.PR_RW_AND_ACTIONS_RW {{ "}}" }}
 ```
-
+{% endraw %}
 to automatically open **PR to release**, when `release-me` git tag events happen.
 
 
 ### 2. Add Workflow that opens PR into main, when Git Ops PR merges to release
 
 Populate file `.github/workflows/gitops-pr-to-main.yml` with content:
+{% raw %}
 ```yaml
 on:
   pull_request:
@@ -65,11 +67,12 @@ jobs:
       )
     uses: boromir674/automated-workflows/.github/workflows/go-pr-to-main.yml@fda3c758fa361c49e056977b1aeb0b2be01c99f1  # v1.6.1
     with:
-      main_branch: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
-      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+      main_branch: ${{ "{{" }} vars.GIT_MAIN_BRANCH || 'main' {{ "}}" }}
+      release_branch: ${{ "{{" }} vars.GIT_RELEASE_BRANCH || 'release' {{ "}}" }}
     secrets:
-      PR_RW_AND_ACTIONS_RW: '${{ secrets.PR_RW_AND_ACTIONS_RW }}'
+      PR_RW_AND_ACTIONS_RW: '${{ "{{" }} secrets.PR_RW_AND_ACTIONS_RW {{ "}}" }}'
 ```
+{% endraw %}
 to automatically open **PR to main**, when events satisfying all below conditions, happen:
 - PR merged to `release`
 - PR title starts with '[GITOPS]' string
@@ -94,24 +97,20 @@ You should have the **required Workflows** for implementing **Phase 1** of the  
 1. Make some changes
 
     ```
-
-        git checkout -b my-temp-branch main
-        echo 'some changes' >> del.txt
-        git add del.txt
-        git commit -m "emphemeral: test Git Ops Release Process"
-        git push origin -u my-temp-branch
-
+    git checkout -b my-temp-branch main
+    echo 'some changes' >> del.txt
+    git add del.txt
+    git commit -m "emphemeral: test Git Ops Release Process"
+    git push origin -u my-temp-branch
     ```
 
 2. Fire `release-me` event
 
     ```
-
-        git tag -d release-me || true
-        git push origin -d release-me || true
-        git tag release-me
-        git push origin release-me
-
+    git tag -d release-me || true
+    git push origin -d release-me || true
+    git tag release-me
+    git push origin release-me
     ```
 
 ### Result

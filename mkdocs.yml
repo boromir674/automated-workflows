@@ -26,9 +26,12 @@ theme:
 
 plugins:
   # Enable jinja inside your markdown files
+  # - allows {% include %} statements
+  # - requires careful escape of double-braces in markdown
+  # - requires wrapping content between {% raw %} and {% endraw %}
   # https://github.com/fralau/mkdocs_macros_plugin
-  # - macros
-
+  - macros:
+      include_dir: docs/includes
   # Authors need installation
   # - git-authors
   - tags:
@@ -40,8 +43,33 @@ plugins:
   # - literate-nav:
   #     nav_file: SUMMARY.md
   - section-index
+
 markdown_extensions:
   - pymdownx.highlight
+  ### ADMONITIONS ###
+  # enabled block kelements such as example, note, info, warning, tip, etc
+  # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
+  - admonition
+
+  ### SUPERFENCES ###
+  # arbitrary nesting of code and content blocks inside each other,
+  # including admonitions, tabs, lists and all other elements
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#superfences
+  # this custom fence defined below with name 'mermaid' is required
+  # to prevent superfences from breaking mermaid default syntax (3 backticks)!
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  ### TABBED ###
+  # usage of content tabs, a simple way to group related content and
+  # code blocks under accessible tabs.
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
+
 nav:
   # each item in the list, renders a left side navigation item/page
   - Home:
@@ -54,6 +82,8 @@ nav:
           - guides/gitops/index.md
           - "Setup Release Me - Phase 1": "guides/gitops/guide_setup_gitops_release_me.md"
           - "Setup Release Me - Phase 2": "guides/gitops/guide_setup_gitops_release_me_phase_2.md"
+          - "Automated Acceptance": "guides/gitops/guide_setup_main_automated_acceptance.md"
+          - "Manual Acceptance": "guides/gitops/guide_setup_main_manual_acceptance.md"
   - API References:
       - "Docker": "api/ref_docker.md"
       - "Github Release": "api/ref_gh-release.md"
@@ -69,7 +99,7 @@ nav:
       - pypi.yml: api/ref_pypi.md
       - "Git Ops - PR to Release": api/ref_go-pr-to-release.md
       - "Git Ops - PR to Main": api/ref_go-pr-to-main.md
-      - "Git Ops - Auto Merge to Main": api/ref_go-auto-merge-main.md
+      - "Git Ops - Auto Merge to Main": "api/ref_go-auto-merge-main.md"
   - Topics:
       - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
       - "Git Ops":
@@ -82,3 +112,10 @@ nav:
   - tags: tags.md
 extra:
   generator: false
+
+
+# Allow writting css to a single css file,
+# eg avoids need to add <style> elements in markdown, in case custom styles required
+
+# extra_css:
+#   - css/extra.css
