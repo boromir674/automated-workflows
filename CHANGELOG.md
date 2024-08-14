@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.7.1-dev1 (2024-09-15)
+
+Adding `How-to` Guide for **Running** `release-me` **Git Ops Process**.
+
+### Changes
+
+##### docs
+
+- write user-friendly content for Git Ops Guides landing page
+- add page for 'Run release-me Git Ops Process' How-to Guide
+- improve Test Suite Development Flow Chart
+
+
 ## 1.7.1-dev (2024-09-13)
 
 Adding `Documentation` Content for **Git Ops Process**
