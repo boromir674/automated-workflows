@@ -19,7 +19,7 @@ graph LR;
   B--Open PR --> C[Main]
 ```
 
-For more on *Phase 1* of this **Git Ops Process**, see the [*Release Me Phase 1* Topics Page](../../topics/gitops/release-me-process.md).
+For more on *Phase 1* of this **Git Ops Process**, see the [*Release Me Phase 1* Topics Page](../../../topics/gitops/release-me-process.md).
 
 
 ## Prerequisites
