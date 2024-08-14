@@ -9,9 +9,12 @@ In Workflow (Unit) Testing, the Client code should be another (caller/consumer) 
 There are 2 ways for implementing a Test Case in our Test Suite:
 
 - Running Reusable Workflow in a **Test Case** that is a `Caller Workflow`
-  - with GIVENs, WHENs, THENs, and the Client Code being a Job that directly calls Resuable Workflow
+
+    - with GIVENs, WHENs, THENs, and the Client Code being a Job that directly calls Resuable Workflow
+
 - Running Reusable Workflow indirectly, in a **Test Case** that triggers `Caller Workflow`
-  - with GIVENs, WHENs, THENs, and the Client Code being a 3rd-party `Caller Workflow`
+
+    - with GIVENs, WHENs, THENs, and the Client Code being a 3rd-party `Caller Workflow`
 
 ## Development Notes
 
@@ -21,6 +24,7 @@ When we want to release a new **Reusable Workflow**, we should implement at leas
 Test Case to "cover" it.
 
 This implies creating a new `Test Case Workflow` in one of below **forms**:
+
 - as a `Caller Workflow` of the new **Reusable Workflow**
 - as a `Workflow triggering` indirectly a 3rd-party `Caller Workflow`
 
@@ -39,7 +43,12 @@ title: Adding Case to Automated Test Suite
 
 flowchart TB
 
-    caller_in_cicd_test{"`Can we **directly Call**
+    create_cicd_test_workflow("`Add a Workflow
+    in *cicd-test*`")
+
+    create_cicd_test_workflow --> should_directly_call_workflow
+
+    should_directly_call_workflow{"`Should we **directly Call**
     the **new Workflow**
     in our **Test Case**?`"}
 
@@ -47,27 +56,26 @@ flowchart TB
     %% Typical Workflow Jobs graph:
     %% setup_givens_n_expectations -> call_new_workflow -> make_assertions
 
-    caller_in_cicd_test --yes --> test_case_calls_new_workflow
+    should_directly_call_workflow --yes --> test_case_calls_new_workflow
 
-    test_case_calls_new_workflow("`Add a Workflow with Jobs
-    'setup' -> 'call' -> 'assert'
-    in *cicd-test*`")
+    test_case_calls_new_workflow("`Add Jobs
+    'setup' -> 'call' -> 'assert'`")
 
-    test_case_calls_new_workflow --> pick_up_caller
 
 
     %% NO: Test Case cannot simply call the new Workflow
     %% Assumes there is a "3rd-party" Caller Workflow
     %% Test Case should ensure it's GIVEN's/WHEN's triggers the 3rd-party Worklfow
 
-    caller_in_cicd_test --"`no: Assume 3rd party
+    should_directly_call_workflow --"`no: Assume *3rd-party*
     Caller Workflow exists`" --> test_case_triggers_caller_of_new_workflow
 
 
-    test_case_triggers_caller_of_new_workflow("`Add Workflow in *cicd-test*
-    able to somehow trigger
-    that Caller **Workflow**`")
+    test_case_triggers_caller_of_new_workflow("`Ensure the *3rd-party*
+    Caller **Workflow**
+    is triggered`")
 
+    test_case_calls_new_workflow --> are_assertions_complex
     test_case_triggers_caller_of_new_workflow --> are_assertions_complex
 
     are_assertions_complex{"`Is *assertions* logic
@@ -98,14 +106,14 @@ flowchart TB
     is_green --no --> modify_expectations
 
     modify_expectations("`**Modify Expectations**
-    in *cicd-test*`")
+    in *cicd-test* Test Suite`")
 
     modify_expectations --> modify_this_cicd_pipe
 
     is_green --yes --> modify_this_cicd_pipe
 
-    modify_this_cicd_pipe("`Ensure **Test Case**
-    runs in this **CI**`")
+    modify_this_cicd_pipe("`Ensure **Test Case** is picked
+    by Test Matrix of *this* **CI**`")
 
 
 ```
