@@ -11,8 +11,8 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
 ## Prerequisites
 - Seting Up a Repository
-    - [Setup `release-me` - Phase 1](../guide_setup_gitops_release_me.md)
-    - [Setup `release-me` - Phase 2](../guide_setup_gitops_release_me_phase_2.md)
+    - [Setup `release-me` - Phase 1](../setup/guide_setup_gitops_release_me.md)
+    - [Setup `release-me` - Phase 2](../setup/guide_setup_gitops_release_me_phase_2.md)
 
 - Single branch with all changes, based on `main`
 
@@ -37,8 +37,8 @@ This is a `how-to` Guide, with everything you need, to "run" the
 ## Recommendations
 
 - Setting Up Recommended Policies
-    - [Setup Automatic QA](../guide_setup_main_automated_acceptance.md)
-    - [Setup Human Approval](../guide_setup_main_manual_acceptance.md)
+    - [Setup Automatic QA](../setup/guide_setup_main_automated_acceptance.md)
+    - [Setup Human Approval](../setup/guide_setup_main_manual_acceptance.md)
 
 
 ## Guide
