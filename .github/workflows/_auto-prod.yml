@@ -115,6 +115,8 @@ jobs:
       # LABEL PR for Auto Deploy, to trigger 'Tag Prod' Workflow after merge
       - name: "Label PR for Auto Deploy"
         run: gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
+        env:
+          GH_TOKEN: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
 
       ### Merge PR, when CI Pass + Human Review OK ###
       - name: "Merge PR   'head': ${{ env.RELEASE_BR }}  -->  'base': ${{ env.MAIN_BR }}"
