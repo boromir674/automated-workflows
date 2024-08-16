@@ -14,4 +14,4 @@ jobs:
           # PAT with 2 permissions for:
           # - 'Pull requests' -> 'create labels': to allow this Action to create labels
           # - 'Actions' -> 'Workflows': to enable triggering other Workflows (listening to label creation events)
-          repo-token: ${{ secrets.GA_WORKFLOWS_CI_LABELER }}
+          repo-token: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}

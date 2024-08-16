@@ -16,7 +16,7 @@ jobs:
   pr_to_release:
     uses: ./.github/workflows/go-pr-to-release.yml
     with:
-      release_branch: ${{ vars.GITOPS_RELEASE_BRANCH || 'release' }}
+      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
     secrets:
       # since job does auto merge pat needs read/write to PRs and to Actions
       github_pat: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
