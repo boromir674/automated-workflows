@@ -24,6 +24,15 @@ For more on *Phase 1* of this **Git Ops Process**, see the [*Release Me Phase 1*
 
 ## Prerequisites
 - a `github repository`
+<!-- - a Github Personal access token, such as a `Fine-grained` token with minimum below permissions:
+    - `Contents` Write, to allow **merging PRs**
+    - `Pull Requests` Write, to allow **opening PRs**
+    - `Actions` Write, to allow **triggering Workflows** -->
+
+[//]: # (Code Write for calling merge GH API)
+[//]: # (PR Write for creating PR, and possible labels)
+[//]: # (Actions Write to allow triggering other Git Ops Workflows, on events this workflow fires)
+
 - **Auto Merge** is ON, on Github Repository Settings
 
 ## Guide
@@ -41,9 +50,9 @@ jobs:
   pr_to_release:
     uses: boromir674/automated-workflows/.github/workflows/go-pr-to-release.yml@fda3c758fa361c49e056977b1aeb0b2be01c99f1  # v1.6.1
     with:
-      release_branch: ${{ "{{" }} vars.GIT_RELEASE_BRANCH || 'release' {{ "}}" }}
+      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
     secrets:
-      github_pat: ${{ "{{" }} secrets.PR_RW_AND_ACTIONS_RW {{ "}}" }}
+      github_pat: ${{ secrets.GH_TOKEN_GITOPS_RELEASE_ME }}
 ```
 {% endraw %}
 to automatically open **PR to release**, when `release-me` git tag events happen.
@@ -67,10 +76,10 @@ jobs:
       )
     uses: boromir674/automated-workflows/.github/workflows/go-pr-to-main.yml@fda3c758fa361c49e056977b1aeb0b2be01c99f1  # v1.6.1
     with:
-      main_branch: ${{ "{{" }} vars.GIT_MAIN_BRANCH || 'main' {{ "}}" }}
-      release_branch: ${{ "{{" }} vars.GIT_RELEASE_BRANCH || 'release' {{ "}}" }}
+      main_branch: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
     secrets:
-      PR_RW_AND_ACTIONS_RW: '${{ "{{" }} secrets.PR_RW_AND_ACTIONS_RW {{ "}}" }}'
+      PR_RW_AND_ACTIONS_RW: '${{ secrets.GH_TOKEN_GITOPS_RELEASE_ME }}'
 ```
 {% endraw %}
 to automatically open **PR to main**, when events satisfying all below conditions, happen:
@@ -81,10 +90,11 @@ to automatically open **PR to main**, when events satisfying all below condition
 ### 3. Grant required Permissions to manipulate PRs and trigger Workflows
 
   1. Create a **PAT**, scoped for your repository, bearing the `read/write` permission for:
+     - *Contents*
      - *Pull Requests*
      - *Actions*
   2. Make PAT available to your repo as a `Repository Secret`
-     1. Create **Repository Secret** with `name` `PR_RW_AND_ACTIONS_RW`
+     1. Create **Repository Secret** with `name` `GH_TOKEN_GITOPS_RELEASE_ME`
      2. Set **Repository Secret** `value` the **PAT**
 
 

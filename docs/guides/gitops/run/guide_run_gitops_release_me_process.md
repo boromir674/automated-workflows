@@ -66,6 +66,16 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
 6. Fire-up a `auto-prod-<sem ver>` git tag event (ie `auto-prod-1.2.0`)
 
+    ```sh
+    export _SEM_VER=...
+    ```
+
+    ```sh
+    export _tag="auto-prod-${_SEM_VER}"
+    git tag -d "$_tag"; git push --delete origin "$_tag";
+    git tag "$_tag" && git push origin "$_tag"
+    ```
+
 7. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
 
 </div>

@@ -24,6 +24,14 @@ theme:
   #   - navigation.tracking
 # - navigation.instant
 
+  ### CSS DESIGN ###
+  # Allow writting css to a single css file,
+  # eg avoids need to add <style> elements in markdown, in case custom styles required
+
+  # extra_css:
+  #   - css/extra.css
+
+
 plugins:
   # Enable jinja inside your markdown files
   # - allows {% include %} statements
@@ -80,7 +88,15 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
-#### SIDE NAVIGATION ####
+  ### On-HOVER TOOLTIP ###
+  # abbr by default supports tooltips on url links
+  - abbr
+  # if attr_list is also added, then tooltips on other html elements are supported as below:
+  # ie :material-information-outline:{ title="Important information" }
+
+
+
+#### SIDE NAVIGATION - DESIGN ####
 nav:
   # each item in the list, renders a left side navigation item/page
   - Home:
@@ -126,10 +142,3 @@ nav:
   - tags: tags.md
 extra:
   generator: false
-
-
-# Allow writting css to a single css file,
-# eg avoids need to add <style> elements in markdown, in case custom styles required
-
-# extra_css:
-#   - css/extra.css

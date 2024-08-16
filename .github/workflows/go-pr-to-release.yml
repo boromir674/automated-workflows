@@ -118,7 +118,7 @@ jobs:
           if [ -n "${{ inputs.backwords_compatibility }}" ]; then
             echo "[WARN]: Unsupported value for input 'backwords_compatibility': '${{ inputs.backwords_compatibility }}'" >> $GITHUB_STEP_SUMMARY
           else
-            echo "[INFO]: Value for input `backwords_compatibility` not provided." >> $GITHUB_STEP_SUMMARY
+            echo '[INFO]: Value for input `backwords_compatibility` not provided.' >> $GITHUB_STEP_SUMMARY
             echo "- Simply we assume user does not know/specify, and we do nothing about it." >> $GITHUB_STEP_SUMMARY
           fi
           echo BACKWORDS_COMPATIBILITY='' >> $GITHUB_ENV
