@@ -1,6 +1,7 @@
 # Automated Workflows
 
-Implement `CI/CD` and `Git Ops`, with `Github Actions Reusable Workflows`.
+Implement `CI/CD`{ title="Continuous Integration/Continuous Delivery" } and `Git Ops`, with `Github Actions Reusable Workflows`.
+
 
 [![CI Status](https://img.shields.io/github/actions/workflow/status/boromir674/automated-workflows/cicd.yml?style=plastic&logo=github-actions&logoColor=lightblue&label=CI%20Tests&color=lightgreen&link=https%3A%2F%2Fgithub.com%2Fboromir674%2Fautomated-workflows%2Factions%2Fworkflows%2Fcicd.yml)](https://github.com/boromir674/automated-workflows/actions/workflows/cicd.yml)
 
