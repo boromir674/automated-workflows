@@ -24,6 +24,16 @@ For more on *Phase 1* of this **Git Ops Process**, see the [*Release Me Phase 1*
 
 ## Prerequisites
 - a `github repository`
+- a Github Personal access token, such as a `Fine-grained` token with minimum below permissions:
+    - `Contents` Write, to allow **merging PRs**
+    - `Pull Requests` Write, to allow **opening PRs**
+    - `Actions` Write, to allow **triggering Workflows**
+
+[//]: # (Code Write for calling merge GH API)
+[//]: # (PR Write for creating PR, and possible labels)
+[//]: # (Actions Write to allow triggering other Git Ops Workflows, on events this workflow fires)
+
+
 - **Auto Merge** is ON, on Github Repository Settings
 
 ## Guide

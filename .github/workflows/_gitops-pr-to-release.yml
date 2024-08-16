@@ -18,5 +18,7 @@ jobs:
     with:
       release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
     secrets:
-      # since job does auto merge pat needs read/write to PRs and to Actions
       github_pat: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
+      # - `Contents` Write, to allow **merging (auto) PRs**
+      # - `Pull Requests` Write, to allow **opening PRs**
+      # - `Actions` Write, to allow **triggering Workflows**
