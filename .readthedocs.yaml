@@ -16,6 +16,14 @@ build:
     # golang: "1.19"
   
   # ALL JOBS implied: https://docs.readthedocs.io/en/stable/builds.html
+
+  # Step                 Customizable jobs
+  # Checkout             post_checkout
+  # System dependencies  pre_system_dependencies, post_system_dependencies
+  # Create environment   pre_create_environment, post_create_environment
+  # Install              pre_install, post_install
+  # Build                pre_build, post_build
+
   jobs:
     # post_system_dependencies:
     #   - python3 -m pip install --user poetry
