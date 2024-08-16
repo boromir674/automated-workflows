@@ -32,7 +32,12 @@ A typical **Release** `User Journey` for a single-Developer/Contributor project,
 
 ## Phase 1
 
-**On-demand trigger** by pushing the `release-me` git tag to remote.
+- **On-demand trigger** by pushing the `release-me` git tag to remote.
+
+In this phase we say
+
+    **Our `head` branch has all the code changes to be released**
+
 
 ```
 export tt='release-me'
@@ -40,8 +45,8 @@ git tag -d "$tt"; git push --delete origin "$tt"
 git tag "$tt" && git push origin "$tt"
 ```
 
-1. Open `PR` 'User Br' --> 'release', and merge if *PR OK*
-2. Open `PR` 'release' --> 'main'
+1. Opens a `PR` 'User Br' --> 'release', and auto merges if *PR OK*
+2. Opens a `PR` 'release' --> 'main'
 
 ```mermaid
 
@@ -62,9 +67,25 @@ git tag "$tt" && git push origin "$tt"
             merge "User Br" id: "Merge" type: HIGHLIGHT
 ```
 
+## Manual Phase
+
+Typically, the Developer should take care of doing the necessary *Release chores*,
+which include make changes to the source files.
+
+- Adding a new Release Entry in source Changelog
+
 ## Phase 2
 
-**On-demand trigger** by pushing a `auto-prod-<sem_ver>` git tag to remote.
+- **On-demand trigger** by pushing a `auto-prod-<sem_ver>` git tag to remote.
+
+!!! Tip
+
+    Typically, the Developer should take care of doing the necessary *Release chores*, which include make changes to the source files, on the `release` branch:
+
+      - **Updating Changelog**, by adding a Release Entry corresponding to the new Sem Ver
+      - **Updating Sem Ver in Sources**, by bumping all references of Version maintained in the Sources
+
+
 
 Example:
 ```
