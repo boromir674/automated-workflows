@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.7.1 (2024-09-16)
+
+### Changes
+
+##### fix
+
+- expect Contents Write permission in release-me PAT
+- console logging message when no inputs.backwords_compatibility is given
+
+##### docs
+
+- improve Git Ops Release Me Run How-to Guide
+- render text Tooltip when hovering on CI/CD introduction text
+- enable abbr markdown extension in mkdocs build
+
+
 ## 1.7.1-dev1 (2024-09-15)
 
 Adding `How-to` Guide for **Running** `release-me` **Git Ops Process**.
