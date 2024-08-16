@@ -56,15 +56,28 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
 2. Wait for PR to open against *base* `main` branch, from *head* `release` branch
 
-3. Derive new Sem Ver
+3. Sync `release` branch to local checkout
+
+    ```sh
+    export release=release
+    ```
+
+    ```sh
+    git fetch
+    git branch --track $release "origin/${release}" || true
+    git checkout "${release}"
+    git pull origin "${release}"
+    ```
+
+4. Derive new Sem Ver
 
     {% include 'diagram-sem-ver-derivation-process.md' %}
 
-4. Update Changelog (1)
+5. Update Changelog (1)
 
-5. If you maintain the Sem Ver in your source files, **update Sem Ver in sources**
+6. If you maintain the Sem Ver in your source files, **update Sem Ver in sources**
 
-6. Fire-up a `auto-prod-<sem ver>` git tag event (ie `auto-prod-1.2.0`)
+7. Fire-up a `auto-prod-<sem ver>` git tag event (ie `auto-prod-1.2.0`)
 
     ```sh
     export _SEM_VER=...
@@ -76,7 +89,7 @@ This is a `how-to` Guide, with everything you need, to "run" the
     git tag "$_tag" && git push origin "$_tag"
     ```
 
-7. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
+8. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
 
 </div>
 
@@ -102,6 +115,7 @@ Your changes should now be merged into `main`.
 
             checkout release
             merge "User Br" id: "Merge" type: HIGHLIGHT
+            commit id: "CHANGELOG.md" tag: "v2.1.0-rc"
 
             checkout main
             merge release id: "[NEW] 2.1.0" type: HIGHLIGHT

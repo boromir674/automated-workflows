@@ -84,7 +84,7 @@ jobs:
       - name: Read New Sem Ver from Tag
         id: sem_ver
         run: |
-          NEW_SEMVER=$(echo "${{ github.ref }}" | cut -d'-' -f3)
+          NEW_SEMVER=$(echo "${{ github.ref }}" | grep -oP '(?<=auto-prod-).+')
           echo "[INFO]: New Sem Ver: $NEW_SEMVER"
           echo "**New Sem Ver: $NEW_SEMVER**" >> $GITHUB_STEP_SUMMARY
           echo SEMVER=$NEW_SEMVER >> $GITHUB_OUTPUT
@@ -110,23 +110,22 @@ jobs:
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
         run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV'
 
-      # ie 1.0.1-dev-> v1.0.1-dev
-      - name: 'Derive RC Git Tag from DEV Release: prepend v and use rest of Sem Ver'      
+      # ie 1.0.1-dev-> v1.0.1-rc
+      - name: 'Derive RC Git Tag from DEV Release: prepend v, use <M.m.p> part from Sem Ver and append -rc'
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
-        run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}0" >> $GITHUB_ENV'
+        # run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}" >> $GITHUB_ENV'
+        run: 'echo RC_TAG="v$(echo ${{ steps.sem_ver.outputs.SEMVER }} | grep -oP "^\d+\.\d+\.\d+")-rc" >> $GITHUB_ENV'
 
-      - name: "Push RC Tag - potentially triggering Deployment into Staging"
+      # potentially trigger Deployment into Staging/Test
+      - name: "Create and Push RC Tag ${{ env.RC_TAG }}"
         run: |
-          echo "[STEP]: Tag Local: ${RC_TAG}"
-          git tag -d "$RC_TAG" || echo "Ensured Local Tag $RC_TAG does not exist"
+          git tag -d "$RC_TAG" || true
           git tag "$RC_TAG"
-          echo
-          echo "[STEP]: Tag Remote: ${RC_TAG}"
-          git push --delete origin "$RC_TAG" || echo "Ensured Remote Tag $RC_TAG does not exist"
+          git push --delete origin "$RC_TAG" || true
           git push origin "$RC_TAG"
-          echo
+
+          echo "Tag ${{ env.RC_TAG }} was **pushed to remote**" >> $GITHUB_STEP_SUMMARY
           echo " -> Pushed tag $RC_TAG"
-          echo
 
       # Derive Commit subject for PR Merge, based on PROD or DEV
 
