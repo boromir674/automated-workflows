@@ -84,7 +84,7 @@ jobs:
       - name: Read New Sem Ver from Tag
         id: sem_ver
         run: |
-          NEW_SEMVER=$(echo "${{ github.ref }}" | cut -d'-' -f3)
+          NEW_SEMVER=$(echo "${{ github.ref }}" | grep -oP '(?<=auto-prod-).+')
           echo "[INFO]: New Sem Ver: $NEW_SEMVER"
           echo "**New Sem Ver: $NEW_SEMVER**" >> $GITHUB_STEP_SUMMARY
           echo SEMVER=$NEW_SEMVER >> $GITHUB_OUTPUT
@@ -110,7 +110,7 @@ jobs:
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
         run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV'
 
-      # ie 1.0.1-dev-> v1.0.1-dev
+      # ie 1.0.1-dev-> v1.0.1-dev0
       - name: 'Derive RC Git Tag from DEV Release: prepend v and use rest of Sem Ver'      
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
         run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}0" >> $GITHUB_ENV'
