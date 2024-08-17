@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.8.1-dev1 (2024-09-17)
+
+### Changes
+
+#### CI
+- fix conditional logic that dynamically selects Job Matrix
+
+
 ## 1.8.1-dev (2024-09-17)
 
 ### Changes

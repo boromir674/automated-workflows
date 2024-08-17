@@ -40,6 +40,8 @@ jobs:
     env:
       # Git Ops Signal for dynamic Pipeline Configuration
       BOARDING_MSG: "Auto Merging '[^']+' carrying '([^']+)' Changes"
+      MAIN_BRANCH: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+      RELEASE_BRANCH: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
     steps:
       # escape parethesis in commit message to prepare next step regex match
       # escape should also handle multiline commit messages from ${{ github.event.head_commit.message }}
@@ -82,15 +84,35 @@ jobs:
             echo PIPE_DOCS_GITOPS_POLICY='1' >> $GITHUB_ENV
           fi
 
-      # if event ref is tag on 'main' branch, and tag includes one of [dev, rc] substrings,
-      # then use JOB_MATRIX_NO_RELEASE_ME (we do not need to check for main unless the on.branches: main changes)
-      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && ! ( contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc') ) }}
-        run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 0 indicates all history for all branches and tags.
 
-      # if event ref is push to 'main' branch or on-demand pushed run-ci tag or rc/dev tag on release,
-      # then use FULL JOB_MATRIX
-      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.ref == 'refs/tags/run-ci' || ( startsWith(github.event.ref, 'refs/tags/v') && ( contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc') ) ) }}
+      # Check if a tag was pushed on the 'release' branch
+      - if: startsWith(github.event.ref, 'refs/tags/v')
+        name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BRANCH }}' branch"
+        uses: rickstaa/action-contains-tag@v1
+        id: release_contains_tag
+        with:
+          reference: ${{ env.RELEASE_BRANCH }}
+          tag: "${{ github.ref }}"
+
+      # if v* tag on release, or push to main, or run-ci tag, then FULL JOB_MATRIX
+      - if: ${{ steps.release_contains_tag.outputs.retval == 'true' || github.event.ref == 'refs/heads/main' || github.event.ref == 'refs/tags/run-ci' }}
         run: echo _JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_ENV
+
+      # Check if a tag was pushed on the 'main' branch
+      - if: startsWith(github.event.ref, 'refs/tags/v') && env._JOB_MATRIX == ''
+        name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BRANCH }}' branch"
+        uses: rickstaa/action-contains-tag@v1
+        id: main_contains_tag
+        with:
+          reference: ${{ env.MAIN_BRANCH }}
+          tag: "${{ github.ref }}"
+
+      # if v* tag on main, then PARTIAL JOB_MATRIX
+      - if: ${{ steps.main_contains_tag.outputs.retval == 'true' && env._JOB_MATRIX == '' }}
+        run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
 
       # Configure Pipeline, while respecting Higher level overrides
       - name: Configure Pipeline
@@ -100,7 +122,6 @@ jobs:
           echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_DOCS_GITOPS_POLICY) || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_PY="${{ env.DOCS_PY_VERSION }}" >> $GITHUB_OUTPUT
           echo JOB_MATRIX="${_JOB_MATRIX}" >> $GITHUB_OUTPUT
-
 
     outputs:
     ## TEST MATRIX ##
