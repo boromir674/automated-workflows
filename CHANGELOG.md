@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.9.0 (2024-09-17)
+
+### Changes
+
+#### Feature
+- Tag `main` branch during `Release Me` **Git Ops Process**, when auto-deploy labeled PR merges on main, from release br
+- use same *-dev tag if pushed in auto-prod-*
+
+
 ## 1.8.1-dev1 (2024-09-17)
 
 ### Changes
