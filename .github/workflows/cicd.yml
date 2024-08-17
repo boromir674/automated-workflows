@@ -11,7 +11,10 @@ on:
       - run-ci
 
 env:
+  # Picks up all Test Cases to run
   JOB_MATRIX: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"test_release_me_gitops_phase_1 or code_viz or docker_test_when_tag_not_given\", \"pypi\", \"static_code or go_single_status\"]}"
+  # Picks up all Test Cases, to run, except 'Release Me' Tests, since they can collide with push event to main branch
+  JOB_MATRIX_NO_RELEASE_ME: "{\"tests_filter\": [\"docker_pol0 or docker_pol1\", \"docker_pol2 or docker_pol3\", \"code_viz or docker_test_when_tag_not_given\", \"pypi\", \"static_code or go_single_status\"]}"
 
   ##### Pipeline - 1st level overrides #####
   # set to false to guarantee Job Skip
@@ -79,6 +82,16 @@ jobs:
             echo PIPE_DOCS_GITOPS_POLICY='1' >> $GITHUB_ENV
           fi
 
+      # if event ref is tag on 'main' branch, and tag includes one of [dev, rc] substrings,
+      # then use JOB_MATRIX_NO_RELEASE_ME (we do not need to check for main unless the on.branches: main changes)
+      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && ! ( contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc') ) }}
+        run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
+
+      # if event ref is push to 'main' branch or on-demand pushed run-ci tag or rc/dev tag on release,
+      # then use FULL JOB_MATRIX
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.ref == 'refs/tags/run-ci' || ( startsWith(github.event.ref, 'refs/tags/v') && ( contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc') ) ) }}
+        run: echo _JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_ENV
+
       # Configure Pipeline, while respecting Higher level overrides
       - name: Configure Pipeline
         id: set_pipe_config
@@ -86,7 +99,9 @@ jobs:
           echo PIPE_TESTS_POLICY="${{ (env.TESTS_PIPE_ON != 'true' && '0') || (env.TESTS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_TESTS_GITOPS_POLICY) || env.TESTS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_DOCS_GITOPS_POLICY) || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_PY="${{ env.DOCS_PY_VERSION }}" >> $GITHUB_OUTPUT
-          echo JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_OUTPUT
+          echo JOB_MATRIX="${_JOB_MATRIX}" >> $GITHUB_OUTPUT
+
+
     outputs:
     ## TEST MATRIX ##
       matrix: ${{ steps.set_pipe_config.outputs.JOB_MATRIX }}
