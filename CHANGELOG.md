@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 
+## 1.8.0 (2024-09-17)
+
+### Changes
+
+#### Feature
+- register auto-deploy label during Auto Prod Workflow, only if missing from Repo PR Labels
+
+
 ## 1.7.2 (2024-09-17)
 
 ### Changes
