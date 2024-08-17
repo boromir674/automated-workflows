@@ -82,6 +82,15 @@ jobs:
             echo PIPE_DOCS_GITOPS_POLICY='1' >> $GITHUB_ENV
           fi
 
+      # if event ref is tag on 'main' branch, and tag includes one of [dev, rc] substrings,
+      # then use JOB_MATRIX_NO_RELEASE_ME (we do not need to check for main unless the on.branches: main changes)
+      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && (contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc')) }}
+        run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
+
+      # if event ref is push to 'main' branch, use JOB_MATRIX
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: echo _JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_ENV
+
       # Configure Pipeline, while respecting Higher level overrides
       - name: Configure Pipeline
         id: set_pipe_config
@@ -89,14 +98,8 @@ jobs:
           echo PIPE_TESTS_POLICY="${{ (env.TESTS_PIPE_ON != 'true' && '0') || (env.TESTS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_TESTS_GITOPS_POLICY) || env.TESTS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_POLICY="${{ (env.DOCS_PIPE_ON != 'true' && '0') || (env.DOCS_ALWAYS == 'true' && '1') || (env.AFFECTED_COMPONENTS != '' && env.PIPE_DOCS_GITOPS_POLICY) || env.DOCS_JOB_POLICY }}" >> $GITHUB_OUTPUT
           echo PIPE_DOCS_PY="${{ env.DOCS_PY_VERSION }}" >> $GITHUB_OUTPUT
+          echo JOB_MATRIX="${_JOB_MATRIX}" >> $GITHUB_OUTPUT
 
-      # if event ref is tag on 'main' branch, use JOB_MATRIX_NO_RELEASE_ME (we do not need to check for main unless the on.branches: main changes)
-      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') }}
-        run: echo JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_OUTPUT
-
-      # if event ref is push to 'main' branch, use JOB_MATRIX
-      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: echo JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_OUTPUT
 
     outputs:
     ## TEST MATRIX ##
