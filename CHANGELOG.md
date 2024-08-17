@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.8.1-dev (2024-09-17)
+
+### Changes
+
+#### CI
+- do not run Release Test Cases, on v* tags pushed to main
+
+#### Git Ops
+- call go-auto-merge-main.yml, to handle 'auto-prod-*' tag events
+
 
 ## 1.8.0 (2024-09-17)
 
