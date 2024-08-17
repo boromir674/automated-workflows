@@ -84,11 +84,11 @@ jobs:
 
       # if event ref is tag on 'main' branch, and tag includes one of [dev, rc] substrings,
       # then use JOB_MATRIX_NO_RELEASE_ME (we do not need to check for main unless the on.branches: main changes)
-      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && !contains(github.event.ref, 'dev') && !contains(github.event.ref, 'rc') }}
+      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && ! ( contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc') ) }}
         run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
 
-      # if event ref is push to 'main' branch, use JOB_MATRIX
-      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      # if event ref is push to 'main' branch or on-demand pushed run-ci tag then use FULL JOB_MATRIX
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.ref == 'refs/tags/run-ci' }}
         run: echo _JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_ENV
 
       # Configure Pipeline, while respecting Higher level overrides
