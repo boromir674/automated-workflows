@@ -143,11 +143,21 @@ jobs:
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
         run: 'echo CM_MSG="[DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
 
-      # LABEL PR for Auto Deploy, to trigger 'Tag Prod' Workflow after merge
-      - name: "Add 'auto-deploy' PR label to trigger Git Tagging Workflow, after merge"
+      - name: Search for 'auto-deploy', among the registered Repository PR Labels
+        run: echo AUTO_DEPLOY_LABEL_OBJECT="$(gh label list --json id,name,description,isDefault --jq '.[] | select(.name == "auto-deploy")')" >> $GITHUB_ENV
+        #  ${label_objects} | jq -r '.[] | select(.name == "auto-deploy")')
+
+      - name: Register 'auto-deploy', in Repository PR Labels, if not already present
+        if: ${{ env.AUTO_DEPLOY_LABEL_OBJECT != '' }}
         run: |
           gh label create auto-deploy --force --description "Branch Ready for Prod/Main Deployment" --color 2ea44f
-          gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
+          echo "Label **auto-deploy was registered** in the **Repository PR Labels**!" >> $GITHUB_STEP_SUMMARY
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}
+
+      # LABEL PR for Auto Deploy, to trigger 'Tag Prod' Workflow after merge
+      - name: "Add 'auto-deploy' PR label to trigger Git Tagging Workflow, after merge"
+        run: gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
 
