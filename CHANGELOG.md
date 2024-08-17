@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+
+## 1.7.2 (2024-09-17)
+
+### Changes
+
+#### Feature
+
+- convert -dev tags into -rc when running Auto Prod Workflow
+
+#### Fix
+- correctly name tag on main and improve Auto Prod
+
+#### Docs
+- mention that Release Me Phase 2 creates an RC Tag on release branch
+
+
 ## 1.7.1 (2024-09-16)
 
 ### Changes

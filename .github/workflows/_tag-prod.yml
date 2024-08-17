@@ -44,7 +44,7 @@ jobs:
 
           # if tag ends with '-rc' strip it and store remaining string
           if [[ $LATEST_GIT_TAG == *"-rc" ]]; then
-            PROD_SEM_VER=${LATEST_GIT_TAG:1:${#LATEST_GIT_TAG}-3}
+            PROD_SEM_VER=${LATEST_GIT_TAG:1:${#LATEST_GIT_TAG}-4}
           # else if dev substring is found then store as it is
           elif [[ $LATEST_GIT_TAG == *"dev"* ]]; then
             PROD_SEM_VER=$LATEST_GIT_TAG
