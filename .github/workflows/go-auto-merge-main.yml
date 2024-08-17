@@ -103,20 +103,26 @@ jobs:
           fi
 
       # Derive Git Tag for RC type of Release
-      # expect to trigger Staging Deployment
+      # Derive Commit subject for PR Merge, based on PROD or DEV
 
+      # [NEW or FIX] maps to PROD -> At least Major, minor, or patch Sem Ver Bump happened
       # ie 1.0.1-> v1.0.1-rc
-      - name: 'Derive RC Git Tag from PROD Release: prepend v and append -rc to Sem Ver'
+      - name: 'Derive RC Git Tag and imminent merge commit message, from PROD Release'
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
-        run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV'
+        run: |
+          echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV
+          echo CM_MSG="[NEW] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV
 
-      # ie 1.0.1-dev-> v1.0.1-rc
-      - name: 'Derive RC Git Tag from DEV Release: prepend v, use <M.m.p> part from Sem Ver and append -rc'
+      # [DEV] maps to DEV -> Sem Ver like 1.2.0-dev happened, with only ci, tests, docs, etc internal changes
+      # ie 1.0.1-dev-> v1.0.1-dev
+      - name: 'Derive RC Git Tag and imminent merge commit message, from DEV Release'
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
-        # run: 'echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}" >> $GITHUB_ENV'
-        run: 'echo RC_TAG="v$(echo ${{ steps.sem_ver.outputs.SEMVER }} | grep -oP "^\d+\.\d+\.\d+")-rc" >> $GITHUB_ENV'
+        run: |
+          echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}" >> $GITHUB_ENV
+          echo CM_MSG="[DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV
+        # run: 'echo RC_TAG="v$(echo ${{ steps.sem_ver.outputs.SEMVER }} | grep -oP "^\d+\.\d+\.\d+")-rc" >> $GITHUB_ENV'
 
-      # potentially trigger Deployment into Staging/Test
+      ## PUSH RC TAG ##
       - name: "Create and Push RC Tag ${{ env.RC_TAG }}"
         run: |
           git tag -d "$RC_TAG" || true
@@ -127,26 +133,10 @@ jobs:
           echo "Tag ${{ env.RC_TAG }} was **pushed to remote**" >> $GITHUB_STEP_SUMMARY
           echo " -> Pushed tag $RC_TAG"
 
-      # Derive Commit subject for PR Merge, based on PROD or DEV
 
-      # Public API got backwords compatible patches
-      # Public API got new backwords compatible features
-      # Public API got backwords incompatible changes (either features or fixes, but breaking changes)
-
-      # [NEW] maps to PROD -> At least Major, minor, or patch Sem Ver Bump happened
-      - name: 'Derive Merge Commit Message: [NEW] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release'
-        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
-        run: 'echo CM_MSG="[NEW] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
-    
-      # [DEV] maps to DEV -> Sem Ver like 1.2.0-dev happened, with only ci, tests, docs, etc internal changes
-      - name: 'Create Commit Message: [DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release'
-        if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
-        run: 'echo CM_MSG="[DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV'
-
+      ## LABEL PR for Auto Deploy, to trigger 'Tag Main' Workflow after merge ##
       - name: Search for 'auto-deploy', among the registered Repository PR Labels
         run: echo AUTO_DEPLOY_LABEL_OBJECT="$(gh label list --json id,name,description,isDefault --jq '.[] | select(.name == "auto-deploy")')" >> $GITHUB_ENV
-        #  ${label_objects} | jq -r '.[] | select(.name == "auto-deploy")')
-
       - name: Register 'auto-deploy', in Repository PR Labels, if not already present
         if: ${{ env.AUTO_DEPLOY_LABEL_OBJECT != '' }}
         run: |
@@ -154,8 +144,6 @@ jobs:
           echo "Label **auto-deploy was registered** in the **Repository PR Labels**!" >> $GITHUB_STEP_SUMMARY
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
-
-      # LABEL PR for Auto Deploy, to trigger 'Tag Prod' Workflow after merge
       - name: "Add 'auto-deploy' PR label to trigger Git Tagging Workflow, after merge"
         run: gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
         env:
