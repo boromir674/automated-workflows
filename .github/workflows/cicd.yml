@@ -84,6 +84,10 @@ jobs:
             echo PIPE_DOCS_GITOPS_POLICY='1' >> $GITHUB_ENV
           fi
 
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 0 indicates all history for all branches and tags.
+
       # Check if a tag was pushed on the 'release' branch
       - if: startsWith(github.event.ref, 'refs/tags/v')
         name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BRANCH }}' branch"
