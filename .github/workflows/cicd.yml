@@ -101,13 +101,13 @@ jobs:
       - if: startsWith(github.event.ref, 'refs/tags/v') && env._JOB_MATRIX == ''
         name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BRANCH }}' branch"
         uses: rickstaa/action-contains-tag@v1
-        id: release_contains_tag
+        id: main_contains_tag
         with:
           reference: ${{ env.MAIN_BRANCH }}
           tag: "${{ github.ref }}"
 
       # if v* tag on main, then PARTIAL JOB_MATRIX
-      - if: ${{ steps.release_contains_tag.outputs.retval == 'true' && env._JOB_MATRIX == '' }}
+      - if: ${{ steps.main_contains_tag.outputs.retval == 'true' && env._JOB_MATRIX == '' }}
         run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
 
       # Configure Pipeline, while respecting Higher level overrides
