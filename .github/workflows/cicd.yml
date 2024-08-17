@@ -84,7 +84,7 @@ jobs:
 
       # if event ref is tag on 'main' branch, and tag includes one of [dev, rc] substrings,
       # then use JOB_MATRIX_NO_RELEASE_ME (we do not need to check for main unless the on.branches: main changes)
-      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && (contains(github.event.ref, 'dev') || contains(github.event.ref, 'rc')) }}
+      - if: ${{ startsWith(github.event.ref, 'refs/tags/v') && !contains(github.event.ref, 'dev') && !contains(github.event.ref, 'rc') }}
         run: echo _JOB_MATRIX="${JOB_MATRIX_NO_RELEASE_ME}" >> $GITHUB_ENV
 
       # if event ref is push to 'main' branch, use JOB_MATRIX
