@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.10.0 (2024-09-18)
+
+### Changes
+
+#### Feature
+- report the Merge (on main) Commit Message in GH STEP SUMMARY
+
+#### Docs
+- include Next Steps, for Release Me Run Guide
+- improve Release Me Run Guide UX, by using icons
+- improve UX with dynamically assisted Changelog update
+- improve UX, with dynamically assisted Release Sem Ver Deriviation
+
+
 ## 1.9.0 (2024-09-17)
 
 ### Changes
