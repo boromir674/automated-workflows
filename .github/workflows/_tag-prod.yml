@@ -26,6 +26,7 @@ jobs:
     with:
       target_branch: ${{ github.event.pull_request.base.ref }}
     secrets:
+      # needs Contents write to push to test branch
       GH_TOKEN_CONTENTS_RW: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
 
   # Automatically create tag on main branch derived from RC Tag on release branch
@@ -37,7 +38,7 @@ jobs:
     if: always() && github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'release' &&
       contains(github.event.pull_request.labels.*.name, 'auto-deploy')
-    uses: .github/workflows/go-tag-main.yml
+    uses: ./.github/workflows/go-tag-main.yml
     with:
       gh_username: ${{ vars.TAG_USER_NAME }}
       gh_email: ${{ vars.TAG_USER_EMAIL }}

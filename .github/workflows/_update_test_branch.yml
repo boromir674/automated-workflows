@@ -1,0 +1,37 @@
+name: Put Test Branch to Target Branch state
+on:
+  workflow_call:
+    inputs:
+      test_branch:
+        description: 'Branch which is referenced in Test Suite'
+        required: false
+        type: string
+        default: ${{ vars.GIT_TEST_BRANCH || 'test' }}
+      target_branch:
+        description: 'Branch with changes to Test against'
+        required: false
+        type: string
+        default: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+    secrets:
+      GH_TOKEN_CONTENTS_RW:
+        description: 'GitHub Token with read/write access to Contents'
+        required: true
+
+jobs:
+  put_test_branch_to_target_branch:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout 'test' branch
+      - name: Checkout 'test' branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.test_branch }}
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN_CONTENTS_RW }}
+
+      # Merge 'target_branch' into 'test' branch
+      - name: Merge '${{ inputs.target_branch }}' into '${{ inputs.test_branch }}' branch
+        run: |
+          git branch --track "${{ inputs.target_branch }}" "origin/${{ inputs.target_branch }}" || echo "Branch already exists! Perhaps it is the 'main' branch."
+          git merge --no-edit "${{ inputs.target_branch }}"
+          git push origin ${{ inputs.test_branch }}
