@@ -73,15 +73,20 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
     {% include 'diagram-sem-ver-derivation-process.md' %}
 
+    Please enter the new **Semantic Release Version**, you intend to publish:
+
+    <input type="text" id="semver-input" placeholder="Enter new semver" oninput="updateSemVer()">
+
+
 5. Update Changelog (1)
 
 6. If you maintain the Sem Ver in your source files, **update Sem Ver in sources**
 
 7. Fire-up a `auto-prod-<sem ver>` git tag event (ie `auto-prod-1.2.0`)
 
-    ```sh
-    export _SEM_VER=...
-    ```
+    <pre><code class="language-sh"><span id="semver-output">export _SEM_VER=...</span></code></pre>
+
+    <!-- export _SEM_VER=<span id="semver-output">...</span> -->
 
     ```sh
     export _tag="auto-prod-${_SEM_VER}"
@@ -89,7 +94,9 @@ This is a `how-to` Guide, with everything you need, to "run" the
     git tag "$_tag" && git push origin "$_tag"
     ```
 
-8. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
+<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; } </script>
+
+1. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
 
 </div>
 
