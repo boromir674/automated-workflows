@@ -44,7 +44,7 @@ This is a `how-to` Guide, with everything you need, to "run" the
 ## Guide
 
 
-<div class="annotate" markdown>
+<!-- <div class="annotate" markdown> -->
 
 1. Fire-up `release-me` git tag event
 
@@ -69,19 +69,19 @@ This is a `how-to` Guide, with everything you need, to "run" the
     git pull origin "${release}"
     ```
 
-4. Derive new Sem Ver
+4. Derive Release Semantic Version
 
-    {% include 'diagram-sem-ver-derivation-process.md' %}
+    To help you decide on the Version Bump (`Current_Version + Version_Bump = New_Version`), see the [Decision Diagram](../../../topics/semantic-release.md#semantic-release-version-bump), or read more on the [Semantic Release Topic](../../../topics/semantic-release.md)
 
     Please enter the new **Semantic Release Version**, you intend to publish:
 
 <div class="grid cards" markdown>
 
--   <input type="text" id="semver-input" placeholder="Enter new semver" oninput="updateSemVer()">
+-   <input type="text" id="semver-input" placeholder="Input Release Semantic Version; ie 1.2.1" oninput="updateSemVer()">
 
     ---
 
-    Input new Release Semantic Version
+    Input Release Semantic Version; ie 1.2.1
 
 -   :material-clock-fast:{ .lg .middle } __Automation currently supports__
 
@@ -89,39 +89,41 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
     - `<M.m.p\>` for Public Changes
 
-          Eg: `1.0.0`, `1.2.1`, `0.5.0`
+        Eg: `1.0.0`, `1.2.1`, `0.5.0`
 
     - <M.m.p-dev\d?\> for Private Changes
 
-          Eg: `1.0.1-dev`, `1.2.1-dev2`,  
-          `0.5.0-dev1`
+        Eg: `1.0.1-dev`, `1.2.1-dev2`,  
+        `0.5.0-dev1`
 
 </div>
 
+<div class="annotate" markdown>
 
-5. Update Changelog (1)
+<ol start="5">
+    <li>Update Changelog (1)<pre><code>code CHANGELOG.md</pre></code><pre><code class="language-sh"><span id="semver-output2">git add CHANGELOG.md && commit -m "chore(changelog): add v... Changelog Release Entry"</span></pre></code></li>
+    <li>If you maintain the Sem Ver in your source files, <strong>update Sem Ver in sources (2)</strong></li>
+    <li>Fire-up an <code>auto-prod-&lt;sem ver&gt;</code> git tag event (ie <code>auto-prod-1.2.0</code>)
 
-6. If you maintain the Sem Ver in your source files, **update Sem Ver in sources**
+        <pre><code class="language-sh"><span id="semver-output">export _SEM_VER=...</span></code></pre>
 
-7. Fire-up a `auto-prod-<sem ver>` git tag event (ie `auto-prod-1.2.0`)
+        ```sh
+        export _tag="auto-prod-${_SEM_VER}"
+        git tag -d "$_tag"; git push --delete origin "$_tag";
+        git tag "$_tag" && git push origin "$_tag"
+        ```
 
-    <pre><code class="language-sh"><span id="semver-output">export _SEM_VER=...</span></code></pre>
+    </li>
+    <li>If, you have setup <code>Human Approval</code>, give the Release a <strong>green light</strong>, by approving a Code Review.</li>
+</ol>
 
-    <!-- export _SEM_VER=<span id="semver-output">...</span> -->
-
-    ```sh
-    export _tag="auto-prod-${_SEM_VER}"
-    git tag -d "$_tag"; git push --delete origin "$_tag";
-    git tag "$_tag" && git push origin "$_tag"
-    ```
-
-<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; } </script>
-
-1. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
+<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; document.getElementById('semver-output2').innerHTML = 'git add CHANGELOG.md && commit -m "chore(changelog): add v' + input + ' Changelog Release Entry"'; } </script>
 
 </div>
 
 1.  :man_raising_hand: Typically the CHANGELOG.md file!
+
+2.  :man_raising_hand: Typical files are, `VERSION`, `pyproject.toml`, `package.json`, etc.
 
 ## Congratulations :partying_face: !
 

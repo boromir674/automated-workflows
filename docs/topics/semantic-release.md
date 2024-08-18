@@ -27,6 +27,11 @@ quadrantChart
     Add support for new python 3.14: [0.25, 0.64]
 ```
 
+## Semantic Release - Version Bump
+
+{% include 'diagram-sem-ver-derivation-process.md' %}
+
+
 ## Non-Public API Changes
 > Essentially anything that is backwords-compatible.  
 > Any non-breaking changes.
