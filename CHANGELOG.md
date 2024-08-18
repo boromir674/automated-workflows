@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.11.0 (2024-09-18)
+
+### Changes
+
+#### Feature
+- write release -> main PR comment mentioning auto-merge commit message
+
+#### CI
+- merge 'release' into 'test' before RC tag (and auto-merge PR main enable)
+- update labeler so that it groups Git Ops feature changes under 'rw_gitops' tag
+
+
 ## 1.10.0 (2024-09-18)
 
 ### Changes
