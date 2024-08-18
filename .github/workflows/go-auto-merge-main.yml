@@ -130,9 +130,8 @@ jobs:
           git push --delete origin "$RC_TAG" || true
           git push origin "$RC_TAG"
 
-          echo "Tag ${{ env.RC_TAG }} was **pushed to remote**" >> $GITHUB_STEP_SUMMARY
+          echo "RC Tag ${{ env.RC_TAG }} was **pushed to remote**" >> $GITHUB_STEP_SUMMARY
           echo " -> Pushed tag $RC_TAG"
-
 
       ## LABEL PR for Auto Deploy, to trigger 'Tag Main' Workflow after merge ##
       - name: Search for 'auto-deploy', among the registered Repository PR Labels
@@ -148,6 +147,15 @@ jobs:
         run: gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
+
+      - run: echo "## Derived Merge Commit Message on `main`" >> $GITHUB_STEP_SUMMARY
+      - run: |
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.CM_MSG }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - run: echo "${{ env.CM_MSG }}" >> $GITHUB_STEP_SUMMARY
 
       ### Merge PR, when CI Pass + Human Review OK + Webhook Statuses Green + etc ###
       - name: "Merge PR   'head': ${{ env.RELEASE_BR }}  -->  'base': ${{ env.MAIN_BR }}"
