@@ -41,7 +41,7 @@ This is a `how-to` Guide, with everything you need, to "run" the
     - [Setup Human Approval](../setup/guide_setup_main_manual_acceptance.md)
 
 
-## Guide
+## :material-forward: Guide
 
 
 <!-- <div class="annotate" markdown> -->
@@ -127,9 +127,9 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
 2.  :man_raising_hand: Typical files are, `VERSION`, `pyproject.toml`, `package.json`, etc.
 
-## Congratulations :partying_face: !
+## Congratulations :partying_face:
 
-Your changes should now be merged into `main`.
+Your changes should now be **merged** and **tagged** into `main`!
 
 ```mermaid
     %%{init: { 'logLevel': 'debug', 'theme': 'gitGraph': {'rotateCommitLabel': false, 'showBranches': true, 'showCommitLabel':true, 'mainBranchName': 'main / master'}} }%%
@@ -150,5 +150,13 @@ Your changes should now be merged into `main`.
             commit id: "CHANGELOG.md" tag: "v2.1.0-rc"
 
             checkout main
-            merge release id: "[NEW] 2.1.0" type: HIGHLIGHT
+            merge release id: "[NEW] 2.1.0" type: HIGHLIGHT tag: "v2.1.0"
 ```
+
+### Next Steps
+
+- :material-sync: Sync your local `main` branch with **remote**
+
+    ```sh
+    git checkout main && git pull origin main
+    ```
