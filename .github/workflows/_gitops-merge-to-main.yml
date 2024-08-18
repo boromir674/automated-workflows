@@ -23,11 +23,38 @@ on:
       - auto-prod-*
 
 jobs:
+  env:
+    # DRY Git Ops Branches
+    MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
+    RELEASE_BR: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+    # Other important Git Branches
+    TEST_BR: ${{ vars.GIT_TEST_BRANCH || 'test' }}
+
+  # The cicd-test Suite references the test branch
+  # So, we push it to have the same state as, before the RC Tag Push
+  # which tag triggers CI Tests
+  put_test_branch_to_head:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout 'test' branch
+      - name: Checkout 'test' branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TEST_BR }}
+          fetch-depth: 0
+          token: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
+
+      # Merge 'release' into 'test' branch
+      - name: Merge 'release' into 'test' branch
+        run: |
+          git merge --no-edit ${{ env.RELEASE_BR }}
+          git push origin ${{ env.TEST_BR }}
+
   auto_merge_pr_to_main:
     uses: ./.github/workflows/go-auto-merge-main.yml
     with:
-      main_branch: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
-      release_branch: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+      main_branch: ${{ env.MAIN_BR }}
+      release_branch: ${{ env.RELEASE_BR }}
       commit_message: 'Automated Workflows'
     secrets:
       pat_token: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
