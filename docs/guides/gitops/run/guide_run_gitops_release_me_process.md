@@ -119,7 +119,7 @@ This is a `how-to` Guide, with everything you need, to "run" the
     <li>If, you have setup <code>Human Approval</code>, give the Release a <strong>green light</strong>, by approving a Code Review.</li>
 </ol>
 
-<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; document.getElementById('semver-output2').innerHTML = 'git add CHANGELOG.md && commit -m "chore(changelog): add v' + input + ' Changelog Release Entry"'; } </script>
+<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; document.getElementById('semver-output2').innerHTML = 'git add CHANGELOG.md && git commit -m "chore(changelog): add v' + input + ' Changelog Release Entry"'; } </script>
 
 </div>
 
