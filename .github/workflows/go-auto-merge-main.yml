@@ -148,6 +148,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
 
+      ## Write Merge Commit Message to STEP SUMMARY ##
       - run: echo "## Derived Merge Commit Message on `main`" >> $GITHUB_STEP_SUMMARY
       - run: |
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -155,7 +156,18 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-      - run: echo "${{ env.CM_MSG }}" >> $GITHUB_STEP_SUMMARY
+      ## Write Merge Commit Message in PR comments ##
+      - name: "Write Merge Commit Message in PR comments"
+        run: |
+          gh pr comment "${{ env.RELEASE_BR }}" --body \
+            "### PR will Auto Merge
+            **Merge Commit Message on main:**
+            \`\`\`
+            ${{ env.CM_MSG }}
+            \`\`\`
+            "
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}
 
       ### Merge PR, when CI Pass + Human Review OK + Webhook Statuses Green + etc ###
       - name: "Merge PR   'head': ${{ env.RELEASE_BR }}  -->  'base': ${{ env.MAIN_BR }}"
