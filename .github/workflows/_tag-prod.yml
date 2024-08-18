@@ -14,68 +14,36 @@ on:
       - main
       - master
 
-
 jobs:
-  tag_prod:
-    runs-on: ubuntu-latest
-    # if merged code AND HEAD branch "was" 'release' AND PR has label 'auto-deploy'
+  # The cicd-test Suite references the test branch
+  # So, we push it to have the same state as, before the RC Tag Push
+  # which tag triggers CI Tests
+  put_test_branch_to_main:
+    uses: ./.github/workflows/_update_test_branch.yml
     if: github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'release' &&
       contains(github.event.pull_request.labels.*.name, 'auto-deploy')
-    env:
-      MAIN_BR: ${{ vars.GIT_MAIN_BRANCH || 'main' }}
-    steps:
-      - name: "Checkout Code"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 0 indicates all history for all branches and tags.
-          set-safe-directory: ''  # `git config --global --add safe.directory <path>`
-          token: '${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}'
+    with:
+      target_branch: ${{ github.event.pull_request.base.ref }}
+    secrets:
+      # needs Contents write to push to test branch
+      GH_TOKEN_CONTENTS_RW: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}
 
-      - name: Ensure we are on '${{ env.MAIN_BR }}' branch
-        run: git checkout "${{ env.MAIN_BR }}"
-
-      # Derive SEM VER from most recent tag
-      - name: "Search tags, filter out those not matching v* and find latest"
-        run: |
-          LATEST_GIT_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
-          echo "[INFO]: Latest Git Tag: $LATEST_GIT_TAG"
-          echo "**Latest Git Tag: $LATEST_GIT_TAG**" >> $GITHUB_STEP_SUMMARY
-
-          # if tag ends with '-rc' strip it and store remaining string
-          if [[ $LATEST_GIT_TAG == *"-rc" ]]; then
-            PROD_SEM_VER=${LATEST_GIT_TAG:1:${#LATEST_GIT_TAG}-4}
-          # else if dev substring is found then store as it is
-          elif [[ $LATEST_GIT_TAG == *"dev"* ]]; then
-            PROD_SEM_VER=$LATEST_GIT_TAG
-          else
-            echo "[INFO] Unexpected Git Tag: $LATEST_GIT_TAG"
-            echo "Exiting .."
-            exit 1
-          fi
-
-          echo "- Using Sem Ver: $PROD_SEM_VER" >> $GITHUB_STEP_SUMMARY
-          echo SEMVER=$PROD_SEM_VER >> $GITHUB_ENV
-
-      # Exit if Sem Ver is empty
-      - name: "Exit if SOURCE Sem Ver is empty"
-        run: |
-          if [ -z "${{ env.SEMVER }}" ]; then
-            echo "SEMVER is empty. Exiting .."
-            exit 1
-          fi
-
-      # Prepen 'v' to the Sem Ver
-      - name: 'Create Git Tag: v${{ env.SEMVER }}'
-        run: echo "PROD_TAG=v${{ env.SEMVER }}" >> $GITHUB_ENV
-
-      # Trigger CI/CD for 'Production Release'
-      - run: git config --global user.name "Konstantinos Lampridis"
-      - run: git config --global user.email "boromir674@hotmail.com"
-
-      - name: "Push '${{ env.PROD_TAG }}' to trigger CI/CD for 'Production Release'"
-        run: |
-          git tag "${{ env.PROD_TAG }}" -m "Production Release ${{ env.PROD_TAG }}"
-          git push origin "${{ env.PROD_TAG }}"
-
-          echo "Tagged and Pushed '${{ env.PROD_TAG }}' to trigger CI/CD for 'Production Release'" >> $GITHUB_STEP_SUMMARY
+  # Automatically create tag on main branch derived from RC Tag on release branch
+  tag_prod:
+    needs: put_test_branch_to_main
+    runs-on: ubuntu-latest
+    # if merged code in main/master AND HEAD branch "was" 'release' AND
+    # PR has label 'auto-deploy'
+    if: always() && github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'release' &&
+      contains(github.event.pull_request.labels.*.name, 'auto-deploy')
+    uses: ./.github/workflows/go-tag-main.yml
+    with:
+      gh_username: ${{ vars.TAG_USER_NAME }}
+      gh_email: ${{ vars.TAG_USER_EMAIL }}
+      main_branch: ${{ github.event.pull_request.base.ref }}
+    secrets:
+      # needs Content write to create Tag!
+      # needs Actions write to allow other workflows to listen to tag event!
+      GH_PAT_ACTION_RW: ${{ secrets.GA_WORKFLOWS_CI_PR_RW_AND_ACTIONS_RW }}

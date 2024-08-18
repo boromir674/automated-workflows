@@ -103,7 +103,7 @@ This is a `how-to` Guide, with everything you need, to "run" the
 <div class="annotate" markdown>
 
 <ol start="5">
-    <li>Update Changelog (1)<pre><code>code CHANGELOG.md</pre></code><pre><code class="language-sh"><span id="semver-output2">git add CHANGELOG.md && commit -m "chore(changelog): add v... Changelog Release Entry"</span></pre></code><pre><code>git push origin release</pre></code></li>
+    <li>Update Changelog (1)<pre><code>code CHANGELOG.md</pre></code><pre><code class="language-sh"><span id="semver-output2">git add CHANGELOG.md && git commit -m "chore(changelog): add v... Changelog Release Entry"</span></pre></code><pre><code>git push origin release</pre></code></li>
     <li>If you maintain the Sem Ver in your source files, <strong>update Sem Ver in sources (2)</strong></li>
     <li>Fire-up an <code>auto-prod-&lt;sem ver&gt;</code> git tag event (ie <code>auto-prod-1.2.0</code>)
 
@@ -119,7 +119,7 @@ This is a `how-to` Guide, with everything you need, to "run" the
     <li>If, you have setup <code>Human Approval</code>, give the Release a <strong>green light</strong>, by approving a Code Review.</li>
 </ol>
 
-<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; document.getElementById('semver-output2').innerHTML = 'git add CHANGELOG.md && commit -m "chore(changelog): add v' + input + ' Changelog Release Entry"'; } </script>
+<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; document.getElementById('semver-output2').innerHTML = 'git add CHANGELOG.md && git commit -m "chore(changelog): add v' + input + ' Changelog Release Entry"'; } </script>
 
 </div>
 
