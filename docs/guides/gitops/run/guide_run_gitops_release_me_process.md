@@ -41,12 +41,12 @@ This is a `how-to` Guide, with everything you need, to "run" the
     - [Setup Human Approval](../setup/guide_setup_main_manual_acceptance.md)
 
 
-## Guide
+## :material-forward: Guide
 
 
-<div class="annotate" markdown>
+<!-- <div class="annotate" markdown> -->
 
-1. Fire-up `release-me` git tag event
+1. :octicons-tag-24: Fire-up `release-me` git tag event
 
     ```sh
     export _tag=release-me
@@ -54,9 +54,9 @@ This is a `how-to` Guide, with everything you need, to "run" the
     git tag "$_tag" && git push origin "$_tag"
     ```
 
-2. Wait for PR to open against *base* `main` branch, from *head* `release` branch
+2. :material-source-pull: Wait for PR to open against *base* `main` branch, from *head* `release` branch
 
-3. Sync `release` branch to local checkout
+3. :material-sync: Sync `release` branch to local checkout
 
     ```sh
     export release=release
@@ -69,35 +69,67 @@ This is a `how-to` Guide, with everything you need, to "run" the
     git pull origin "${release}"
     ```
 
-4. Derive new Sem Ver
+4. :simple-semanticrelease: Derive Release Semantic Version
 
-    {% include 'diagram-sem-ver-derivation-process.md' %}
+    **Please enter** the new **Semantic Release Version**, you intend to publish:
 
-5. Update Changelog (1)
+<div class="grid cards" markdown>
 
-6. If you maintain the Sem Ver in your source files, **update Sem Ver in sources**
+-   <input type="text" id="semver-input" placeholder="Input Release Semantic Version; ie 1.2.1" oninput="updateSemVer()">
 
-7. Fire-up a `auto-prod-<sem ver>` git tag event (ie `auto-prod-1.2.0`)
+    ---
 
-    ```sh
-    export _SEM_VER=...
-    ```
+    Input Release Semantic Version; ie 1.2.1
 
-    ```sh
-    export _tag="auto-prod-${_SEM_VER}"
-    git tag -d "$_tag"; git push --delete origin "$_tag";
-    git tag "$_tag" && git push origin "$_tag"
-    ```
+    - Get help in **determining Version Bump**, from the [:material-arrow-decision: Decision Diagram](../../../topics/semantic-release.md#semantic-release-version-bump)
+    - Read more on [:octicons-book-16: Semantic Release Topic](../../../topics/semantic-release.md)
 
-8. If, you have setup `Human Approval`, give the Release a **green light**, by approving a Code Review.
+
+-   :material-clock-fast:{ .lg .middle } __Automation currently supports__
+
+    ---
+
+    - `<M.m.p>` for Public Changes
+
+        Eg: `1.0.0`, `1.2.1`, `0.5.0`
+
+    - `<M.m.p-dev\d?\>` for Private Changes
+
+        Eg: `1.0.1-dev`, `1.2.1-dev2`,  
+        `0.5.0-dev1`
+
+</div>
+
+<div class="annotate" markdown>
+
+<ol start="5">
+    <li>Update Changelog (1)<pre><code>code CHANGELOG.md</pre></code><pre><code class="language-sh"><span id="semver-output2">git add CHANGELOG.md && commit -m "chore(changelog): add v... Changelog Release Entry"</span></pre></code><pre><code>git push origin release</pre></code></li>
+    <li>If you maintain the Sem Ver in your source files, <strong>update Sem Ver in sources (2)</strong></li>
+    <li>Fire-up an <code>auto-prod-&lt;sem ver&gt;</code> git tag event (ie <code>auto-prod-1.2.0</code>)
+
+        <pre><code class="language-sh"><span id="semver-output">export _SEM_VER=...</span></code></pre>
+
+        ```sh
+        export _tag="auto-prod-${_SEM_VER}"
+        git tag -d "$_tag"; git push --delete origin "$_tag";
+        git tag "$_tag" && git push origin "$_tag"
+        ```
+
+    </li>
+    <li>If, you have setup <code>Human Approval</code>, give the Release a <strong>green light</strong>, by approving a Code Review.</li>
+</ol>
+
+<script> function updateSemVer() { var input = document.getElementById('semver-input').value; document.getElementById('semver-output').innerText = 'export _SEM_VER=' + input; document.getElementById('semver-output2').innerHTML = 'git add CHANGELOG.md && commit -m "chore(changelog): add v' + input + ' Changelog Release Entry"'; } </script>
 
 </div>
 
 1.  :man_raising_hand: Typically the CHANGELOG.md file!
 
-## Congratulations :partying_face: !
+2.  :man_raising_hand: Typical files are, `VERSION`, `pyproject.toml`, `package.json`, etc.
 
-Your changes should now be merged into `main`.
+## Congratulations :partying_face:
+
+Your changes should now be **merged** and **tagged** into `main`!
 
 ```mermaid
     %%{init: { 'logLevel': 'debug', 'theme': 'gitGraph': {'rotateCommitLabel': false, 'showBranches': true, 'showCommitLabel':true, 'mainBranchName': 'main / master'}} }%%
@@ -118,5 +150,13 @@ Your changes should now be merged into `main`.
             commit id: "CHANGELOG.md" tag: "v2.1.0-rc"
 
             checkout main
-            merge release id: "[NEW] 2.1.0" type: HIGHLIGHT
+            merge release id: "[NEW] 2.1.0" type: HIGHLIGHT tag: "v2.1.0"
 ```
+
+### Next Steps
+
+- :material-sync: Sync your local `main` branch with **remote**
+
+    ```sh
+    git checkout main && git pull origin main
+    ```
