@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.11.1 (2024-09-19)
+
+### Changes
+
+#### Docs
+- fix auto-prod-* event trigger shell command
+
+#### CI
+- automatically push test branch before Automated CI Tests
+
+
 ## 1.11.0 (2024-09-18)
 
 ### Changes
