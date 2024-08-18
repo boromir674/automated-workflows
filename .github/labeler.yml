@@ -37,11 +37,11 @@ rw_gh_release:
     - changed-files:
       - any-glob-to-any-file: 
         - '.github/workflows/gh-release.yml'
-rw_go_pr_to_boarding:
+rw_gitops:
   - any:
     - changed-files:
       - any-glob-to-any-file: 
-        - '.github/workflows/internal/go-pr-to-boarding.yml'
+        - '.github/workflows/internal/go-*.yml'
 rw_docs:
   - any:
     - changed-files:
