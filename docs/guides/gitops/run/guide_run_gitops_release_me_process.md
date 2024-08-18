@@ -75,7 +75,28 @@ This is a `how-to` Guide, with everything you need, to "run" the
 
     Please enter the new **Semantic Release Version**, you intend to publish:
 
-    <input type="text" id="semver-input" placeholder="Enter new semver" oninput="updateSemVer()">
+<div class="grid cards" markdown>
+
+-   <input type="text" id="semver-input" placeholder="Enter new semver" oninput="updateSemVer()">
+
+    ---
+
+    Input new Release Semantic Version
+
+-   :material-clock-fast:{ .lg .middle } __Automation currently supports__
+
+    ---
+
+    - `<M.m.p\>` for Public Changes
+
+          Eg: `1.0.0`, `1.2.1`, `0.5.0`
+
+    - <M.m.p-dev\d?\> for Private Changes
+
+          Eg: `1.0.1-dev`, `1.2.1-dev2`,  
+          `0.5.0-dev1`
+
+</div>
 
 
 5. Update Changelog (1)
