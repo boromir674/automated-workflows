@@ -25,9 +25,9 @@ chmod +x ./scripts/gen-workflow-ref.py
 for workflow_yaml in ./.github/workflows/*.yml ./.github/workflows/*.yaml; do
     filename=$(basename $workflow_yaml)
     # exclude if name starts with 'underscore' (_) character
-    # if [[ $filename == _* ]]; then
-    #     continue
-    # fi
+    if [[ $filename == _* ]]; then
+        continue
+    fi
 
     # keep only Reusable Workflows that are user-facing (public API)
     # use yq to keep only if there is top-level 'on' key mapping to any object with the 'workflow_call' inner key
@@ -104,18 +104,24 @@ for workflow_yaml in ./.github/workflows/*.yml ./.github/workflows/*.yaml; do
     # 'Github Release'
     # ...
     # dynamic_keys=$(yq eval ".nav[2].References | .[] | keys | .[] | sub(\"-\",\"\") | sub(\"^\",\"'\") | sub(\"\$\",\"'\")" mkdocs.yml)
-    dirty_dynamic_keys=$(yq eval ".nav[2].References | .[] | keys | .[] | sub(\"-\",\"\") | sub(\"^\",\"'\") | sub(\"\$\",\"'\")" mkdocs.yml)
 
-    dynamic_keys=$(yq eval '.nav[2].References | .[] | keys | .[] | sub("^-","")' mkdocs.yml)
+    # dirty_dynamic_keys=$(yq eval ".nav[2].References | .[] | keys | .[] | sub(\"-\",\"\") | sub(\"^\",\"'\") | sub(\"\$\",\"'\")" mkdocs.yml)
+
+    # DRY value, in case Side Navigation Design changes
+    API_REFS_KEY="API References"
+
+    dynamic_keys=$(yq eval ".nav[2].[\"${API_REFS_KEY}\"] | .[] | keys | .[] | sub(\"^-\",\"\")" mkdocs.yml)
+
     # using the keys we can query for the existing URLs to determine if the URL is already present
     file_url_is_present="false"
 
     IFS=$'\n' # set internal field separator to newline
-    # for key in $dynamic_keys; do
+
+    # iterate over keys, get URI values and compare with generated URI
     for key in $dynamic_keys; do
 
         # ie api/ref_docker.md
-        uri_in_mkdocs_to_compare=$(yq eval ".nav[2].References | to_entries | .[].value | select(. | has(\"$key\")) | .[\"$key\"]" mkdocs.yml)
+        uri_in_mkdocs_to_compare=$(yq eval ".nav[2].[\"${API_REFS_KEY}\"] | to_entries | .[].value | select(. | has(\"$key\")) | .[\"$key\"]" mkdocs.yml)
 
         # it is possible that we get a multiline string with the same values per "row", simply keep the first
         uri_in_mkdocs_to_compare=$(echo "$uri_in_mkdocs_to_compare" | head -n 1)
@@ -149,7 +155,7 @@ for workflow_yaml in ./.github/workflows/*.yml ./.github/workflows/*.yaml; do
         continue
     fi
     echo "[INFO] Adding ${markdown_file_url} to Site Navigation !"
-    yq eval ".nav[2].References += [{\"$filename\": \"$markdown_file_url\"}]" -i mkdocs.yml
+    yq eval ".nav[2].[\"${API_REFS_KEY}\"] += [{\"$filename\": \"$markdown_file_url\"}]" -i mkdocs.yml
 done
 
 shopt -u nullglob
