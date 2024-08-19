@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.12.1-dev (2024-09-19)
+
+### Changes
+
+#### Docs
+- add 'Setup Automatic Clean-Up' How-to Guide
+
+#### CI
+- automatically delete git ops tags, after they served their purpose
+- 
+
 ## 1.12.0 (2024-09-19)
 
 ### Changes
