@@ -18,9 +18,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        # with:
-        #   # ref: ${{ github.head_ref }}
-        token: ${{ secrets.GH_PAT_CONTENT_RW }}
+        with:
+          # ref: ${{ github.head_ref }}
+          token: ${{ secrets.GH_PAT_CONTENT_RW }}
 
       # DELETE 'release-me' tag, if found
       # if the tag exists on remote, then empty log message corresponds to successfull deletion
