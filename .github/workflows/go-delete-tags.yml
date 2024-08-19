@@ -31,15 +31,19 @@ jobs:
           git push origin -d release-me 2>&1 | tee tag-delete.log
 
           if [ -s tag-delete.log ]; then  # file exists with >0 bytes content
+
+            # if 2nd line of log message matches '[deleted]         release-me', we are OK
+            if [[ $(sed -n '2p' tag-delete.log) == *"[deleted]         release-me"* ]]; then
+              echo '- **Deleted Tag** `release-me` :)' >> $GITHUB_STEP_SUMMARY
+
             # if 1st line of log file is
-            # error: unable to delete 'release-me': remote ref does not exist
+            # error: unable to delete 'release-me': remote ref does not exist, we are OK
+            elif [[ $(head -n 1 tag-delete.log) == *"error: unable to delete 'release-me': remote ref does not exist"* ]]; then
 
-            log_message_fist_line=$(head -n 1 tag-delete.log)
-
-            if [[ $log_message_fist_line == *"error: unable to delete 'release-me': remote ref does not exist"* ]]; then
-              # Success in making sure there is no 'release-me' tag anymore
               echo '- **Tag** `release-me` **NOT Found on remote** :)' >> $GITHUB_STEP_SUMMARY
+
             else
+              # we fail to anticipate log message, so we crash with ERROR
               echo '- [ERROR] Could not `Delete` or `Verify non-existing` **Tag** `release-me` on **remote** !' >> $GITHUB_STEP_SUMMARY
               echo "Error message:" >> $GITHUB_STEP_SUMMARY
 
@@ -51,9 +55,11 @@ jobs:
               echo "**Exiting Job with ERROR !**" >> $GITHUB_STEP_SUMMARY
               exit 1
             fi
-
-          else  # Success in making sure there is no 'release-me' tag anymore
-            echo '- **Deleted Tag** `release-me` :)' >> $GITHUB_STEP_SUMMARY
+          else
+            # no Log message captured, we exit with CRITICAL
+            echo '- [CRITICAL] Could not capture Tag Deletion Log Message!' >> $GITHUB_STEP_SUMMARY
+            echo "**Exiting Job with CRITICAL !**" >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi
 
       # DELETE any 'auto-prod-*' tag(s) found
