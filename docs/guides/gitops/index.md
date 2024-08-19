@@ -41,6 +41,14 @@ For more on what is `Git Ops` and `Git Ops Processes` see the [Git Ops Topics Pa
 
     [:octicons-arrow-right-24: Setup ](./setup/guide_setup_main_manual_acceptance.md)
 
+-   :material-clock-fast:{ .lg .middle } __Setup Automatic Clean-Up__
+
+    ---
+
+    Automatically delete Git Ops Tags, after they have served their purpose
+
+    [:octicons-arrow-right-24: Setup ](./setup/guide_setup_automatic_tags_deletion.md)
+
 </div>
 
 

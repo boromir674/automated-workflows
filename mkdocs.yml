@@ -112,6 +112,7 @@ nav:
             - "Setup Release Me - Phase 2": "guides/gitops/setup/guide_setup_gitops_release_me_phase_2.md"
             - "Automated Acceptance": "guides/gitops/setup/guide_setup_main_automated_acceptance.md"
             - "Manual Acceptance": "guides/gitops/setup/guide_setup_main_manual_acceptance.md"
+            - "Automatic Clean-Up": "guides/gitops/setup/guide_setup_automatic_tags_deletion.md"
           - "RUN":
             - "Release Me": "guides/gitops/run/guide_run_gitops_release_me_process.md"
   - API References:
