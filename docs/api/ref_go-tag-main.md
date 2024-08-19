@@ -27,10 +27,12 @@ Event Trigger: `workflow_call`
 
 #### Optional Inputs
 
+{% raw %}
 - `main_branch`
     - type: _string_
     - Description: Name of the Main Branch. Example: main, master
     - Default: `${{ github.event.pull_request.base.ref || vars.GIT_MAIN_BRANCH || 'main' }}`
+{% endraw %}
 
 ### Secrets
 
