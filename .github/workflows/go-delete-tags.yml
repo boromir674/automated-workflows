@@ -1,0 +1,73 @@
+####################################
+##  Delete Tags of Git Ops Events ##
+##        Reusable Workflow       ##
+####################################
+
+# Delete Git Tags, acting as push events that trigger Git Ops Workflows
+
+name: Delete Git Ops Tags
+on:
+  workflow_call:
+    secrets:
+      GH_PAT_CONTENT_RW:
+        description: 'GitHub Personal Access Token with permission to Delete Tags; read/write permissions to Content'
+        required: true
+jobs:
+  delete_tags:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        # with:
+        #   # ref: ${{ github.head_ref }}
+        token: ${{ secrets.GH_PAT_CONTENT_RW }}
+
+      # DELETE 'release-me' tag, if found
+      # if the tag exists on remote, then empty log message corresponds to successfull deletion
+      - name: Delete the 'release-me' Tag, if found
+        shell: bash
+        run: |
+          set -o pipefail
+          git push origin -d release-me 2>&1 | tee tag-delete.log
+
+          if [ -s tag-delete.log ]; then  # file exists with >0 bytes content
+            # if 1st line of log file is
+            # error: unable to delete 'release-me': remote ref does not exist
+
+            log_message_fist_line=$(head -n 1 tag-delete.log)
+
+            if [[ $log_message_fist_line == *"error: unable to delete 'release-me': remote ref does not exist"* ]]; then
+              # Success in making sure there is no 'release-me' tag anymore
+              echo '- **Tag** `release-me` **NOT Found on remote** :)' >> $GITHUB_STEP_SUMMARY
+            else
+              echo '- [ERROR] Could not `Delete` or `Verify non-existing` **Tag** `release-me` on **remote** !' >> $GITHUB_STEP_SUMMARY
+              echo "Error message:" >> $GITHUB_STEP_SUMMARY
+
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "$(cat tag-delete.log)" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+
+              echo "**Exiting Job with ERROR !**" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+
+          else  # Success in making sure there is no 'release-me' tag anymore
+            echo '- **Deleted Tag** `release-me` :)' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # DELETE any 'auto-prod-*' tag(s) found
+      - name: Delete any auto-prod-* tag found
+        env:
+          auto_prod_prefix: 'auto-prod-'
+        run: |
+          # not possible to clobber existing tags, since local checkout only tracks default (ie main) branch
+          # so we can safely fetch all tags
+          git fetch --tags
+
+          # Now we have guaranteed all local tags HAVE a remote counterpart (referencing the same commits)
+          # iterate and delete each tag, if any deletion fails, we crash to indicate failure
+          for git_tag in $(git tag -l "${auto_prod_prefix}*"); do
+            git push origin --delete "${git_tag}"
+            echo '- **Deleted Tag** ${git_tag}' >> $GITHUB_STEP_SUMMARY
+          done
