@@ -32,7 +32,6 @@ jobs:
   # Automatically create tag on main branch derived from RC Tag on release branch
   tag_prod:
     needs: put_test_branch_to_main
-    runs-on: ubuntu-latest
     # if merged code in main/master AND HEAD branch "was" 'release' AND
     # PR has label 'auto-deploy'
     if: always() && github.event.pull_request.merged == true &&
