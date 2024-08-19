@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.12.0 (2024-09-19)
+
+### Changes
+
+Add new Reusable Workflow for doing **Clean-up**, during the final phase of `release-me` **Git Ops Process**.
+
+#### Feature
+- delete Git Ops events related tags, on-demand with Reusable Workflow
+
+#### Docs
+- add API Reference Pages for 'Tag Prod' and 'Clean-up Tags' Reusable Workflows
+- fix auto-prod-* event trigger shell command
+
+#### CI
+| * 48376c9 ci: fix gitops _tag_prod Workflow
+
+#### Other
+- fix Automatic mkdocs Side-Navigation-update and API Gen script
+
+
 ## 1.11.1 (2024-09-19)
 
 ### Changes
