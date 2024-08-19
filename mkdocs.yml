@@ -130,6 +130,8 @@ nav:
       - "Git Ops - PR to Release": api/ref_go-pr-to-release.md
       - "Git Ops - PR to Main": api/ref_go-pr-to-main.md
       - "Git Ops - Auto Merge to Main": "api/ref_go-auto-merge-main.md"
+      - "Git Ops - Tag Main": api/ref_go-tag-main.md
+      - "Git Ops - Clean-up Tags": api/ref_go-delete-tags.md
   - Topics:
       - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
       - "Git Ops":
