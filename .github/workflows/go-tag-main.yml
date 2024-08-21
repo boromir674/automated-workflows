@@ -37,58 +37,35 @@ jobs:
         with:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
+          ref: ${{ inputs.main_branch }}
           token: '${{ secrets.GH_PAT_ACTION_RW }}'
 
-      - name: Ensure we are on '${{ inputs.main_branch }}' branch
-        run: git checkout "${{ inputs.main_branch }}"
+      # Find latest tag and derive Sem Ver
+      - name: Find most recently pushed Git Tag v*
+        run: echo "LATEST_GIT_TAG=$(git tag -l 'v*' | sort -V | tail -n 1)" >> $GITHUB_ENV
 
-      # Derive SEM VER from most recent tag
-      - name: "Search tags, filter out those not matching v* and find latest"
-        run: |
-          LATEST_GIT_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
-          echo "[INFO]: Latest Git Tag: $LATEST_GIT_TAG"
-          echo "**Found Latest Git Tag: ${LATEST_GIT_TAG}**" >> $GITHUB_STEP_SUMMARY
+      - run: 'echo "**Most Recent Git Tag: ${{ env.LATEST_GIT_TAG }}**" >> $GITHUB_STEP_SUMMARY'
 
-          # remove starting v
-          SEM_VER="${LATEST_GIT_TAG:1:${#LATEST_GIT_TAG}}"
-          echo "**Derived Latest Release Sem Ver: ${SEM_VER}**" >> $GITHUB_STEP_SUMMARY
+      # if tag ends with '-rc' strip it and store remaining string
+      - if: contains(env.LATEST_GIT_TAG, '-rc')
+        run: echo PROD_GIT_TAG="${LATEST_GIT_TAG%-rc}" >> $GITHUB_ENV
 
-          # if tag ends with '-rc' strip it and store remaining string
-          if [[ $LATEST_GIT_TAG == *"-rc" ]]; then
-            # PROD_SEM_VER=${LATEST_GIT_TAG:1:${#LATEST_GIT_TAG}-4}
-            PROD_SEM_VER="${SEM_VER%-rc}"
+      - if: contains(env.LATEST_GIT_TAG, 'dev')
+        run: echo PROD_GIT_TAG="${LATEST_GIT_TAG}" >> $GITHUB_ENV
 
-          # else if dev substring is found then store as it is
-          elif [[ $LATEST_GIT_TAG == *"dev"* ]]; then
-            PROD_SEM_VER="${SEM_VER}"
-          else
-            echo "[INFO] Unexpected Git Tag: $LATEST_GIT_TAG"
-            echo "Exiting .."
-            exit 1
-          fi
+      - run: 'echo "- **New Sem Ver Release Tag: ${{ env.PROD_GIT_TAG }}**" >> $GITHUB_STEP_SUMMARY'
 
-          echo "- **New Sem Ver: ${PROD_SEM_VER}**" >> $GITHUB_STEP_SUMMARY
-          echo SEMVER=$PROD_SEM_VER >> $GITHUB_ENV
-
-      # Exit if Sem Ver is empty
-      - name: "Exit if SOURCE Sem Ver is empty"
-        run: |
-          if [ -z "${{ env.SEMVER }}" ]; then
-            echo "SEMVER is empty. Exiting .."
-            exit 1
-          fi
-
-      # Prepen 'v' to the Sem Ver
-      - name: 'Create Git Tag: v${{ env.SEMVER }}'
-        run: echo "PROD_TAG=v${{ env.SEMVER }}" >> $GITHUB_ENV
+      # if PROD_GIT_TAG is empty/not-populated
+      - if: env.PROD_GIT_TAG == ''
+        run: 'echo "[ERROR] Could not derive new Prod Release Git Tag from most recent discovered tag: ${{ env.LATEST_GIT_TAG }}. Exiting .." && exit 1'
 
       - run: git config --global user.name "${{ inputs.gh_username }}"
       - run: git config --global user.email "${{ inputs.gh_email }}"
 
-      # PUSH TAG in MAIN BRANCH
-      - name: "Push '${{ env.PROD_TAG }}' to trigger CI/CD for 'Production Release'"
+      ### PUSH TAG in MAIN BRANCH ###
+      - name: "Push '${{ env.PROD_GIT_TAG }}' to trigger CI/CD for 'Production Release'"
         run: |
-          git tag "${{ env.PROD_TAG }}" -m "Production Release ${{ env.PROD_TAG }}"
-          git push origin "${{ env.PROD_TAG }}"
+          git tag "${{ env.PROD_GIT_TAG }}" -m "Production Release ${{ env.PROD_GIT_TAG }}"
+          git push origin "${{ env.PROD_GIT_TAG }}"
 
-          echo "Tagged and Pushed '${{ env.PROD_TAG }}'" >> $GITHUB_STEP_SUMMARY
+          echo "Tagged and Pushed '${{ env.PROD_GIT_TAG }}'" >> $GITHUB_STEP_SUMMARY
