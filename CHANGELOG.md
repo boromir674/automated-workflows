@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.12.1-dev1 (2024-09-21)
+
+### Changes
+
+#### Docs
+- add How-to "setup Automatic Semantic Tag on Main' Guide
+
+
 ## 1.12.1-dev (2024-09-19)
 
 ### Changes
