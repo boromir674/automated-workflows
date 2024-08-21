@@ -41,6 +41,14 @@ For more on what is `Git Ops` and `Git Ops Processes` see the [Git Ops Topics Pa
 
     [:octicons-arrow-right-24: Setup ](./setup/guide_setup_main_manual_acceptance.md)
 
+-   :material-clock-fast:{ .lg .middle } __Setup Automatic Tagging on Main__
+
+    ---
+
+    Automatically Tag Commit on Main, with Semantic Version
+
+    [:octicons-arrow-right-24: Setup ](./setup/guide_setup_auto_tag_main.md)
+
 -   :material-clock-fast:{ .lg .middle } __Setup Automatic Clean-Up__
 
     ---
