@@ -41,7 +41,7 @@ on:
         default: ''
       forbidden_branches:
         required: false
-        default: 'main,master'
+        default: 'main,master,release'
         description: >
           "Comma separated list of branches, which are forbidden to be merged into Release Branch.
           Set to main,master to crash this Job, in case accidentally the main/master branch was
