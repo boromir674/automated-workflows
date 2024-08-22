@@ -116,6 +116,7 @@ jobs:
         run: |
           echo "Input **Backwords Compatibility**: ${{ inputs.backwords_compatibility }}" >> $GITHUB_STEP_SUMMARY
           echo BACKWORDS_COMPATIBILITY=${{ inputs.backwords_compatibility }} >> $GITHUB_ENV
+          echo CLI_FLAG="--label ${{ inputs.backwords_compatibility }}" >> $GITHUB_ENV
 
       - name: 'Warn, if unsupported value for backwords_compatibility'
         if: ${{ inputs.backwords_compatibility != 'backwords-compatible' && inputs.backwords_compatibility != 'backwords-incompatible' }}
@@ -154,8 +155,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.github_pat }}
         run: |
-          gh pr create --head "${{ env.USER_BRANCH }}" --base "${{ inputs.release_branch }}" \
-            ${{ env.BACKWORDS_COMPATIBILITY && '--label env.BACKWORDS_COMPATIBILITY' || '' }} \
+          gh pr create --head "${{ env.USER_BRANCH }}" --base "${{ inputs.release_branch }}" ${{ env.CLI_FLAG }} \
             --title "[GITOPS] - Merging '${{ env.USER_BRANCH }}' in '${{ inputs.release_branch }}' - Initiate Release Process" \
             --body "## :rocket: **Marking for Release** all changes from **${{ env.USER_BRANCH }}** Branch :rocket:
 
