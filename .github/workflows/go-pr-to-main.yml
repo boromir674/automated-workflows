@@ -45,6 +45,21 @@ jobs:
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
           token: '${{ secrets.PR_RW_AND_ACTIONS_RW }}'
 
+      - name: Find most recently pushed Git Tag v*
+        run: echo "LATEST_SEMVER_TAG=$(git tag -l 'v*' | sort -V | tail -n 1)" >> $GITHUB_ENV
+
+      - name: Generate Linear Commit History from HEAD to main
+        id: commit_generator
+        uses: boromir674/action-commit-parser@v1.0.0
+        with:
+          # we do not override input.from_ref to use whatever we checked out with actions/checkout
+          to_ref: ${{ env.LATEST_SEMVER_TAG }}
+
+        # ommit oldest commit since somehow (todo investigate) it is expected to be the latest merge commit on main !
+        # Yaml string is formatted into JSON github expression, which is a ready-to-use quoted thing to use in shell/bash
+      - name: Store JSON Array of objects as JSON Array of strings, in a GITHUB_ENV Variable
+        run: echo COMMITS_ARRAY=$(echo ${{ toJSON(steps.test_commit_parser.outputs.commits_array) }} | jq -c '[.[0:-1] | .[].message]') >> $GITHUB_ENV
+
       ##### Open PR: Release  -->  Main/Master #####
       - name: "Open PR  'head': ${{ env.RELEASE }} --> 'base': ${{ env.MAIN_BR }}"
         env:
@@ -53,24 +68,36 @@ jobs:
           gh pr create --head "${{ env.RELEASE }}" --base "${{ env.MAIN_BR }}" \
             --title "[GITOPS] - Merging '${{ env.RELEASE }}' in '${{ env.MAIN_BR }}' - Releasing into Production" \
             --body "## :rocket: Releasing into Production :rocket:
-            
-            This PR marks a pivotal moment in our deployment cycle, signaling that all changes on the **Release** branch are deemed ready for production.  
-            It represents the collective decision of our developers that the changes bundled in the Release are suitable to be released together.
 
-            ### What's Happening in This PR?
+          This PR signals our \`intention\` to
+          - **Continue the Release Process**
 
-            - We are merging the '${{ env.RELEASE }}' branch into the '${{ env.MAIN_BR }}' branch.
-            - This is the last Pull Request, transitioning us from the release phase to the production phase.
+          ### :point_right: Changes
+          $(echo ${COMMITS_ARRAY} | jq -r | jq -r '.[]' | awk '{print "- " $0}')
 
-            ### :white_check_mark: Automatic Merging Upon CI Checks :white_check_mark:
-            
-            Before merging into '${{ env.MAIN_BR }}', this PR **should be checked**, for meetings some standards, such as:
+          ### What's Happening in This PR?
 
-            - All CI Jobs are Green / Passing
-            - Acceptance Criteria/Tests passed, on a Staging Deployment
-            - Code Review is approved by at least one developer
+          - We are merging the \`${{ env.RELEASE }}\` branch into the \`${{ env.MAIN_BR }}\` branch.
+          - This action is typically an intermediate Step in the \`Release Process\`, where we **prepare** the changes for the **Release**.
+            - Eg: Updating the **Changelog** file
+            - Eg: Updating the **Version** file. if maintained
+          - This is the last Pull Request, transitioning us from the \`release\` phase to the \`production\` phase.
 
-            "
-        # ### :warning: Manual Merging Upon CI Checks and Code Review :warning:
+          \`\`\`mermaid
+          ---
+          title: Typical 2-PR Release Process
+          ---
+          graph LR
+            A[User Branch] -->|PR| B[Release Branch]
+            B -->|PR| C[Main Branch]
+          \`\`\`
 
-        # If the above conditions are not met, this PR will be manually merged into the '${{ env.MAIN_BR }}' branch, by a developer.
+          ### :white_check_mark: Automatic Merging Upon CI Checks :white_check_mark:
+
+          **Before merging** into '${{ env.MAIN_BR }}', this PR **should be checked**, for meeting **standards**, such as:
+
+          - All CI Jobs are Green / Passing
+          - Acceptance Criteria/Tests passed, on a Staging Deployment
+          - Code Review is approved by at least one developer
+          "
+
