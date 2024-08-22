@@ -156,19 +156,21 @@ jobs:
           GH_TOKEN: ${{ secrets.github_pat }}
         run: |
           gh pr create --head "${{ env.USER_BRANCH }}" --base "${{ inputs.release_branch }}" ${{ env.CLI_FLAG }} \
-            --title "[GITOPS] - Merging '${{ env.USER_BRANCH }}' in '${{ inputs.release_branch }}' - Initiate Release Process" \
-            --body "## :rocket: **Marking for Release** all changes from **${{ env.USER_BRANCH }}** Branch :rocket:
+            --title "[GITOPS] - Merging '${{ env.USER_BRANCH }}' in '${{ inputs.release_branch }}'" \
+            --body "## :steam_locomotive: **Marking for Release** all changes from **\`${{ env.USER_BRANCH }}\`** Branch :steam_locomotive:
 
-          This PR signals our `intention` that all changes from **${{ env.USER_BRANCH }}** branch should be **included for Release**.
+          This PR signals our \`intention\` to
+          - **Initiate the Release Process**
+          - include all changes from **${{ env.USER_BRANCH }}** branch in the Release.
 
           ### :large_blue_diamond: Changes
           $(echo ${COMMITS_ARRAY} | jq -r | jq -r '.[]' | awk '{print "- " $0}')
 
           ### What's Happening in This PR?
 
-          - We are merging the `${{ env.USER_BRANCH }}` branch into the `${{ inputs.release_branch }}` branch.
-          - We have decided that next Release should exactly include all changes from the `${{ env.USER_BRANCH }}` branch.
-          - This action is typically the 1st Step in the `Release Process`, where we **prepare** the changes for the **Release**.
+          - We are merging the \`${{ env.USER_BRANCH }}\` branch into the \`${{ inputs.release_branch }}\` branch.
+          - We have decided that next Release should exactly include all changes from the \`${{ env.USER_BRANCH }}\` branch.
+          - This action is typically the 1st Step in the \`Release Process\`, where we **prepare** the changes for the **Release**.
 
           \`\`\`mermaid
           ---
@@ -182,33 +184,12 @@ jobs:
           ### :bulb: Next Steps in Our Journey:
 
           Following the successful merge of this PR, we can initiate the **next phase**, which involves for example:
-          - Ensuring `Release Chores` are completed, such as:
-            - Updating the maintained Changelog file
-            - Updating the maintained Version file
-            - Generating the Github Release Notes
-          - `Merging` the `${{ inputs.release_branch }}` into the **${{ inputs.main_branch }}** branch.
+          - Ensuring \`Release Chores\` are completed, such as:
+            - Updating the **Changelog** file
+            - Updating the **Version** file. if maintained
+            - Generating the Github **Release Notes**
+          - \`Merging\` the \`${{ inputs.release_branch }}\` into the **${{ inputs.main_branch }}** branch.
           "
-
-      # - name: Extract PR API URL, using Github REST API, through CLI Client
-      #   run: echo PR_API_URL="$(gh pr view --json url | jq -r '.url')" >> $GITHUB_ENV
-
-      # # EG: https://api.github.com/repos/boromir674/gitops-automation/pulls/50
-      # - run: 'echo "Derived PR API URL: ${{ env.PR_API_URL}}" >> $GITHUB_STEP_SUMMARY'
-
-      # ### Generate updated PR Body contents, based on Conventional Commits
-      # - name: Construct PR Body contents
-      #   uses: octue/generate-pull-request-description@b5257de511dfdd6e1de7adee90b62b6279ce40a0  # 1.0.0.beta-2
-      #   id: pr-description
-      #   with:
-      #     pull_request_url: ${{ env.PR_API_URL }}
-      #     api_token: ${{ secrets.GITHUB_TOKEN }}
-
-      # ## Update PR Body Contents ##
-      # - name: Update pull request body
-      #   uses: riskledger/update-pr-description@bb136dcb15789ce886dee9c8e04332c5cbf34832  # v2
-      #   with:
-      #     body: ${{ steps.pr-description.outputs.pull_request_description }}
-      #     token: ${{ secrets.GITHUB_TOKEN }}
 
       ##### Auto Merge: User Branch --> Release #####
       - name: 'Merge PR   ${{ env.USER_BRANCH }}  -->  ${{ inputs.release_branch }}'
