@@ -45,8 +45,11 @@ jobs:
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
           token: '${{ secrets.PR_RW_AND_ACTIONS_RW }}'
 
-      - name: Find most recently pushed Git Tag v*
-        run: echo "LATEST_SEMVER_TAG=$(git tag -l 'v*' | sort -V | tail -n 1)" >> $GITHUB_ENV
+      # Sort Sem Ver from Lower precedenc to Higher Precedence and get last one
+      - name: Find Tag with Highest Semantic Version Precedence (ie latest published prod release)
+        run: |
+          git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//'
+          echo "LATEST_SEMVER_TAG=$(git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1)" >> $GITHUB_ENV
 
       - name: Generate Linear Commit History from HEAD to main
         id: commit_generator
@@ -55,10 +58,9 @@ jobs:
           # we do not override input.from_ref to use whatever we checked out with actions/checkout
           to_ref: ${{ env.LATEST_SEMVER_TAG }}
 
-        # ommit oldest commit since somehow (todo investigate) it is expected to be the latest merge commit on main !
         # Yaml string is formatted into JSON github expression, which is a ready-to-use quoted thing to use in shell/bash
       - name: Store JSON Array of objects as JSON Array of strings, in a GITHUB_ENV Variable
-        run: echo COMMITS_ARRAY=$(echo ${{ toJSON(steps.commit_generator.outputs.commits_array) }} | jq -c '[.[0:-1] | .[].message]') >> $GITHUB_ENV
+        run: echo COMMITS_ARRAY=$(echo ${{ toJSON(steps.commit_generator.outputs.commits_array) }} | jq -c '[.[].message]') >> $GITHUB_ENV
 
       ##### Open PR: Release  -->  Main/Master #####
       - name: "Open PR  'head': ${{ env.RELEASE }} --> 'base': ${{ env.MAIN_BR }}"

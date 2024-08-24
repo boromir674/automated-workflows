@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## 1.13.0 (2024-09-23)
+## 1.13.1 (2024-09-24)
+
+### Changes
+
+Fix Bug where the `open PR` Workflows would detect as "latest" not the tag with highest Semantic Version Precedence, but an '-rc' tag.
+
+#### Fix
+- ensure PR `Changes sections`, renders list of commits from `feature/release` branches only
+
+
+## 1.13.0 (2024-09-24)
 
 ### Changes
 
