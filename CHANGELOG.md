@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.13.0 (2024-09-23)
+
+### Changes
+
+#### Feature
+- better PR Title and Body contents, with **automatically parsed commit history**, for 'PR to main' Workflow
+- crash and report error if user is on release branch when opening PR to release
+- better PR Title and Body contents, with **automatically parsed commit history**, for PR to release
+
+#### Fix
+- properly pass dynamic flag in gh CLI based on backword-compatibility User Input
+- add permission for registering new label in available repository PR Labels
+- checkout main before Tag on main
+
+
 ## 1.12.1-dev1 (2024-09-21)
 
 ### Changes

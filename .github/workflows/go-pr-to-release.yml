@@ -24,11 +24,16 @@ on:
         type: string
         description: "Branch with 'Release' Purpose"
         default: 'release'
+      main_branch:
+        required: false
+        type: string
+        description: "Branch with 'Main' Purpose"
+        default: 'main'
       backwords_compatibility:
         required: false
         type: string
         description: >
-          "Etheir 'backwords-compatible' or 'backwords-incompatible'.
+          "Either 'backwords-compatible' or 'backwords-incompatible'.
           If 'backwords-incompatible', then it hints for major Sem Ver bump, if this released.
           If 'backwords-compatible', then when this is the only change for release, it hints for patch or minor Sem Ver bump.
           If 'backwords-compatible', then when there are more changes for release, this does not impose minimum Bump level.
@@ -36,7 +41,7 @@ on:
         default: ''
       forbidden_branches:
         required: false
-        default: 'main,master'
+        default: 'main,master,release'
         description: >
           "Comma separated list of branches, which are forbidden to be merged into Release Branch.
           Set to main,master to crash this Job, in case accidentally the main/master branch was
@@ -111,6 +116,7 @@ jobs:
         run: |
           echo "Input **Backwords Compatibility**: ${{ inputs.backwords_compatibility }}" >> $GITHUB_STEP_SUMMARY
           echo BACKWORDS_COMPATIBILITY=${{ inputs.backwords_compatibility }} >> $GITHUB_ENV
+          echo CLI_FLAG="--label ${{ inputs.backwords_compatibility }}" >> $GITHUB_ENV
 
       - name: 'Warn, if unsupported value for backwords_compatibility'
         if: ${{ inputs.backwords_compatibility != 'backwords-compatible' && inputs.backwords_compatibility != 'backwords-incompatible' }}
@@ -124,41 +130,66 @@ jobs:
           echo BACKWORDS_COMPATIBILITY='' >> $GITHUB_ENV
 
       ####### PR: User Branch --> Release #######
+      # TODO: auto populate section '### :white_check_mark: Automatic Merging Upon CI Checks :white_check_mark:' inside PR Body
+      #    - Automatically GET with Gh API the Required Checks matching the release branch rule
+      #    - use YAML to parse Single QA Job Required/allowed_skip/allowed_fail Inputs
+      #    - use above info to populate the PR Body section
 
+      - name: Find most recently pushed Git Tag v*
+        run: echo "LATEST_SEMVER_TAG=$(git tag -l 'v*' | sort -V | tail -n 1)" >> $GITHUB_ENV
+
+      - name: Generate Linear Commit History from HEAD to main
+        id: commit_generator
+        uses: boromir674/action-commit-parser@v1.0.0
+        with:
+          # we do not override input.from_ref to use whatever we checked out with actions/checkout
+          to_ref: ${{ env.LATEST_SEMVER_TAG }}
+
+        # Yaml string is formatted into JSON github expression, which is a ready-to-use quoted thing to use in shell/bash
+        # ommit oldest commit since somehow (todo investigate) it is expected to be the latest merge commit on main !
+      - name: Store JSON Array of objects as JSON Array of strings, in a GITHUB_ENV Variable
+        run: echo COMMITS_ARRAY=$(echo ${{ toJSON(steps.commit_generator.outputs.commits_array) }} | jq -c '[.[0:-1] | .[].message]') >> $GITHUB_ENV
+
+      ## Create PR ##
       - name: "Create PR  'head': ${{ env.USER_BRANCH }}  -->  'base': ${{ inputs.release_branch }}"
         env:
           GH_TOKEN: ${{ secrets.github_pat }}
         run: |
-          gh pr create --head "${{ env.USER_BRANCH }}" --base "${{ inputs.release_branch }}" \
-            ${{ env.BACKWORDS_COMPATIBILITY && '--label env.BACKWORDS_COMPATIBILITY' || '' }} \
-            --title "[GITOPS] - Merging '${{ env.USER_BRANCH }}' in '${{ inputs.release_branch }}' - Initiate Release Process" \
-            --body "## :rocket: Initiating Release Process :rocket:
+          gh pr create --head "${{ env.USER_BRANCH }}" --base "${{ inputs.release_branch }}" ${{ env.CLI_FLAG }} \
+            --title "[GITOPS] - Merging '${{ env.USER_BRANCH }}' in '${{ inputs.release_branch }}'" \
+            --body "## :steam_locomotive: **Marking for Release** all changes from **\`${{ env.USER_BRANCH }}\`** Branch :steam_locomotive:
 
-            This PR marks a pivotal moment in our deployment cycle, signaling that all changes on the **Release Train (RT)** are deemed ready for release. It represents the collective decision of our developers that the changes bundled in the RT are suitable to be released together.
+          This PR signals our \`intention\` to
+          - **Initiate the Release Process**
+          - include all changes from **${{ env.USER_BRANCH }}** branch in the Release.
 
-            ### What's Happening in This PR?
+          ### :large_blue_diamond: Changes
+          $(echo ${COMMITS_ARRAY} | jq -r | jq -r '.[]' | awk '{print "- " $0}')
 
-            - We are merging the `${{ env.USER_BRANCH }}` branch into the `${{ inputs.release_branch }}` branch.
-            - This action is a critical step, transitioning us from the development phase to the release phase.
+          ### What's Happening in This PR?
 
-            ### :white_check_mark: Automatic Merging Upon CI Checks :white_check_mark:
+          - We are merging the \`${{ env.USER_BRANCH }}\` branch into the \`${{ inputs.release_branch }}\` branch.
+          - We have decided that next Release should exactly include all changes from the \`${{ env.USER_BRANCH }}\` branch.
+          - This action is typically the 1st Step in the \`Release Process\`, where we **prepare** the changes for the **Release**.
 
-            - This PR is configured to **automatically merge** once all CI checks successfully pass.
-            - These checks include running our comprehensive test suite on the RT branch to ensure a minimum standard of quality, covering sanity checks, QA, and unit tests.
+          \`\`\`mermaid
+          ---
+          title: Typical 2-PR Release Process
+          ---
+          graph LR
+            A[User Branch] -->|PR| B[Release Branch]
+            B -->|PR| C[Main Branch]
+          \`\`\`
 
-            ### Ensuring Quality and Preparing for Release:
+          ### :bulb: Next Steps in Our Journey:
 
-            - Our focus now shifts to **stress testing** and on CI.
-            - We'll also handle essential chores, like updating the changelog with a new entry dedicated for the imminent release.
-
-            ### :bulb: Next Steps in Our Journey:
-
-            - Following the successful merge of this PR, we'll initiate the next phase, which involves merging the `${{ inputs.release_branch }}` into the **${{ env.MAIN_BR }}** branch.
-
-            ### :hourglass_flowing_sand: Looking Ahead:
-
-            - Once merged, our changes are set for the final stage of release preparation.
-            "
+          Following the successful merge of this PR, we can initiate the **next phase**, which involves for example:
+          - Ensuring \`Release Chores\` are completed, such as:
+            - Updating the **Changelog** file
+            - Updating the **Version** file. if maintained
+            - Generating the Github **Release Notes**
+          - \`Merging\` the \`${{ inputs.release_branch }}\` into the **${{ inputs.main_branch }}** branch.
+          "
 
       ##### Auto Merge: User Branch --> Release #####
       - name: 'Merge PR   ${{ env.USER_BRANCH }}  -->  ${{ inputs.release_branch }}'

@@ -136,6 +136,8 @@ jobs:
       ## LABEL PR for Auto Deploy, to trigger 'Tag Main' Workflow after merge ##
       - name: Search for 'auto-deploy', among the registered Repository PR Labels
         run: echo AUTO_DEPLOY_LABEL_OBJECT="$(gh label list --json id,name,description,isDefault --jq '.[] | select(.name == "auto-deploy")')" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}
       - name: Register 'auto-deploy', in Repository PR Labels, if not already present
         if: ${{ env.AUTO_DEPLOY_LABEL_OBJECT != '' }}
         run: |
