@@ -58,8 +58,8 @@ jobs:
           # we do not override input.from_ref to use whatever we checked out with actions/checkout
           to_ref: ${{ env.LATEST_SEMVER_TAG }}
 
+      - name: 'Convert JSON Array {message: str}[] into JSON Array str[] and store in a GITHUB_ENV Variable'
         # Yaml string is formatted into JSON github expression, which is a ready-to-use quoted thing to use in shell/bash
-      - name: Store JSON Array of objects as JSON Array of strings, in a GITHUB_ENV Variable
         run: echo COMMITS_ARRAY=$(echo ${{ toJSON(steps.commit_generator.outputs.commits_array) }} | jq -c '[.[].message]') >> $GITHUB_ENV
 
       ##### Open PR: Release  -->  Main/Master #####
@@ -103,3 +103,38 @@ jobs:
           - Code Review is approved by at least one developer
           "
 
+      ## Group Conventional Commits and Post as PR Comment
+      - name: "Group Conventional Commits, as Markdown Sections of lists"
+        id: group_commits
+        uses: boromir674/action-generate-changelog@dev
+        with:
+          commits: ${{ env.COMMITS_ARRAY }}
+          output_format: 'MD'  # output Markdown content
+          categories: 'feat,fix,refactor,test,build,docs,ci,style,chore'
+
+      - name: "Post Markdown Content as PR Comment"
+        env:
+          GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
+        # TODO use semver to dynamically populate
+        run: |
+          gh pr comment "${{ env.RELEASE }}" --body \
+          "## Automation-Suggested Changelog Entry Content
+          \`\`\`markdown
+          ## \`Enter semver string\` ($(date -u +%Y/%m/%d))
+
+          ### Changes
+
+          ${{ format('{0}', steps.group_commits.outputs.content) }}
+          \`\`\`
+          "
+
+          gh pr comment "${{ env.RELEASE }}" --body \
+            '## Update CHANGELOG.md
+            ```sh
+            VERSION=...
+            code CHANGELOG.md
+            git add CHANGELOG.md && git commit -m "chore(changelog): add v${VERSION} Changelog Release Entry"
+            ```
+            '
+        # TODO allow release-me-<semver> to trigger and supply the SemVer to this Workflow
+        # THEN use semver to dynamically populate the commit message above: "chore(changelog): add v... Changelog Release Entry"
