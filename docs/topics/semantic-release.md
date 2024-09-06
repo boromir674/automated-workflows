@@ -28,6 +28,7 @@ quadrantChart
 ```
 
 ## Semantic Release - Version Bump
+> Decide on `Sem Ver Bump` Operator.
 
 {% include 'diagram-sem-ver-derivation-process.md' %}
 
