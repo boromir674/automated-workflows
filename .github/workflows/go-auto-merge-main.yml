@@ -111,15 +111,91 @@ jobs:
           changelog_file: ${{ inputs.changelog_file }}
           version_to_check: ${{ steps.sem_ver.outputs.SEMVER }}
 
-      - name: Fail Job if '${{ inputs.changelog_file }}' was not updated according to the Rules
+      - name: IF CHANGELOG.md NOT Updated, according to Rules, Get PR ID for following Operations
+      - if: steps.check_changelog.outputs.retval == 'false'
+        id: pr_id
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}
+        run: echo PR_ID=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == "${{ env.RELEASE_BR }}") | .number') >> $GITHUB_OUTPUT
+
+      - name: IF CHANGELOG.md NOT Updated, Detect if User Requested AUTO-UPDATE
         if: steps.check_changelog.outputs.retval == 'false'
+        id: auto_update_changelog_flag
+        env:
+          COMMENT_BODY: 'User PAYLOAD for Automatic CHANGELOG.md Update'
+          AUTO_UPDATE_USER_FLAG_NAME: auto_update
+          GH_TOKEN: ${{ secrets.pat_token }}
+        run: |
+          # FIND COMMENT with PAYLOAD, by matching COMMENT_BODY
+          COMMENT_OBJECT=$(gh api -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${{ github.repository }}/issues/${{ steps.pr_id.outputs.PR_ID }}/comments" | jq -r '[.[] | {body: .body, url: .url, id: .id}]' | jq -rc --arg COMMENT_BODY "$COMMENT_BODY" '.[] | select(.body | contains($COMMENT_BODY))')
+
+          # extact .body value and pattern/extract content between '```json' and '```'
+
+          PAYLOAD_OBJECT=$(echo "$COMMENT_OBJECT" | jq -r '.body' | sed -n '/```json/,/```/p' | sed '1d;$d')
+
+          # if payload not empy and .auto_update == true then set flag
+          if [[ -n "$PAYLOAD_OBJECT" ]]; then
+            echo AUTO_UPDATE_CHANGELOG=$(echo "$PAYLOAD_OBJECT" | jq -r '.${{ env.AUTO_UPDATE_USER_FLAG_NAME }}') >> $GITHUB_OUTPUT
+          fi
+
+        ### AUTOMATIC CHANGELOG.MD UPDATE ###
+      - name: IF AUTO_UPDATE_CHANGELOG should be perfomed, insert new (automatically generated) Release Entry
+        if: steps.auto_update_changelog_flag.outputs.AUTO_UPDATE_CHANGELOG == 'true'
+        env:
+          COMMENT_BODY: '## Automation-Suggested Changelog Entry Content'
+          CHANGELOG: ${{ inputs.changelog_file }}
+          GH_TOKEN: ${{ secrets.pat_token }}
+        run: |
+          # Fetch Automatically Generated new Release Entry Markdown content from PR Comment
+          # FIND COMMENT with Release Entry Markdown content, by matching COMMENT_BODY
+          COMMENT_OBJECT=$(gh api -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${{ github.repository }}/issues/${{ steps.pr_id.outputs.PR_ID }}/comments" | jq -r '[.[] | {body: .body, url: .url, id: .id}]' | jq -rc --arg COMMENT_BODY "$COMMENT_BODY" '.[] | select(.body | contains($COMMENT_BODY))')
+
+          # extact .body value and pattern/extract content between '```markdown' and '```'
+          MARKDOWN_CONTENT=$(echo "$COMMENT_OBJECT" | jq -r '.body' | sed -n '/```markdown/,/```/p' | sed '1d;$d')
+
+          NEW_ENTRY="${MARKDOWN_CONTENT}"
+
+          git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//'
+          LATEST_SEMVER_TAG="$(git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1)"
+
+          # Insert new entry in CHANGELOG.md, below header and above existing release entries
+          echo "$NEW_ENTRY" | python -c 'import re, sys; content=sys.stdin.read(); regex=sys.argv[1]; file_path=sys.argv[2]; pattern=re.compile(regex); file=open(file_path, "r+"); file_content=file.read(); match=re.search(regex, file_content, re.MULTILINE); NL = "\n"; exec("if match:\n    file.seek(match.start()); file.write(content + NL + file_content[match.start():])\nelse:\n    print(\"NO MATCH\")"); file.close()' "^## ${LATEST_SEMVER_TAG}" "${CHANGELOG}"
+
+          cat ${CHANGELOG}
+
+          echo "## Updated ${CHANGELOG}" >> $GITHUB_STEP_SUMMARY
+          echo '```markdown' >> $GITHUB_STEP_SUMMARY
+          cat ${CHANGELOG} >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          git checkout ${{ env.RELEASE_BR }}
+          git add ${CHANGELOG}
+          git config user.name "Konstantinos Lampridis"
+          git config user.email "boromir674@hotmail.com"
+          git commit -m "chore: update ${CHANGELOG} with new ${{ steps.sem_ver.outputs.SEMVER }} Release entry"
+          git push origin ${{ env.RELEASE_BR }}
+
+      - name: Check if ${{ inputs.changelog_file }} is now OK
+        if: steps.auto_update_changelog_flag.outputs.AUTO_UPDATE_CHANGELOG == 'true'
+        id: check_changelog_again
+        uses: boromir674/action-changelog-ci@v2.0.0
+        with:
+          ref_to_check: ${{ github.ref }}
+          main_branch: ${{ env.MAIN_BR }}
+          changelog_file: ${{ inputs.changelog_file }}
+          version_to_check: ${{ steps.sem_ver.outputs.SEMVER }}
+
+      - name: Fail Job if '${{ inputs.changelog_file }}' was not updated according to the Rules
+        if: steps.check_changelog_again.outputs.retval == 'false'
         run: |
           echo "## CHANGELOG.md CI error" >> $GITHUB_STEP_SUMMARY
-          echo '`CHANGELOG.md` file was **not updated according to the Rules**  ' >> $GITHUB_STEP_SUMMARY
+          echo '`${{ inputs.changelog_file }}` file was **not updated according to the Rules**  ' >> $GITHUB_STEP_SUMMARY
           echo "Passing all Rule Checks is required for Merge to Main" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**TO FIX:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Update \`CHANGELOG.md\` file and push the changes" >> $GITHUB_STEP_SUMMARY
+          echo "- Update \`${{ inputs.changelog_file }}\` file and push the changes" >> $GITHUB_STEP_SUMMARY
           echo '- Trigger Workflow; ie `git tag -f auto-prod-1.2.0 && git push origin -f auto-prod-1.2.0`' >> $GITHUB_STEP_SUMMARY
           exit 1
 
