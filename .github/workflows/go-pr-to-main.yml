@@ -120,7 +120,7 @@ jobs:
           gh pr comment "${{ env.RELEASE }}" --body \
           "## Automation-Suggested Changelog Entry Content
           \`\`\`markdown
-          ## \`Enter semver string\` ($(date -u +%Y/%m/%d))
+          ## \`Enter semver string\` ($(date -u +%Y-%m-%d))
 
           ### Changes
 
