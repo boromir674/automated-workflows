@@ -91,18 +91,8 @@ jobs:
           echo "**New Sem Ver: $NEW_SEMVER**" >> $GITHUB_STEP_SUMMARY
           echo SEMVER=$NEW_SEMVER >> $GITHUB_OUTPUT
 
-      # CHECK that CHANGELOG.md was updated in the PR, with entry corresponding to new Semantic Release Version
+      # CHECK that CHANGELOG.md was updated with entry corresponding to new Semantic Release Version
       - name: Check if Release entry was added to '${{ inputs.changelog_file }}', corresponding to new Semantic Version
-        # Idea: ATTEMP TO AUTOMATICALLY UPDATE CHANGELOG given conditions
-        # if not label indicating changelog is OK not found
-        # then compute section to inject
-        # show content in a PR COMMENT,
-        # allow user to review
-        # this should happen before the PR is merged to allow user to alter the MARKDOWN content throug same PR COMMENT !
-        # INJECT into CHANGELOG.md, and commit after user approved
-
-        # TLDR GET PR comments
-        # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/boromir674/gitops-automation/issues/350/comments | jq -r '[.[] | {body: .body, url: .url}]'
         id: check_changelog
         uses: boromir674/action-changelog-ci@v2.0.0
         with:
@@ -178,7 +168,6 @@ jobs:
           git push origin ${{ env.RELEASE_BR }}
 
       - name: Check if ${{ inputs.changelog_file }} is now OK
-        if: steps.auto_update_changelog_flag.outputs.AUTO_UPDATE_CHANGELOG == 'true'
         id: check_changelog_again
         uses: boromir674/action-changelog-ci@v2.0.0
         with:
