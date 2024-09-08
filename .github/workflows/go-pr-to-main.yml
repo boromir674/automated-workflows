@@ -130,6 +130,7 @@ jobs:
 
       - name: Post a PR Comment with User Payload
         env:
+          GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
           AUTO_UPDATE_USER_FLAG_NAME: auto_update
         run: |
           gh pr comment "${{ env.RELEASE }}" --body \
@@ -150,6 +151,8 @@ jobs:
             git add CHANGELOG.md && git commit -m "chore(changelog): add v${VERSION} Changelog Release Entry"
             ```
             '
+        env:
+          GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
         # TODO allow release-me-<semver> to trigger and supply the SemVer to this Workflow
         # THEN use semver to dynamically populate the commit message above: "chore(changelog): add v... Changelog Release Entry"
 
