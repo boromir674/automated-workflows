@@ -151,7 +151,7 @@ jobs:
           LATEST_SEMVER_TAG="$(git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1)"
 
           # Insert new entry in CHANGELOG.md, below header and above existing release entries
-          echo "$NEW_ENTRY" | python -c 'import re, sys; content=sys.stdin.read(); regex=sys.argv[1]; file_path=sys.argv[2]; pattern=re.compile(regex); file=open(file_path, "r+"); file_content=file.read(); match=re.search(regex, file_content, re.MULTILINE); NL = "\n"; exec("if match:\n    file.seek(match.start()); file.write(content + NL + file_content[match.start():])\nelse:\n    print(\"NO MATCH\")"); file.close()' "^## ${LATEST_SEMVER_TAG}" "${CHANGELOG}"
+          echo "$NEW_ENTRY" | python -c 'import re, sys; content=sys.stdin.read(); regex=sys.argv[1]; file_path=sys.argv[2]; pattern=re.compile(regex); file=open(file_path, "r+"); file_content=file.read(); match=re.search(regex, file_content, re.MULTILINE); NL = "\n"; exec("if match:\n    file.seek(match.start()); file.write(content + NL*2 + file_content[match.start():])\nelse:\n    print(\"NO MATCH\")"); file.close()' "^## ${LATEST_SEMVER_TAG}" "${CHANGELOG}"
 
           cat ${CHANGELOG}
 
@@ -164,8 +164,8 @@ jobs:
           git add ${CHANGELOG}
           git config user.name "Konstantinos Lampridis"
           git config user.email "boromir674@hotmail.com"
-          git commit -m "chore: update ${CHANGELOG} with new ${{ steps.sem_ver.outputs.SEMVER }} Release entry"
-          git push origin ${{ env.RELEASE_BR }}
+          git commit -m "chore(changelog): update ${CHANGELOG} with new ${{ steps.sem_ver.outputs.SEMVER }} Release entry"
+          git push
 
       - name: Check if ${{ inputs.changelog_file }} is now OK
         id: check_changelog_again
