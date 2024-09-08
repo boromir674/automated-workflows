@@ -182,7 +182,7 @@ jobs:
         id: check_changelog_again
         uses: boromir674/action-changelog-ci@v2.0.0
         with:
-          ref_to_check: ${{ github.ref }}
+          ref_to_check: ${{ env.RELEASE_BR }}
           main_branch: ${{ env.MAIN_BR }}
           changelog_file: ${{ inputs.changelog_file }}
           version_to_check: ${{ steps.sem_ver.outputs.SEMVER }}
