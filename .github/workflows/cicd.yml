@@ -89,8 +89,8 @@ jobs:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
 
       # Check if a tag was pushed on the 'release' branch
-      - if: startsWith(github.event.ref, 'refs/tags/v')
-        name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BRANCH }}' branch"
+      - name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BRANCH }}' branch"
+        if: startsWith(github.event.ref, 'refs/tags/v')
         uses: rickstaa/action-contains-tag@v1
         id: release_contains_tag
         with:
@@ -166,6 +166,7 @@ jobs:
           # which requires the GH_TOKEN env var to be set. We pass the default GITHUB_TOKEN
           # as it is with the default permissions
           GH_TOKEN: ${{ github.token }}
+          # The python Autoamted Test Suite authenticates with Gh API using below Token
           CICD_TEST_GH_TOKEN: ${{ secrets.CICD_TEST_GH_TOKEN }}
         working-directory: cicd-test
         run: tox -e test -vv -- -n auto -vvs -k '${{ matrix.tests_filter }}'
