@@ -125,7 +125,7 @@ jobs:
         run: tox -e dev -vv -s false
 
 
-      - name: Set Distro Name
+      - name: Discover Python Distribution Name from Source
         shell: bash
         run: |
           if [ -f "pyproject.toml" ]; then
@@ -147,7 +147,7 @@ jobs:
       # 3. pyproject.toml
       # 4. setup.py
 
-      - name: Find Version from Source
+      - name: Find Python Distribution Version from Source
         shell: bash
         run: |
           set -e
@@ -209,13 +209,15 @@ jobs:
       # BUILD_DEST controls where the wheel and tar.gz is stored
       # defaults to the    env var, which defaults to 'dist'
 
-      ## Build Wheel with `build`, not `pip wheel` and Test ##
-      - if: contains(inputs.build_installation, 'wheel')
+      ## Build Wheel with `python -m build`, not `pip wheel`##
+      - name: "Build Wheel (from sdist) with 'build' and run Tests"
+        if: contains(inputs.build_installation, 'wheel')
         run: tox -e build -vv -s false
         env:
-          BUILD_DEST: ${{ env.BUILD_DEST }}
+          BUILD_DEST: ${{ env.BUILD_DEST }}    
 
-      - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
+      - name: "Build Sdist, unless 'build' ran, which produces sdist too"
+        if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
         run: tox -e sdist -vv -s false --notest
 
       - name: Set Distro Version
@@ -256,7 +258,8 @@ jobs:
       - run: tox -e pin-deps -s false -- -E test
 
       ## Install SDIST and TEST ##
-      - if: contains(inputs.build_installation, 'sdist')
+      - name: Install SDIST previously generated, and Tests
+        if: contains(inputs.build_installation, 'sdist')
         run: tox -e ga-sdist -vv -s false
         env:
           ARTIFACT: '${{ steps.distros.outputs.SDIST_FILE }}[test]'
@@ -307,7 +310,7 @@ jobs:
             echo "Type Checking Failed, but continuing"
           fi
 
-      ## DISTROs (SDIST, WHEEL) ARTIFACTS ##
+      ## DISTROs (SDIST, WHEEL) UPLOAD ARTIFACTS ##
       - if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
         shell: bash
         run: |
