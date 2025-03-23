@@ -91,32 +91,32 @@ jobs:
       - run: git branch -a
 
       # ENSURE 'release' branch is OK
-      - name: 'git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}"'
+      - name: 'git branch --track "${{ env.RELEASE_BRANCH }}" "origin/${{ env.RELEASE_BRANCH }}"'
         id: track_release_br
         run: |
           exit_code=0
-          git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" || exit_code=$?
+          git branch --track "${{ env.RELEASE_BRANCH }}" "origin/${{ env.RELEASE_BRANCH }}" || exit_code=$?
 
           if [[ $exit_code -ne 0 ]]; then
-            echo "[WARN] Could not track '${{ env.RELEASE_BR }}' branch. Possibly origin/${{ env.RELEASE_BR }} has been already deleted"
+            echo "[WARN] Could not track '${{ env.RELEASE_BRANCH }}' branch. Possibly origin/${{ env.RELEASE_BRANCH }} has been already deleted"
           fi
           echo "TRACK_RELEASE_CODE=${exit_code}" >> $GITHUB_OUTPUT
 
       # ENSURE 'main' branch is OK
-      - name: 'git branch --track "${{ env.MAIN_BR }}" "origin/${{ env.MAIN_BR }}"'
+      - name: 'git branch --track "${{ env.MAIN_BRANCH }}" "origin/${{ env.MAIN_BRANCH }}"'
         id: track_main_br
         run: |
           exit_code=0
-          git branch --track "${{ env.MAIN_BR }}" "origin/${{ env.MAIN_BR }}" || exit_code=$?
+          git branch --track "${{ env.MAIN_BRANCH }}" "origin/${{ env.MAIN_BRANCH }}" || exit_code=$?
           if [[ $exit_code -ne 0 ]]; then
-            echo "[WARN] Could not track '${{ env.MAIN_BR }}' branch!"
+            echo "[WARN] Could not track '${{ env.MAIN_BRANCH }}' branch!"
           fi
           echo "TRACK_MAIN_CODE=${exit_code}" >> $GITHUB_OUTPUT
 
       # Check if a tag was pushed on the 'release' branch
       - name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BRANCH }}' branch"
-        if: startsWith(github.event.ref, 'refs/tags/v')
-        uses: rickstaa/action-contains-tag@v1
+        if: steps.track_release_br.outputs.TRACK_RELEASE_CODE == 0 && startsWith(github.event.ref, 'refs/tags/v')
+        uses: rickstaa/action-contains-tag@a9ff27d505ba2bf074a2ebb48b208e76d35ff308
         id: release_contains_tag
         with:
           reference: ${{ env.RELEASE_BRANCH }}
@@ -128,8 +128,8 @@ jobs:
 
       # Check if a tag was pushed on the 'main' branch
       - name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BRANCH }}' branch"
-        if: startsWith(github.event.ref, 'refs/tags/v') && env._JOB_MATRIX == ''
-        uses: rickstaa/action-contains-tag@v1
+        if: steps.track_main_br.outputs.TRACK_MAIN_CODE == 0 && startsWith(github.event.ref, 'refs/tags/v') && env._JOB_MATRIX == ''
+        uses: rickstaa/action-contains-tag@a9ff27d505ba2bf074a2ebb48b208e76d35ff308
         id: main_contains_tag
         with:
           reference: ${{ env.MAIN_BRANCH }}
