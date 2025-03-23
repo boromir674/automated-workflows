@@ -43,6 +43,11 @@ on:
         required: false
         type: string
         default: ${{ vars.GIT_RELEASE_BRANCH || 'release' }}
+      changelog_file:
+        description: 'Name of the CHANGELOG.md file, to check if it was updated with new Release entry'
+        required: false
+        type: string
+        default: ${{ vars.GIT_CHANGELOG_FILE || 'CHANGELOG.md' }}
     secrets:
       pat_token:
         description: >
@@ -64,24 +69,21 @@ jobs:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
           token: '${{ secrets.pat_token }}'
-
       - run: git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" 
 
-      # Assumes called from Workflow triggered on tag event
-      - name: "Check if tag is on '${{ env.RELEASE_BR }}' branch"
+      # REQUIRE ${{ github.ref }} to be a Tag on the Release Branch, else ERROR and EXIT
+      - name: "Check if '${{ github.ref }}' is a tag on '${{ env.RELEASE_BR }}' branch"
         uses: rickstaa/action-contains-tag@v1
         id: tag_on_release
         with:
           tag: "${{ github.ref }}"
           reference: "${{ env.RELEASE_BR }}"  # the branch to check if the tag is on
-
-      # REQUIRE Tag to be on Release Branch, else Exit with Error
-      - if: ${{ steps.tag_on_release.outputs.retval == 'false' }}
-        name: "Exit if '${{ github.ref }}' NOT on '${{ env.RELEASE_BR }}' branch"
+      - name: "Exit with Error, if '${{ github.ref }}' NOT on '${{ env.RELEASE_BR }}' branch"
+        if: ${{ steps.tag_on_release.outputs.retval == 'false' }}
         run: echo "Tag '${{ github.ref }}' on '${{ env.RELEASE_BR }}' = ${{ steps.tag_on_release.outputs.retval }}" && exit 1
 
-      # READ NEW SEM VER from trigger tag event, ie '1.2.0' from 'auto-prod-1.2.0'
-      - name: Read New Sem Ver from Tag
+      # READ NEW SEM VER from pushed tag, ie '1.2.0' from 'auto-prod-1.2.0'
+      - name: Parse Sem Ver, intented for Release, from pushed Tag
         id: sem_ver
         run: |
           NEW_SEMVER=$(echo "${{ github.ref }}" | grep -oP '(?<=auto-prod-).+')
@@ -89,11 +91,108 @@ jobs:
           echo "**New Sem Ver: $NEW_SEMVER**" >> $GITHUB_STEP_SUMMARY
           echo SEMVER=$NEW_SEMVER >> $GITHUB_OUTPUT
 
-      # PROD at least one of major, minor, or patch bump happened
-      # DEV ie internal changes, only docs, ci, tests, etc
-      - name: "Mark as PROD (major, minor, or patch happened) Release, unless explicit 'dev' in Sem Ver"
-      #  explicitly DEV Release if dev in Sem Ver string, elsek if it is a PROD or DEV Release"
-      # todo: shorten code by combining this with below steps
+      # CHECK that CHANGELOG.md was updated with entry corresponding to new Semantic Release Version
+      - name: Check if Release entry was added to '${{ inputs.changelog_file }}', corresponding to new Semantic Version
+        id: check_changelog
+        uses: boromir674/action-changelog-ci@v2.0.0
+        with:
+          ref_to_check: ${{ github.ref }}
+          main_branch: ${{ env.MAIN_BR }}
+          changelog_file: ${{ inputs.changelog_file }}
+          version_to_check: ${{ steps.sem_ver.outputs.SEMVER }}
+
+      - name: IF CHANGELOG.md NOT Updated, according to Rules, Get PR ID for following Operations
+        if: steps.check_changelog.outputs.retval == 'false'
+        id: pr_id
+        env:
+          GH_TOKEN: ${{ secrets.pat_token }}
+        run: echo PR_ID=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == "${{ env.RELEASE_BR }}") | .number') >> $GITHUB_OUTPUT
+
+      - name: IF CHANGELOG.md NOT Updated, Detect if User Requested AUTO-UPDATE
+        if: steps.check_changelog.outputs.retval == 'false'
+        id: auto_update_changelog_flag
+        env:
+          COMMENT_BODY: 'User PAYLOAD for Automatic CHANGELOG.md Update'
+          AUTO_UPDATE_USER_FLAG_NAME: auto_update
+          GH_TOKEN: ${{ secrets.pat_token }}
+        run: |
+          # FIND COMMENT with PAYLOAD, by matching COMMENT_BODY
+          COMMENT_OBJECT=$(gh api -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${{ github.repository }}/issues/${{ steps.pr_id.outputs.PR_ID }}/comments" | jq -r '[.[] | {body: .body, url: .url, id: .id}]' | jq -rc --arg COMMENT_BODY "$COMMENT_BODY" '.[] | select(.body | contains($COMMENT_BODY))')
+
+          # extact .body value and pattern/extract content between '```json' and '```'
+
+          PAYLOAD_OBJECT=$(echo "$COMMENT_OBJECT" | jq -r '.body' | sed -n '/```json/,/```/p' | sed '1d;$d')
+
+          # if payload not empy and .auto_update == true then set flag
+          if [[ -n "$PAYLOAD_OBJECT" ]]; then
+            echo AUTO_UPDATE_CHANGELOG=$(echo "$PAYLOAD_OBJECT" | jq -r '.${{ env.AUTO_UPDATE_USER_FLAG_NAME }}') >> $GITHUB_OUTPUT
+          fi
+
+        ### AUTOMATIC CHANGELOG.MD UPDATE ###
+      - name: IF AUTO_UPDATE_CHANGELOG should be perfomed, insert new (automatically generated) Release Entry
+        if: steps.auto_update_changelog_flag.outputs.AUTO_UPDATE_CHANGELOG == 'true'
+        env:
+          COMMENT_BODY: '## Automation-Suggested Changelog Entry Content'
+          CHANGELOG: ${{ inputs.changelog_file }}
+          GH_TOKEN: ${{ secrets.pat_token }}
+        run: |
+          # Fetch Automatically Generated new Release Entry Markdown content from PR Comment
+          # FIND COMMENT with Release Entry Markdown content, by matching COMMENT_BODY
+          COMMENT_OBJECT=$(gh api -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${{ github.repository }}/issues/${{ steps.pr_id.outputs.PR_ID }}/comments" | jq -r '[.[] | {body: .body, url: .url, id: .id}]' | jq -rc --arg COMMENT_BODY "$COMMENT_BODY" '.[] | select(.body | contains($COMMENT_BODY))')
+
+          # extact .body value and pattern/extract content between '```markdown' and '```'
+          MARKDOWN_CONTENT=$(echo "$COMMENT_OBJECT" | jq -r '.body' | sed -n '/```markdown/,/```/p' | sed '1d;$d')
+
+          NEW_ENTRY="${MARKDOWN_CONTENT}"
+
+          git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//'
+          LATEST_SEMVER_TAG="$(git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n 1)"
+
+          # Insert new entry in CHANGELOG.md, below header and above existing release entries
+          echo "$NEW_ENTRY" | python -c 'import re, sys; content=sys.stdin.read(); regex=sys.argv[1]; file_path=sys.argv[2]; pattern=re.compile(regex); file=open(file_path, "r+"); file_content=file.read(); match=re.search(regex, file_content, re.MULTILINE); NL = "\n"; exec("if match:\n    file.seek(match.start()); file.write(content + NL*2 + file_content[match.start():])\nelse:\n    print(\"NO MATCH\")"); file.close()' "^## ${LATEST_SEMVER_TAG}" "${CHANGELOG}"
+
+          cat ${CHANGELOG}
+
+          echo "## Updated ${CHANGELOG}" >> $GITHUB_STEP_SUMMARY
+          echo '```markdown' >> $GITHUB_STEP_SUMMARY
+          cat ${CHANGELOG} >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          git checkout ${{ env.RELEASE_BR }}
+          git add ${CHANGELOG}
+          git config user.name "Konstantinos Lampridis"
+          git config user.email "boromir674@hotmail.com"
+          git commit -m "chore(changelog): update ${CHANGELOG} with new ${{ steps.sem_ver.outputs.SEMVER }} Release entry"
+          git push
+
+      - name: Check if ${{ inputs.changelog_file }} is now OK
+        id: check_changelog_again
+        uses: boromir674/action-changelog-ci@v2.0.0
+        with:
+          ref_to_check: ${{ env.RELEASE_BR }}
+          main_branch: ${{ env.MAIN_BR }}
+          changelog_file: ${{ inputs.changelog_file }}
+          version_to_check: ${{ steps.sem_ver.outputs.SEMVER }}
+
+      - name: Fail Job if '${{ inputs.changelog_file }}' was not updated according to the Rules
+        if: steps.check_changelog_again.outputs.retval == 'false'
+        run: |
+          echo "## CHANGELOG.md CI error" >> $GITHUB_STEP_SUMMARY
+          echo '`${{ inputs.changelog_file }}` file was **not updated according to the Rules**  ' >> $GITHUB_STEP_SUMMARY
+          echo "Passing all Rule Checks is required for Merge to Main" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**TO FIX:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Update \`${{ inputs.changelog_file }}\` file and push the changes" >> $GITHUB_STEP_SUMMARY
+          echo '- Trigger Workflow; ie `git tag -f auto-prod-1.2.0 && git push origin -f auto-prod-1.2.0`' >> $GITHUB_STEP_SUMMARY
+          exit 1
+
+      ## COMPUTE RC TAG and Merge (to main) Commit Message, for PROD or DEV ##
+      - name: "Assume PROD (Public Changes: major, minor, or patch), unless 'dev' in Sem Ver"
+        # PROD ->  Public Changes: at least one of major, minor, or patch bump happened
+        # DEV  -> Private Changes: internal changes, only docs, ci, tests, etc
+        # todo: shorten code by combining this with below steps
         id: prod_or_dev
         run: |
           if [[ "${{ steps.sem_ver.outputs.SEMVER }}" == *dev* ]]; then
@@ -102,27 +201,23 @@ jobs:
             echo "PROD_OR_DEV=PROD" >> $GITHUB_OUTPUT
           fi
 
-      # Derive Git Tag for RC type of Release
-      # Derive Commit subject for PR Merge, based on PROD or DEV
-
-      # [NEW or FIX] maps to PROD -> At least Major, minor, or patch Sem Ver Bump happened
-      # ie 1.0.1-> v1.0.1-rc
-      - name: 'Derive RC Git Tag and imminent merge commit message, from PROD Release'
+      - name: "IF PROD, Derive RC Git Tag as 'v${{ steps.sem_ver.outputs.SEMVER }}-rc' and imminent merge commit message"
+        # - PROD Commit Message: [NEW or FIX] -> At least Major, minor, or patch Bump
+        #   ie 1.0.1-> v1.0.1-rc
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'PROD' }}
         run: |
           echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}-rc" >> $GITHUB_ENV
           echo CM_MSG="[NEW] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV
 
-      # [DEV] maps to DEV -> Sem Ver like 1.2.0-dev happened, with only ci, tests, docs, etc internal changes
-      # ie 1.0.1-dev-> v1.0.1-dev
-      - name: 'Derive RC Git Tag and imminent merge commit message, from DEV Release'
+      - name: "IF DEV, Derive RC Git Tag as 'v${{ steps.sem_ver.outputs.SEMVER }}' and imminent merge commit message"
+        # - [DEV] maps to DEV -> Sem Ver like 1.2.0-dev happened, with only ci, tests, docs, etc internal changes
+        #   ie 1.0.1-dev-> v1.0.1-dev
         if: ${{ steps.prod_or_dev.outputs.PROD_OR_DEV == 'DEV' }}
         run: |
           echo RC_TAG="v${{ steps.sem_ver.outputs.SEMVER }}" >> $GITHUB_ENV
           echo CM_MSG="[DEV] ${{ inputs.commit_message }} v${{ steps.sem_ver.outputs.SEMVER }} Release" >> $GITHUB_ENV
-        # run: 'echo RC_TAG="v$(echo ${{ steps.sem_ver.outputs.SEMVER }} | grep -oP "^\d+\.\d+\.\d+")-rc" >> $GITHUB_ENV'
 
-      ## PUSH RC TAG ##
+      ##### EVENT: PUSH RC TAG #####
       - name: "Create and Push RC Tag ${{ env.RC_TAG }}"
         run: |
           git tag -d "$RC_TAG" || true
@@ -133,37 +228,40 @@ jobs:
           echo "RC Tag ${{ env.RC_TAG }} was **pushed to remote**" >> $GITHUB_STEP_SUMMARY
           echo " -> Pushed tag $RC_TAG"
 
-      ## LABEL PR for Auto Deploy, to trigger 'Tag Main' Workflow after merge ##
+      ## Create for Auto Deploy Label, if not available in Repository PR Labels
       - name: Search for 'auto-deploy', among the registered Repository PR Labels
         run: echo AUTO_DEPLOY_LABEL_OBJECT="$(gh label list --json id,name,description,isDefault --jq '.[] | select(.name == "auto-deploy")')" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
       - name: Register 'auto-deploy', in Repository PR Labels, if not already present
-        if: ${{ env.AUTO_DEPLOY_LABEL_OBJECT != '' }}
+        if: ${{ env.AUTO_DEPLOY_LABEL_OBJECT == '' }}
         run: |
           gh label create auto-deploy --force --description "Branch Ready for Prod/Main Deployment" --color 2ea44f
           echo "Label **auto-deploy was registered** in the **Repository PR Labels**!" >> $GITHUB_STEP_SUMMARY
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
+
+      ##### EVENT LABEL PR with 'auto-deploy', to trigger 'Tag Main' Workflow after merge #####
       - name: "Add 'auto-deploy' PR label to trigger Git Tagging Workflow, after merge"
         run: gh pr edit "${{ env.RELEASE_BR }}" --add-label "auto-deploy"
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
 
-      ## Write Merge Commit Message to STEP SUMMARY ##
-      - run: echo "## Derived Merge Commit Message on `main`" >> $GITHUB_STEP_SUMMARY
+      ## Write Merge Commit Message in PR comments ##
       - run: |
+          echo '## Merge Commit Message on `main`' >> $GITHUB_STEP_SUMMARY
+          echo "Derived by Automation for Auto Merge" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ env.CM_MSG }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-      ## Write Merge Commit Message in PR comments ##
+      # Write Merge Commit Message to STEP SUMMARY (todo: do not write new if workflows fails and re-runs)
       - name: "Write Merge Commit Message in PR comments"
         run: |
           gh pr comment "${{ env.RELEASE_BR }}" --body \
-            "### PR will Auto Merge
-            **Merge Commit Message on main:**
+            "### PR Merge Commit Message on \`main\`
+
+            **Derived by Automation for Auto Merge:**
             \`\`\`
             ${{ env.CM_MSG }}
             \`\`\`
@@ -171,7 +269,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.pat_token }}
 
-      ### Merge PR, when CI Pass + Human Review OK + Webhook Statuses Green + etc ###
+      ##### AUTO MERGE PR; ie when CI Pass + Human Review OK + Webhook Statuses Green + etc #####
       - name: "Merge PR   'head': ${{ env.RELEASE_BR }}  -->  'base': ${{ env.MAIN_BR }}"
         run: |
           git checkout "${{ env.RELEASE_BR }}"

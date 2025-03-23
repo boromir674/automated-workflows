@@ -45,7 +45,7 @@ jobs:
           set-safe-directory: ''  # `git config --global --add safe.directory <path>`
           token: '${{ secrets.PR_RW_AND_ACTIONS_RW }}'
 
-      # Sort Sem Ver from Lower precedenc to Higher Precedence and get last one
+      ## GET ARRAY of COMMITS from HEAD to LATEST_SEMVER_TAG
       - name: Find Tag with Highest Semantic Version Precedence (ie latest published prod release)
         run: |
           git tag -l 'v*' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//'
@@ -53,16 +53,16 @@ jobs:
 
       - name: Generate Linear Commit History from HEAD to main
         id: commit_generator
-        uses: boromir674/action-commit-parser@v1.0.0
+        uses: boromir674/action-commit-parser@v1.1.0
         with:
           # we do not override input.from_ref to use whatever we checked out with actions/checkout
           to_ref: ${{ env.LATEST_SEMVER_TAG }}
 
+      - name: 'Convert JSON Array {message: str}[] into JSON Array str[] and store in a GITHUB_ENV Variable'
         # Yaml string is formatted into JSON github expression, which is a ready-to-use quoted thing to use in shell/bash
-      - name: Store JSON Array of objects as JSON Array of strings, in a GITHUB_ENV Variable
         run: echo COMMITS_ARRAY=$(echo ${{ toJSON(steps.commit_generator.outputs.commits_array) }} | jq -c '[.[].message]') >> $GITHUB_ENV
 
-      ##### Open PR: Release  -->  Main/Master #####
+      ##### OPEN PR: Release  -->  Main/Master #####
       - name: "Open PR  'head': ${{ env.RELEASE }} --> 'base': ${{ env.MAIN_BR }}"
         env:
           GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
@@ -102,4 +102,57 @@ jobs:
           - Acceptance Criteria/Tests passed, on a Staging Deployment
           - Code Review is approved by at least one developer
           "
+
+      ## Suggest CHANGELOG.md Content Update, in a PR Comment
+      - name: "Group Conventional Commits, as Markdown Sections of lists"
+        id: group_commits
+        uses: boromir674/action-generate-changelog@v2.0.0
+        with:
+          commits: ${{ env.COMMITS_ARRAY }}
+          output_format: 'MD'  # output Markdown content
+          categories: 'feat,fix,refactor,test,build,docs,ci,style,chore'
+
+      - name: "Suggest CHANGELOG.md Content Update, via PR Comment"
+        env:
+          GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
+        # TODO use semver to dynamically populate
+        run: |
+          gh pr comment "${{ env.RELEASE }}" --body \
+          "## Automation-Suggested Changelog Entry Content
+          \`\`\`markdown
+          ## \`Enter semver string\` ($(date -u +%Y-%m-%d))
+
+          ### Changes
+
+          ${{ format('{0}', steps.group_commits.outputs.content) }}
+          \`\`\`
+          "
+
+      - name: Post a PR Comment with User Payload
+        env:
+          GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
+          AUTO_UPDATE_USER_FLAG_NAME: auto_update
+        run: |
+          gh pr comment "${{ env.RELEASE }}" --body \
+          "## User PAYLOAD for Automatic CHANGELOG.md Update
+          \`\`\`json
+          {
+            \"${{ env.AUTO_UPDATE_USER_FLAG_NAME }}\": true
+          }
+          \`\`\`
+          "
+
+      - run: |
+          gh pr comment "${{ env.RELEASE }}" --body \
+            '## Update CHANGELOG.md
+            ```sh
+            VERSION=...
+            code CHANGELOG.md
+            git add CHANGELOG.md && git commit -m "chore(changelog): add v${VERSION} Changelog Release Entry"
+            ```
+            '
+        env:
+          GH_TOKEN: ${{ secrets.PR_RW_AND_ACTIONS_RW }}
+        # TODO allow release-me-<semver> to trigger and supply the SemVer to this Workflow
+        # THEN use semver to dynamically populate the commit message above: "chore(changelog): add v... Changelog Release Entry"
 

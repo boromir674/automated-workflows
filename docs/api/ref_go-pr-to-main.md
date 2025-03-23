@@ -1,5 +1,7 @@
 # Workflow go-pr-to-main.yml
 
+> A `Reusable Workflow` for standardizing PRs to `main` branch.
+
 ### Trigger Events
 
 If any of the below events occur, the `go-pr-to-main.yml` workflow will be triggered.
