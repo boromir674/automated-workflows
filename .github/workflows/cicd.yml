@@ -88,6 +88,31 @@ jobs:
         with:
           fetch-depth: 0  # 0 indicates all history for all branches and tags.
 
+      - run: git branch -a
+
+      # ENSURE 'release' branch is OK
+      - name: 'git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}"'
+        id: track_release_br
+        run: |
+          exit_code=0
+          git branch --track "${{ env.RELEASE_BR }}" "origin/${{ env.RELEASE_BR }}" || exit_code=$?
+
+          if [[ $exit_code -ne 0 ]]; then
+            echo "[WARN] Could not track '${{ env.RELEASE_BR }}' branch. Possibly origin/${{ env.RELEASE_BR }} has been already deleted"
+          fi
+          echo "TRACK_RELEASE_CODE=${exit_code}" >> $GITHUB_OUTPUT
+
+      # ENSURE 'main' branch is OK
+      - name: 'git branch --track "${{ env.MAIN_BR }}" "origin/${{ env.MAIN_BR }}"'
+        id: track_main_br
+        run: |
+          exit_code=0
+          git branch --track "${{ env.MAIN_BR }}" "origin/${{ env.MAIN_BR }}" || exit_code=$?
+          if [[ $exit_code -ne 0 ]]; then
+            echo "[WARN] Could not track '${{ env.MAIN_BR }}' branch!"
+          fi
+          echo "TRACK_MAIN_CODE=${exit_code}" >> $GITHUB_OUTPUT
+
       # Check if a tag was pushed on the 'release' branch
       - name: "Check if '${{ github.ref }}' tag is on '${{ env.RELEASE_BRANCH }}' branch"
         if: startsWith(github.event.ref, 'refs/tags/v')
@@ -102,8 +127,8 @@ jobs:
         run: echo _JOB_MATRIX="${JOB_MATRIX}" >> $GITHUB_ENV
 
       # Check if a tag was pushed on the 'main' branch
-      - if: startsWith(github.event.ref, 'refs/tags/v') && env._JOB_MATRIX == ''
-        name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BRANCH }}' branch"
+      - name: "Check if '${{ github.ref }}' tag is on '${{ env.MAIN_BRANCH }}' branch"
+        if: startsWith(github.event.ref, 'refs/tags/v') && env._JOB_MATRIX == ''
         uses: rickstaa/action-contains-tag@v1
         id: main_contains_tag
         with:
