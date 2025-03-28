@@ -38,6 +38,11 @@ on:
       dist_folder:
         required: false
         type: string
+      python_runtime:
+        required: false
+        type: string
+        default: '3.11'
+        description: 'Python Runtime to use, for underlying PyPI Upload command'
     secrets:
       # Bypassing https://github.com/actions/runner/issues/1490
       TWINE_PASSWORD: 
@@ -127,9 +132,13 @@ jobs:
         fi
     ##
 
-    ## PyPI Upload Command
+    - name: Set up Python ${{ inputs.python_runtime }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python_runtime }}
     - run: pip install tox==3.28
 
+    #### PyPI Command ####
     - name: "Publish '${{ inputs.distro_name }}' version ${{ inputs.distro_version }} to '${{ inputs.pypi_server }}' Server"
       env:
         PACKAGE_DIST_VERSION: ${{ inputs.distro_version }}
