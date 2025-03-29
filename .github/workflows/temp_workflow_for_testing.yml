@@ -1,0 +1,18 @@
+
+on:
+  # trigger on pushed tags run-exp
+  push:
+    tags:
+      - 'run-exp'
+
+env:
+  A_VARIABLE_UNAVAILABLE: 'MY_VALUE'
+
+jobs:
+  demonstrate_env_var_not_available_in_with:
+    uses: ./.github/workflows/go-tag-main.yml
+    name: "Experiment with Environment Variables"
+    with:
+      gh_username: '${{ env.MY_VALUE }}'
+      gh_email: 'test@email.io'
+      main_branch: 'main'

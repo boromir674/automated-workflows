@@ -63,9 +63,10 @@ jobs:
     - uses: actions/checkout@v4
     # TODO only Download Build Artifacts
     # For python, Builds typically are files: *.tar.gz, *.whl, cython builds, etc.
-    - name: Download Source & Wheel distributions
+    - name: Download Source & Wheel distributions from ARTIFACTS
       uses: actions/download-artifact@v4
       with:
+        # TODO FIX: this here downloads ALL ARtifacts without selection/filtering: missing name field !!!!
         path: ${{ inputs.artifacts_path }}
 
     - run: ls -laR ${{ inputs.artifacts_path }}

@@ -32,6 +32,12 @@ jobs:
   tag_main:
     runs-on: ubuntu-latest
     steps:
+      - name: Dummy step to try things out
+        run: |
+          echo "-----------------"
+          echo "INPUT value from env context is '${{ inputs.gh_username }}'"
+          echo "-----------------"
+          exit 1
       - name: "Checkout Code"
         uses: actions/checkout@v4
         with:
