@@ -14,18 +14,19 @@ mkdir -p "$CONFIG_DIR"
 SCRIPTS="check-git-branches-exist.sh check-github-branch-protection-using-jq.sh check-github-branch-protection.sh check-setup-git-and-protection.sh"
 
 # Base URL for fetching scripts
-BASE_URL="https://raw.githubusercontent.com/boromir674/automated-workflows/main/scripts"
+BASE_URL="https://raw.githubusercontent.com/boromir674/automated-workflows/develop/scripts"
 
 # Fetch and install each script
 for script in $SCRIPTS; do
     echo "Fetching $script..."
-    curl -fsSL "$BASE_URL/$script" -o "$BIN_DIR/$script"
+    curl -fsSL "$BASE_URL/$script" -o "$CONFIG_DIR/$script"
     if [ $? -ne 0 ]; then
         echo "Error: Failed to fetch $script from $BASE_URL"
         exit 1
     fi
-    chmod +x "$BIN_DIR/$script"
-    echo "Installed $script to $BIN_DIR"
+    chmod +x "$CONFIG_DIR/$script"
+    ln -sf "$CONFIG_DIR/$script" "$BIN_DIR/$script"
+    echo "Installed symbolic link for $script to $BIN_DIR"
 done
 
 # Add $BIN_DIR to PATH if not already present

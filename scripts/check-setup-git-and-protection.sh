@@ -121,6 +121,7 @@ main() {
     for branch in $branches; do
         branch_flags="$branch_flags -b $branch"
     done
+    echo "${BIN_DIR}/check-git-branches-exist.sh $branch_flags"
     ${BIN_DIR}/check-git-branches-exist.sh $branch_flags
     echo "----------------------------------------"
 
