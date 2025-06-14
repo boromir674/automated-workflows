@@ -46,7 +46,7 @@ parse_arguments() {
     branches_provided="" # Flag to track if branches were explicitly provided
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            -b|--branches)
+            -b|--branch)
                 shift
                 branches="$branches $1"
                 branches_provided="true" # Mark that branches were provided

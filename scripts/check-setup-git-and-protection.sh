@@ -75,9 +75,9 @@ parse_arguments() {
 
     # Automatically derive REPO if not provided
     if [ -z "$REPO" ]; then
-        echo "🔍 Deriving repository from git remote..."
+        # echo "🔍 Deriving repository from git remote..."
         REPO=$(derive_repo_from_git_remote)
-        echo "Derived Repository: $REPO"
+        # echo "Derived Repository: $REPO"
     fi
 
     if [ -z "$REPO" ]; then
