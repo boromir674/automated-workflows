@@ -95,7 +95,6 @@ query_branch_protection() {
 
     echo
     echo "🔒 Checking Branch Protection Rules"
-    echo "Branch: $branch"
     echo "Repository: $repo_uri"
     echo "========================================"
 
@@ -247,8 +246,6 @@ main() {
     branches=$(echo "$parse_result" | cut -d'|' -f1)
     REPO=$(echo "$parse_result" | cut -d'|' -f2)
 
-    echo "Repository: $REPO"
-    echo "Branches: $branches"
     echo "----------------------------------------"
 
     # Query branch protection rules for all branches
