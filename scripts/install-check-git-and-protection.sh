@@ -36,10 +36,10 @@ if ! echo "$PATH" | grep -q "$BIN_DIR"; then
 fi
 
 # Optional: Create a default configuration file
-echo "Creating default configuration..."
-echo "MAIN_BRANCH=main" > "$CONFIG_DIR/config.env"
-echo "DEV_BRANCH=dev" >> "$CONFIG_DIR/config.env"
-echo "RELEASE_BRANCH=release" >> "$CONFIG_DIR/config.env"
+echo "Creating default configuration at '$CONFIG_DIR/config.env'"
+echo "export MAIN_BRANCH=main" > "$CONFIG_DIR/config.env"
+echo "export DEV_BRANCH=dev" >> "$CONFIG_DIR/config.env"
+echo "export RELEASE_BRANCH=release" >> "$CONFIG_DIR/config.env"
 echo "Configuration file created at $CONFIG_DIR/config.env"
 
 echo "Installation complete. Scripts are now available in your PATH."

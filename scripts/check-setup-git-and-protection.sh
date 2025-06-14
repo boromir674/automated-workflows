@@ -42,7 +42,6 @@ derive_repo_from_git_remote() {
     echo "$repo"
 }
 
-
 parse_arguments() {
     branches=""
     branches_provided=""
@@ -54,9 +53,6 @@ parse_arguments() {
                 if [ -n "$1" ]; then
                     REPO="$1"
                 fi
-                # else
-                #     echo "Error: Missing value for -r option."
-                #     exit 1
                 ;;
             -b|--branch)
                 shift
@@ -64,9 +60,6 @@ parse_arguments() {
                     branches="$branches $1"
                     branches_provided="true"
                 fi
-                # else
-                #     echo "Error: Missing value for -b option."
-                #     exit 1
                 ;;
             -h|--help)
                 print_help
@@ -110,8 +103,6 @@ parse_arguments() {
     echo "$branches|$REPO"
 }
 
-
-
 main() {
     echo "🚀 Starting Git Setup and Protection Check"
 
@@ -119,13 +110,6 @@ main() {
     parse_result=$(parse_arguments "$@")
     branches=$(echo "$parse_result" | cut -d'|' -f1)
     REPO=$(echo "$parse_result" | cut -d'|' -f2)
-
-    # Automatically derive REPO if not provided
-    if [ -z "$REPO" ]; then
-        echo "🔍 Deriving repository from git remote..."
-        REPO=$(derive_repo_from_git_remote)
-        echo "Derived Repository: $REPO"
-    fi
 
     echo "Repository: $REPO"
     echo "Branches: $branches"
