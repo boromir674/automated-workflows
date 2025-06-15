@@ -99,7 +99,14 @@ echo
 echo " STEP 1 ---> Automatic Sem Ver Bump in sources"
 echo
 bash ./scripts/sem-ver-bump.sh ${NEW_VERSION}
-uv lock
+
+# if project is managed by poetry, we are ok
+# if project is managed by uv, we need to update the Package sem ver in the lock
+if [ -f "uv.lock" ]; then
+    echo "Updating uv.lock with new version ${NEW_VERSION}"
+    # Update the version in uv.lock
+    uv lock
+fi
 
 git add ${SOURCES_TO_UPDATE}
 
