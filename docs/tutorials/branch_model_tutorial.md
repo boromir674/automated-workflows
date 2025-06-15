@@ -125,24 +125,24 @@ gitGraph
     commit id: "[NEW] 2.0.0" type: HIGHLIGHT tag: "v2.0.0"
 
     branch dev
-    branch "feature/add-functionality-X"
-    branch "fix/functionality-Y"
+    branch "feature/X"
+    branch "fix/Y"
 
-    checkout "fix/functionality-Y"
+    checkout "fix/Y"
     commit id: "fix: backend"
     commit id: "fix: frontend"
 
-    checkout "feature/add-functionality-X"
+    checkout "feature/X"
     commit id: "add X that does Z"
     commit id: "test: X does Z"
 ```
 
 ---
 
-When branch `feature/add-functionality-X` is deemed **Done**,  
+When branch `feature/X` is deemed **Done**,  
 then it should open **Pull Request** to `request merging` into **`dev` branch**.
 
-If all QA passes, then branch `feature/add-functionality-X` merges into `dev`.
+If all QA passes, then branch `feature/X` merges into `dev`.
 
 
 ```mermaid
@@ -155,28 +155,29 @@ gitGraph
     commit id: "[NEW] 2.0.0" type: HIGHLIGHT tag: "v2.0.0"
 
     branch dev
-    branch "feature/add-functionality-X"
-    branch "fix/functionality-Y"
+    branch "feature/X"
+    branch "fix/Y"
 
-    checkout "fix/functionality-Y"
+    checkout "fix/Y"
     commit id: "fix: backend"
     commit id: "fix: frontend"
 
-    checkout "feature/add-functionality-X"
+    checkout "feature/X"
     commit id: "add X that does Z"
     commit id: "test: X does Z"
 
     checkout dev
-    merge "feature/add-functionality-X"
+    merge "feature/X"
 ```
 
 ---
 
-When branch `fix/functionality-Y` is deemed **Done**,  
+When branch `fix/Y` is deemed **Done**,  
 then it should open **Pull Request** to `request merging` into **`dev` branch**.
 
-If all QA passes, then branch `fix/functionality-Y` merges into `dev`.
+If all QA passes, then branch `fix/Y` merges into `dev`.
 
+Option 1: **Merge ("pure")**
 
 ```mermaid
 %%{init: { 'logLevel': 'debug', 'gitGraph': {'showBranches': true, 
@@ -188,20 +189,53 @@ gitGraph
     commit id: "[NEW] 2.0.0" type: HIGHLIGHT tag: "v2.0.0"
 
     branch dev
-    branch "feature/add-functionality-X"
-    branch "fix/functionality-Y"
+    checkout dev
+    branch "feature/X"
+    branch "fix/Y"
 
-    checkout "fix/functionality-Y"
+    checkout "fix/Y"
     commit id: "fix: backend"
     commit id: "fix: frontend"
 
-    checkout "feature/add-functionality-X"
+    checkout "feature/X"
     commit id: "add X that does Z"
     commit id: "test: X does Z"
 
     checkout dev
-    merge "feature/add-functionality-X"
-    merge "fix/functionality-Y"
+    merge "feature/X"
+    merge "fix/Y"
+```
+
+
+Option 2: **Merge with Rebase**
+
+```mermaid
+%%{init: { 'logLevel': 'debug', 'gitGraph': {'showBranches': true, 
+'rotateCommitLabel': true,
+'showCommitLabel':true,'mainBranchName': 'main'}} }%%
+
+gitGraph
+    commit id: "[NEW] 1.2.0" type: HIGHLIGHT tag: "v1.2.0"
+    commit id: "[NEW] 2.0.0" type: HIGHLIGHT tag: "v2.0.0"
+
+    branch dev
+    checkout dev
+    branch "feature/X"
+
+    checkout "feature/X"
+    commit id: "add X that does Z"
+    commit id: "test: X does Z"
+
+    checkout dev
+    merge "feature/X"
+
+    branch "fix/Y"
+    checkout "fix/Y"
+    commit id: "fix: backend"
+    commit id: "fix: frontend"
+
+    checkout dev
+    merge "fix/Y"
 ```
 
 ---
