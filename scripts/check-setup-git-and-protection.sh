@@ -132,7 +132,7 @@ main() {
         ${BIN_DIR}/check-github-branch-protection-using-jq.sh -r "$REPO" -b "$branches"
     else
         echo "⚠️ jq is not installed. Using no-jq.sh..."
-        ${BIN_DIR}/no-jq.sh -r "$REPO" -b "$branches"
+        ${BIN_DIR}/check-github-branch-protection.sh -r "$REPO" -b "$branches"
     fi
     echo "========================================"
     echo "✅ Completed Git Setup and Protection Check"

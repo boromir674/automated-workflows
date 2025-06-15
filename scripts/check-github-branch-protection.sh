@@ -1,7 +1,24 @@
 #!/bin/sh
 
+# CHECK GITHUB BRANCH PROTECTION AND RULESET for BRANCHES
 # Portable POSIX-compliant script to query GitHub branch protection rules and rulesets.
 
+
+# Define installation directories
+CONFIG_DIR="$HOME/.config/check-git-and-protection"
+
+# Try to source shared environment variables, fallback to defaults if unavailable
+if [ -f "${CONFIG_DIR}/git_env.sh" ]; then
+    . "${CONFIG_DIR}/git_env.sh"
+else
+    MAIN_BRANCH="${MAIN_BRANCH:-main}"
+    RELEASE_BRANCH="${RELEASE_BRANCH:-release}"
+    DEV_BRANCH="${DEV_BRANCH:-dev}"
+fi
+
+DEFAULT_FALLBACK_BRANCHES="$MAIN_BRANCH $DEV_BRANCH $RELEASE_BRANCH" # Use shared or fallback variables
+
+# Helper function to show usage instructions
 print_help() {
     echo "Usage: $0 -r <repository> [-b <branches>] [-h]"
     echo "Options:"
@@ -12,8 +29,18 @@ print_help() {
     echo "  BRANCHES          Specify branches to check (space-separated). Overrides command-line arguments."
 }
 
-DEFAULT_FALLBACK_BRANCHES="main dev release" # Default branches if none provided
+# Helper function to derive the repository from git remote
+derive_repo_from_git_remote() {
+    # Extract the org/repo pattern from `git remote show -v`
+    repo=$(git remote -v | grep -oE 'git@github\.com:([^/]+/[^.]+)' | head -n 1 | sed 's/git@github\.com://')
+    if [ -z "$repo" ]; then
+        echo "Error: Unable to derive repository from git remote."
+        exit 1
+    fi
+    echo "$repo"
+}
 
+# Parse command-line arguments and environment variables
 parse_arguments() {
     branches=""
     branches_provided=""
@@ -50,6 +77,13 @@ parse_arguments() {
         esac
         shift
     done
+
+    # Automatically derive REPO if not provided
+    if [ -z "$REPO" ]; then
+        # echo "🔍 Deriving repository from git remote..."
+        REPO=$(derive_repo_from_git_remote)
+        # echo "Derived Repository: $REPO"
+    fi
 
     # Validate that REPO is set and in the correct format
     if [ -z "$REPO" ]; then
