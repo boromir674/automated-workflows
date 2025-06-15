@@ -1,6 +1,6 @@
 site_name: 'CI/CD Workflows'
 site_url: https://automated-workflows.readthedocs.io/
-site_description: CI/CD Workflows Project Documentation.
+site_description: CI/CD Wokflows Project Documentation.
 site_author: Konstantinos Lampridis
 repo_url: https://github.com/boromir674/automated-workflows/
 repo_name: boromir674/automated-workflows
@@ -98,16 +98,13 @@ markdown_extensions:
 
 #### SIDE NAVIGATION - DESIGN ####
 nav:
-  - Home: index.md
-  - Tutorials:
-      - "Branching Strategy": "./tutorials/branch_model_tutorial.md"
-      - "Install and Use Git Protection Scripts": "./tutorials/install-and-use-git-protection.md"
+  # each item in the list, renders a left side navigation item/page
+  - Home:
+      - "Quick Start": index.md
   - How-to Guides:
       - "CD: Dockerhub": "guides/guide_setup_cicd.md"
       - "CD: PyPI": "guides/guide_setup_pypi.md"
       - "CI: Build(s) Testing": "guides/guide_test_build.md"
-      - "Git Ops - V2":
-        - "Setup": "guides/gitops/setup/guide_setup_terminal_based_release_process.md"
       - "Git Ops":
           - guides/gitops/index.md
           - "Setup":
@@ -139,9 +136,6 @@ nav:
       - "Git Ops - Clean-up Tags": api/ref_go-delete-tags.md
   - Topics:
       - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
-      - "Git Ops - V2":
-          - "topics/gitops_v2/index.md"
-          - "Branching Strategy": "topics/branch_model.md"
       - "Git Ops":
           - "topics/gitops/index.md"
           - "Process - Release Me": "topics/gitops/release-me-process.md"

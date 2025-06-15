@@ -225,11 +225,11 @@ echo "Assuming CI/CD Pipeline Succeeded!"
 
 echo "[NEXT] Please run the below to complete merge to '${DEFAULT_BRANCH}'"
 echo
-echo "gh pr merge --subject \"[NEW] ... v${NEW_VERSION}\" --body \"Release v${NEW_VERSION}\" --merge"
+echo "gh pr merge --subject \"Release version ${NEW_VERSION}\" --body \"Release ${NEW_VERSION}\" --merge"
 
 echo "[IF] prohibited, you can use --admin flag:"
 echo
-echo "gh pr merge --admin --subject \"[NEW] ... v${NEW_VERSION}\" --body \"Release v${NEW_VERSION}\" --merge"
+echo "gh pr merge --admin --subject \"Release version ${NEW_VERSION}\" --body \"Release ${NEW_VERSION}\" --merge"
 
 echo
 # press any key to continue
