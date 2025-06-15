@@ -108,8 +108,10 @@ if [ -f "uv.lock" ]; then
     uv lock
 fi
 
-git add ${SOURCES_TO_UPDATE}
+git add -u
 
+echo =======
+git status -uno
 echo =======
 git diff --cached
 echo =======
