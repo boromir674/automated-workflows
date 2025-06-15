@@ -49,6 +49,10 @@ RELEASE_BRANCH="$RELEASE_BRANCH"
 # ./terminal-based-release.sh 0.1.0
 # ./terminal-based-release.sh 0.1.0 dev
 
+
+# Set the SOFTWARE_RELEASE_GH_API_TOKEN env var, required by `release-software-rolling` tool
+. ../software-release/.env
+
 set -e
 
 # Arguments Parsing
