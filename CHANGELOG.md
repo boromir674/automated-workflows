@@ -15,11 +15,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - add installer and uninstaller posix-compliant scripts
 - add installation sh script for 'Release Setup Check'
 
-#### fix
-
-- 'Release Setup Check' script(s)
-- 'Release Setup Check' script(s)
-
 #### chore
 
 - bump version to 1.15.0
@@ -29,7 +24,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 #### docs
 
-- update Site Navigation and 'Branch Model' Tutorial
 - update Site Navigation and 'Branch Model' Tutorial
 
 
