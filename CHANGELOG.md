@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.15.0 (2025-06-16)
+
+### Changes
+
+#### feat
+
+- conditionally run 'uv lovk', if uv.lock found
+- add the 'Terminal-based Release Script' for taking Dev -> Release -> Main
+- add installer and uninstaller posix-compliant scripts
+- add installation sh script for 'Release Setup Check'
+
+#### fix
+
+- 'Release Setup Check' script(s)
+- 'Release Setup Check' script(s)
+
+#### chore
+
+- bump version to 1.15.0
+- use simpler heuristic for CHANGELOG.md update
+- update terminal-based-release.sh to source env vars for software-release tool
+- update sem-ver-bump.sh script
+
+#### docs
+
+- update Site Navigation and 'Branch Model' Tutorial
+- update Site Navigation and 'Branch Model' Tutorial
+
+
 ## 1.13.1 (2024-09-24)
 
 ### Changes
