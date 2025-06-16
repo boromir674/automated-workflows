@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ga-workflows"
-version = "0.1.0"
+version = "1.15.0"
 description = "Automated Workflows - Documentation Site"
 authors = ["konstantinos <boromir674@hotmail.com>"]
 readme = "README.md"
