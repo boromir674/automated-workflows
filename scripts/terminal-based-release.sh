@@ -131,25 +131,49 @@ git commit -m "chore: bump version to ${NEW_VERSION}"
 
 ## 2. CHANGELOG Update ##
 echo
-echo " STEP 2 ---> Do Heuristic CHANGELOG Auto-Update, by parsing Commits written in 'conventional' format"
-
-# Do Heuristic Auto-Update, by parsing commits written in "conventional" format
-set +e
-release-software-rolling -cl -mb ${DEFAULT_BRANCH} -nv ${NEW_VERSION}
-set -e
-
+echo " STEP 2 ---> Auto-Update CHANGELOG"
 echo
-echo "Read commit messages above that failed to be auto-parsed."
-echo "Then do 'code ${CHANGELOG_FILE}' to manually write the Header of the new Release entry!"
-echo 'Header should "talk about" the purposes/goals of the Release (why we want the changes to be released)'
 
-# Do manual additions
-read -ep "Press any key to open '${CHANGELOG_FILE}' in VS Code!" -n1 -s
-code ${CHANGELOG_FILE}
+# Generate changelog entry using group-commits.sh
+changelog_entry=$(./scripts/group-commits.sh --prev "${DEFAULT_BRANCH}")
+
+# using sed proved troublesome (needed to escape special characters), now using simpler heuristic
+
+# insert new entry after 5th line of CHANGELOG.md file!
+
+# Create a temporary file for the updated changelog
+temp_file=$(mktemp)
+
+# Read the first 5 lines and write them to the temp file
+head -n 5 "${CHANGELOG_FILE}" > "${temp_file}"
+
+# Append the new changelog entry
+echo -e "\n## ${NEW_VERSION} ($(date +%Y-%m-%d))\n" >> "${temp_file}"
+echo "${changelog_entry}" >> "${temp_file}"
+
+# Append the rest of the original changelog file, skipping the first 5 lines
+tail -n +6 "${CHANGELOG_FILE}" >> "${temp_file}"
+
+# Replace the original changelog file with the updated one
+mv "${temp_file}" "${CHANGELOG_FILE}"
+
+
+
+
+
+
+# Display the updated changelog
+echo "Updated CHANGELOG:"
+echo "=================="
+# cat "${CHANGELOG_FILE}"
+
+# Pause for manual edits
+read -ep "Press any key to open '${CHANGELOG_FILE}' in VS Code for manual edits!" -n1 -s
+code "${CHANGELOG_FILE}"
 
 read -ep "Press any key after done editing '${CHANGELOG_FILE}'" -n1 -s
 
-git add ${CHANGELOG_FILE}
+git add "${CHANGELOG_FILE}"
 echo =======
 git diff --stat --cached
 echo =======
