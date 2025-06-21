@@ -58,15 +58,23 @@ echo "$COMMITS" | awk -v tmpdir="$TMPDIR" '
     if (match(subject, /^([a-zA-Z]+): /, m)) {
       type=m[1];
       msg=substr(subject, RLENGTH+1);
-      if (type ~ /^(feat|fix|chore|docs|style|refactor|perf|test)$/) {
-        print "- " msg >> tmpdir "/" type;
+      # Add a blank line before the first entry in each category
+      if (!seen[type]) {
+        print "" >> tmpdir "/" type;
+        seen[type] = 1;
       }
+      print "- " msg >> tmpdir "/" type;
     }
     if (body ~ /BREAKING CHANGE:/) {
       n = split(body, lines, "\n");
       for (i=1; i<=n; i++) {
         if (lines[i] ~ /BREAKING CHANGE:/) {
           sub(/.*BREAKING CHANGE:[ ]*/, "", lines[i]);
+          # Add a blank line before the first entry in the "breaking" category
+          if (!seen["breaking"]) {
+            print "" >> tmpdir "/breaking";
+            seen["breaking"] = 1;
+          }
           print "- " lines[i] " (`" sha "`) " >> tmpdir "/breaking";
         }
       }
@@ -78,6 +86,7 @@ echo "$COMMITS" | awk -v tmpdir="$TMPDIR" '
 for cat in $CATEGORIES; do
   if [ -s "$TMPDIR/$cat" ]; then
     if [ "$FORMAT" = "md" ]; then
+      # Ensure no `-e` artifact by using printf without unnecessary options
       printf "%s %s\n" "$(printf '#%.0s' $(seq 1 "$HEADER_LEVEL"))" "$cat"
     fi
     cat "$TMPDIR/$cat"
