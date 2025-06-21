@@ -9,7 +9,7 @@
 # Default values from environment
 PREV_REV="${PREV_REV:-}"
 FORMAT="md"
-HEADER_LEVEL=3
+HEADER_LEVEL=4
 
 # Parse command line args
 while [ $# -gt 0 ]; do

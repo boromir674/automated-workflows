@@ -214,11 +214,13 @@ if [ "$SKIP_CHANGELOG" = false ]; then
 
     ## 2.a Construct new CHANGELOG.md file
     # Read the first 5 lines and write them to the temp file
-    head -n 5 "${CHANGELOG_FILE}" > "${temp_file}"
+    head -n 6 "${CHANGELOG_FILE}" > "${temp_file}"
 
 
     # 2.a.1 Append the new changelog entry
     echo -e "\n## ${NEW_VERSION} ($(date +%Y-%m-%d))\n" >> "${temp_file}"
+    echo -e "### Changes\n" >> "${temp_file}"
+
     echo "${changelog_entry}" >> "${temp_file}"
 
     # 2.a.2 Append the rest of the original changelog file, skipping the first 5 lines
