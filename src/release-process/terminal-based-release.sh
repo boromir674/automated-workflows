@@ -218,8 +218,8 @@ if [ "$SKIP_CHANGELOG" = false ]; then
 
 
     # 2.a.1 Append the new changelog entry
-    echo -e "\n## ${NEW_VERSION} ($(date +%Y-%m-%d))\n" >> "${temp_file}"
-    echo -e "### Changes\n" >> "${temp_file}"
+    echo "\n## ${NEW_VERSION} ($(date +%Y-%m-%d))\n" >> "${temp_file}"
+    echo "### Changes\n" >> "${temp_file}"
 
     echo "${changelog_entry}" >> "${temp_file}"
 
