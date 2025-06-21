@@ -97,7 +97,7 @@ echo "Press any key to continue.. (unless ctrl + C)"
 read dummy
 
 git checkout "${BRANCH_WITH_CHANGES}"
-git pull
+# git pull
 
 ## 1. SEM VER SOURCE UPDATE ##
 echo
