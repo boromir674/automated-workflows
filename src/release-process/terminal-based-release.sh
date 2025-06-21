@@ -3,6 +3,7 @@
 # Requires executables: git, code, gh, uv, sed
 
 # Define installation directories
+BIN_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/check-git-and-protection"
 
 # Try to source shared environment variables, fallback to defaults if unavailable
@@ -153,7 +154,7 @@ echo " STEP 2 ---> Auto-Update CHANGELOG"
 echo
 
 # Generate changelog entry using group-commits.sh
-changelog_entry=$(./scripts/group-commits.sh --prev "${DEFAULT_BRANCH}")
+changelog_entry=$(${BIN_DIR}/group-commits.sh --prev "${DEFAULT_BRANCH}")
 
 # using sed proved troublesome (needed to escape special characters), now using simpler heuristic
 # insert new entry after 5th line of CHANGELOG.md file!

@@ -14,8 +14,10 @@ mkdir -p "$CONFIG_DIR"
 SCRIPTS="check-git-branches-exist.sh check-github-branch-protection-using-jq.sh check-github-branch-protection.sh check-setup-git-and-protection.sh sem-ver-bump.sh group-commits.sh terminal-based-release.sh"
 
 # Base URL for fetching scripts
-BASE_URL="https://raw.githubusercontent.com/boromir674/automated-workflows/develop/scripts"
-
+BASE_URL="https://raw.githubusercontent.com/boromir674/automated-workflows/develop/src/release-process"
+echo
+echo "Installing source code in $CONFIG_DIR"
+echo
 # Fetch and install each script
 for script in $SCRIPTS; do
     echo "Fetching $script..."
@@ -37,16 +39,25 @@ if ! echo "$PATH" | grep -q "$BIN_DIR"; then
 fi
 
 # Optional: Create a default configuration file
-echo "Creating default configuration at '$CONFIG_DIR/config.env'"
 echo 'export MAIN_BRANCH=${MAIN_BRANCH:-main}' > "$CONFIG_DIR/config.env"
 echo 'export RELEASE_BRANCH=${RELEASE_BRANCH:-release}' >> "$CONFIG_DIR/config.env"
 echo 'export DEV_BRANCH=${DEV_BRANCH:-dev}' >> "$CONFIG_DIR/config.env"
+echo
 echo "Configuration file created at $CONFIG_DIR/config.env"
 echo
 echo "**** Installation complete! Scripts are now available in your PATH. ****"
 
+echo "     CHECK  "
 echo "       1: check-git-branches-exist.sh"
 echo "      2a: check-github-branch-protection-using-jq.sh"
 echo "      2b: check-github-branch-protection.sh"
 echo
-echo "  1 + 2 (a or b): check-setup-git-and-protection.sh"
+echo "  ALL: check-setup-git-and-protection.sh"
+echo
+echo "     RUN:"
+echo
+echo "  Release Process: terminal-based-release.sh"
+echo
+echo "     terminal-based-release.sh <NEW_VERSION> [<INTEGRATION_BRANCH>]"
+echo "     Example: terminal-based-release.sh 0.1.0 dev"
+echo "     Example: terminal-based-release.sh 0.1.0"
