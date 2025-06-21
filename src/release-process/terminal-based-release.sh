@@ -2,6 +2,29 @@
 
 # Requires executables: git, code, gh, uv, sed
 
+# RUN THIS, WHEN All changes for Release are ALREADY on the Integration_Br branch
+
+# USAGE
+# ./terminal-based-release.sh <NEW_VERSION> [<INTEGRATION_BRANCH>]
+# Example:
+# ./terminal-based-release.sh 0.1.0
+# ./terminal-based-release.sh 0.1.0 dev
+
+
+### Terminal-Based Release Process ###
+
+# Topic_A, Topic_B, ... , Topic_N
+#    \         |            /
+#     \        |           /
+#       \      |         /
+#         \    |       /
+#         Integration_Br
+#              |
+#          Release_Br
+#              |
+#          Default_Br
+
+
 # Define installation directories
 BIN_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/check-git-and-protection"
@@ -22,35 +45,13 @@ fi
 ### 2. CHANGELOG Update ###
 CHANGELOG_FILE="${CHANGELOG_FILE:-CHANGELOG.md}"
 
+
 # Use shared or fallback variables for branch configuration
 # See Guide: https://automated-workflows.readthedocs.io/guide_setup_terminal_based_release_process/
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-$MAIN_BRANCH}"
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-$DEV_BRANCH}"
 RELEASE_BRANCH="$RELEASE_BRANCH"
 
-
-### Terminal-Based Release Process ###
-
-# Topic_A, Topic_B, ... , Topic_N
-#    \         |            /
-#     \        |           /
-#       \      |         /
-#         \    |       /
-#         Integration_Br
-#              |
-#          Release_Br
-#              |
-#          Default_Br
-
-# RUN THIS, WHEN All changes for Release are ALREADY on the Integration_Br branch
-
-
-
-# USAGE
-# ./terminal-based-release.sh <NEW_VERSION> [<INTEGRATION_BRANCH>]
-# Example:
-# ./terminal-based-release.sh 0.1.0
-# ./terminal-based-release.sh 0.1.0 dev
 
 set -e
 
@@ -92,7 +93,8 @@ echo "We are about to checkout ${BRANCH_WITH_CHANGES} branch and pull latest cha
 echo "Make sure all changes for release are already merged into ${BRANCH_WITH_CHANGES}!"
 echo
 
-read -n 1 -s -r -p "Press any key to continue.. (unless ctrl + C)"
+echo "Press any key to continue.. (unless ctrl + C)"
+read dummy
 
 git checkout "${BRANCH_WITH_CHANGES}"
 git pull
@@ -109,17 +111,17 @@ set -e
 ## 1.a Update PYPROJECT - Sem Ver
 # Until uv migration is verified we must update all regex matches (ie for poetry and uv config sections!)
 PYPROJECT='pyproject.toml'
-sed -i.bak -E "s/(version = ['\"])[0-9]+\.[0-9]+\.[0-9]+(['\"])/\\1${VERSION}\\2/" "${PYPROJECT}" && rm "${PYPROJECT}.bak"
+sed -i.bak -E "s/(version = ['\"])[0-9]+\.[0-9]+\.[0-9]+(['\"])/\\1${NEW_VERSION}\\2/" "${PYPROJECT}" && rm "${PYPROJECT}.bak"
 
 ## 2.b Update README.md - Sem Ver
 README_MD='README.md'
 # sed -i -E "s/(['\"]?v?)[0-9]+\.[0-9]+\.[0-9]+(['\"]?)/\1${VERSION}\2/" "${README_MD}"
 
 # 2.b.1 Replace occurrences such as /v2.5.8/ with /v2.5.9/, excluding lines with `image_tag:`
-sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}(['\"]?)/\1${VERSION}\2/" "${README_MD}"
+sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}(['\"]?)/\1${NEW_VERSION}\2/" "${README_MD}"
 
 # 2.b.2 Replace occurrences such as /v2.5.8..main with /v2.5.9..main, excluding lines with `image_tag:`
-sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}\.\./\1${VERSION}../" "${README_MD}"
+sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}\.\./\1${NEW_VERSION}../" "${README_MD}"
 
 # 2.c - Optional
 # if project is managed by poetry, we are ok
@@ -130,6 +132,23 @@ if [ -f "uv.lock" ]; then
     uv lock
 fi
 
+echo "Automatic Sem Ver Bump completed!"
+git diff --stat
+echo
+echo ' --> Please check the DIFF'
+echo 'Press enter to continue or Ctrl+C to abort...'
+read -r dummy
+
+git diff
+
+echo
+echo ' --> Please make any manual modifications/fixes, if needed'
+echo 'Press enter to continue or Ctrl+C to abort...'
+read -r dummy
+
+echo ' --> Now the Sem Ver updates should be GOOD!'
+echo 'Press enter to continue or Ctrl+C to abort...'
+read -r dummy
 
 git add -u
 
@@ -142,7 +161,8 @@ git diff --stat --cached
 echo =======
 
 # Press any key to continue dialog
-read -ep "Press any key to commit version changes!" -n1 -s
+echo "Press any key to commit version changes!"
+read dummy
 
 ### 1.d Commit the changes
 git commit -m "chore: bump version to ${NEW_VERSION}"
@@ -184,10 +204,12 @@ echo "=================="
 # cat "${CHANGELOG_FILE}"
 
 # Pause for manual edits
-read -ep "Press any key to open '${CHANGELOG_FILE}' in VS Code for manual edits!" -n1 -s
+echo "Press any key to open '${CHANGELOG_FILE}' in VS Code for manual edits!"
+read dummy
 code "${CHANGELOG_FILE}"
 
-read -ep "Press any key after done editing '${CHANGELOG_FILE}'" -n1 -s
+echo "Press any key after done editing '${CHANGELOG_FILE}'"
+read dummy
 
 git add "${CHANGELOG_FILE}"
 echo =======
@@ -195,7 +217,8 @@ git diff --stat --cached
 echo =======
 
 # Dialog before Commit
-read -ep "Press any key to commit '${CHANGELOG_FILE}'!" -n1 -s
+echo "Press any key to commit '${CHANGELOG_FILE}'!"
+read dummy
 
 ### 2.b Commit the changes
 git commit -m "docs(changelog): add ${NEW_VERSION} Release entry in ${CHANGELOG_FILE}"
@@ -204,7 +227,8 @@ echo
 echo "DONE!"
 
 echo
-read -ep "Press any key to push changes to ${BRANCH_WITH_CHANGES} remote!" -n1 -s
+echo "Press any key to push changes to ${BRANCH_WITH_CHANGES} remote!"
+read dummy
 
 ## 3. PUSH Integration_Br TO REMOTE
 git push
@@ -242,7 +266,8 @@ echo "========================="
 echo "DONE! PR ${BRANCH_WITH_CHANGES} --> ${RELEASE_BRANCH} Merged!"
 
 echo
-read -ep "Press any key to update local '${RELEASE_BRANCH}' branch from remote!" -n1 -s
+echo "Press any key to update local '${RELEASE_BRANCH}' branch from remote!"
+read dummy
 
 
 ## 7. CREATE PR TO DEFAULT_BRANCH (ie release --> main)
@@ -250,7 +275,8 @@ git checkout ${RELEASE_BRANCH}
 git pull
 gh pr create --base ${DEFAULT_BRANCH} --head "${RELEASE_BRANCH}" --title "Release ${NEW_VERSION} to production" --body "This PR delivers version ${NEW_VERSION} to production"
 echo
-read -ep "Press any key to make a RELEASE CANDIDATE tag!" -n1 -s
+echo "Press any key to make a RELEASE CANDIDATE tag!"
+read dummy
 
 ## 8. CREATE and PUSH RC TAG
 RC_TAG="v${NEW_VERSION}-rc"
@@ -263,10 +289,12 @@ echo "Release Candidate Pipeline Triggered!"
 
 
 # press any key to continue
-read -ep "Please run 'gh run watch' to watch the CI/CD Pipeline (press any key to continue)" -n1 -s
+echo "Please run 'gh run watch' to watch the CI/CD Pipeline (press any key to continue)"
+read dummy
 
 # TODO: try to implement the below; currently after gh run watch finishes it stops execution of the sshell script!
-# read -ep "Please watch the CI/CD Pipeline to succeed (press any key to continue to 'live watch') !" -n1 -s
+echo "Please watch the CI/CD Pipeline to succeed (press any key to continue to 'live watch')!"
+read dummy
 # gh run watch
 
 ## 9. PROMPT USER TO MERGE the PR if QA/CHECKS PASSED
@@ -283,7 +311,8 @@ echo "gh pr merge --admin --subject \"[NEW] Automated Workflows v${NEW_VERSION}\
 
 echo
 # press any key to continue
-read -ep "After Merge to '${DEFAULT_BRANCH}' branch is made (ie via CLI or github.com), press any key to proceed with updating local '${DEFAULT_BRANCH}' branch" -n1 -s
+echo "After Merge to '${DEFAULT_BRANCH}' branch is made (ie via CLI or github.com), press any key to proceed with updating local '${DEFAULT_BRANCH}' branch"
+read dummy
 
 echo "========================="
 
@@ -298,7 +327,8 @@ echo "Release v${NEW_VERSION} is now tagged!"
 echo
 
 # press any key to continue
-read -ep "Please watch the CI/CD Pipeline to succeed (press any key to continue to 'live watch')!" -n1 -s
+echo "Please watch the CI/CD Pipeline to succeed (press any key to continue to 'live watch')!"
+read dummy
 
 ## 11. WATCH GITHUB ACTIONS WORKFLOWS RUNNING
 gh run watch
