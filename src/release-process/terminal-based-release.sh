@@ -5,10 +5,11 @@
 # RUN THIS, WHEN All changes for Release are ALREADY on the Integration_Br branch
 
 # USAGE
-# ./terminal-based-release.sh <NEW_VERSION> [<INTEGRATION_BRANCH>]
+# ./terminal-based-release.sh <NEW_VERSION> [<INTEGRATION_BRANCH>] [--skip-semver] [--skip-changelog]
 # Example:
 # ./terminal-based-release.sh 0.1.0
-# ./terminal-based-release.sh 0.1.0 dev
+# ./terminal-based-release.sh 0.1.0 dev --skip-semver
+# ./terminal-based-release.sh 0.1.0 dev --skip-changelog
 
 
 ### Terminal-Based Release Process ###
@@ -55,22 +56,39 @@ RELEASE_BRANCH="$RELEASE_BRANCH"
 
 set -e
 
-# Arguments Parsing
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 <NEW_VERSION> [<BRANCH_WITH_CHANGES>]"
-    echo
-    echo "Example: $0 0.1.0"
-    echo "Example: $0 0.1.0 dev"
+# Parse flags
+SKIP_SEMVER=false
+SKIP_CHANGELOG=false
+
+NEW_VERSION=""
+BRANCH_WITH_CHANGES=""
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        --skip-semver)
+            SKIP_SEMVER=true
+            ;;
+        --skip-changelog)
+            SKIP_CHANGELOG=true
+            ;;
+        *)
+            if [ -z "$NEW_VERSION" ]; then
+                NEW_VERSION=$1
+            elif [ -z "$BRANCH_WITH_CHANGES" ]; then
+                BRANCH_WITH_CHANGES=$1
+            fi
+            ;;
+    esac
+    shift
+done
+
+if [ -z "$NEW_VERSION" ]; then
+    echo "Usage: $0 <NEW_VERSION> [<BRANCH_WITH_CHANGES>] [--skip-semver] [--skip-changelog]"
     exit 1
 fi
-# New version to be released
-NEW_VERSION=$1
-# BRANCH WITH CHANGES WE WANT TO RELEASE to main
-if [ $# -ge 2 ]; then
-    BRANCH_WITH_CHANGES=$2
-else
-    BRANCH_WITH_CHANGES=${INTEGRATION_BRANCH}
-fi
+
+BRANCH_WITH_CHANGES=${BRANCH_WITH_CHANGES:-$INTEGRATION_BRANCH}
+
 # Check if the script is run from the root of the repository
 if [ ! -d ".git" ]; then
     echo "This script must be run from the root of the repository."
@@ -99,131 +117,148 @@ read dummy
 git checkout "${BRANCH_WITH_CHANGES}"
 # git pull
 
-## 1. SEM VER SOURCE UPDATE ##
-echo
-echo " STEP 1 ---> Automatic Sem Ver Bump in sources"
-echo
-# Sem Ver Major Minor Patch + Pre-release metadata
-regex="[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?"
+# Initialize internal step counter
+STEP_NUMBER=1
 
-set -e
+# Check if the user opted to skip the semantic version update step
+if [ "$SKIP_SEMVER" = false ]; then
+    ## 1. SEM VER SOURCE UPDATE ##
+    echo
+    # Print dynamic step number for semantic version update
+    echo " STEP ${STEP_NUMBER} ---> Automatic Sem Ver Bump in sources"
+    echo
+    # Sem Ver Major Minor Patch + Pre-release metadata
+    regex="[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?"
 
-## 1.a Update PYPROJECT - Sem Ver
-# Until uv migration is verified we must update all regex matches (ie for poetry and uv config sections!)
-PYPROJECT='pyproject.toml'
-sed -i.bak -E "s/(version = ['\"])[0-9]+\.[0-9]+\.[0-9]+(['\"])/\\1${NEW_VERSION}\\2/" "${PYPROJECT}" && rm "${PYPROJECT}.bak"
+    set -e
 
-## 2.b Update README.md - Sem Ver
-README_MD='README.md'
-# sed -i -E "s/(['\"]?v?)[0-9]+\.[0-9]+\.[0-9]+(['\"]?)/\1${VERSION}\2/" "${README_MD}"
+    ## 1.a Update PYPROJECT - Sem Ver
+    # Until uv migration is verified we must update all regex matches (ie for poetry and uv config sections!)
+    PYPROJECT='pyproject.toml'
+    sed -i.bak -E "s/(version = ['\"])[0-9]+\.[0-9]+\.[0-9]+(['\"])/\\1${NEW_VERSION}\\2/" "${PYPROJECT}" && rm "${PYPROJECT}.bak"
 
-# 2.b.1 Replace occurrences such as /v2.5.8/ with /v2.5.9/, excluding lines with `image_tag:`
-sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}(['\"]?)/\1${NEW_VERSION}\2/" "${README_MD}"
+    ## 2.b Update README.md - Sem Ver
+    README_MD='README.md'
+    # sed -i -E "s/(['\"]?v?)[0-9]+\.[0-9]+\.[0-9]+(['\"]?)/\1${VERSION}\2/" "${README_MD}"
 
-# 2.b.2 Replace occurrences such as /v2.5.8..main with /v2.5.9..main, excluding lines with `image_tag:`
-sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}\.\./\1${NEW_VERSION}../" "${README_MD}"
+    # 2.b.1 Replace occurrences such as /v2.5.8/ with /v2.5.9/, excluding lines with `image_tag:`
+    sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}(['\"]?)/\1${NEW_VERSION}\2/" "${README_MD}"
 
-# 2.c - Optional
-# if project is managed by poetry, we are ok
-# if project is managed by uv, we need to update the Package sem ver in the lock
-if [ -f "uv.lock" ]; then
-    echo "Updating uv.lock with new version ${NEW_VERSION}"
-    # Update the version in uv.lock
-    uv lock
+    # 2.b.2 Replace occurrences such as /v2.5.8..main with /v2.5.9..main, excluding lines with `image_tag:`
+    sed -i -E "/image_tag:/!s/(['\"]?v?)${regex}\.\./\1${NEW_VERSION}../" "${README_MD}"
+
+    # 2.c - Optional
+    # if project is managed by poetry, we are ok
+    # if project is managed by uv, we need to update the Package sem ver in the lock
+    if [ -f "uv.lock" ]; then
+        echo "Updating uv.lock with new version ${NEW_VERSION}"
+        # Update the version in uv.lock
+        uv lock
+    fi
+
+    echo "Automatic Sem Ver Bump completed!"
+    git diff --stat
+    echo
+    echo ' --> Please check the DIFF'
+    echo 'Press enter to continue or Ctrl+C to abort...'
+    read -r dummy
+
+    git diff
+
+    echo
+    echo ' --> Please make any manual modifications/fixes, if needed'
+    echo 'Press enter to continue or Ctrl+C to abort...'
+    read -r dummy
+
+    echo ' --> Now the Sem Ver updates should be GOOD!'
+    echo 'Press enter to continue or Ctrl+C to abort...'
+    read -r dummy
+
+    git add -u
+
+    echo =======
+    git status -uno
+    echo =======
+    git diff --cached
+    echo =======
+    git diff --stat --cached
+    echo =======
+
+    # Press any key to continue dialog
+    echo "Press any key to commit version changes!"
+    read dummy
+
+    ### 1.d Commit the changes
+    git commit -m "chore: bump version to ${NEW_VERSION}"
+
+    # Increment internal step number after completing semantic version update
+    STEP_NUMBER=$((STEP_NUMBER + 1))
 fi
 
-echo "Automatic Sem Ver Bump completed!"
-git diff --stat
-echo
-echo ' --> Please check the DIFF'
-echo 'Press enter to continue or Ctrl+C to abort...'
-read -r dummy
+# Check if the user opted to skip the changelog update step
+if [ "$SKIP_CHANGELOG" = false ]; then
+    ## 2. CHANGELOG Update ##
+    echo
+    # Print dynamic step number for changelog update
+    echo " STEP ${STEP_NUMBER} ---> Auto-Update CHANGELOG"
+    echo
 
-git diff
+    # Generate changelog entry using group-commits.sh
+    changelog_entry=$(${BIN_DIR}/group-commits.sh --prev "${DEFAULT_BRANCH}")
 
-echo
-echo ' --> Please make any manual modifications/fixes, if needed'
-echo 'Press enter to continue or Ctrl+C to abort...'
-read -r dummy
+    # using sed proved troublesome (needed to escape special characters), now using simpler heuristic
+    # insert new entry after 5th line of CHANGELOG.md file!
 
-echo ' --> Now the Sem Ver updates should be GOOD!'
-echo 'Press enter to continue or Ctrl+C to abort...'
-read -r dummy
+    # Create a temporary file for the updated changelog
+    temp_file=$(mktemp)
 
-git add -u
-
-echo =======
-git status -uno
-echo =======
-git diff --cached
-echo =======
-git diff --stat --cached
-echo =======
-
-# Press any key to continue dialog
-echo "Press any key to commit version changes!"
-read dummy
-
-### 1.d Commit the changes
-git commit -m "chore: bump version to ${NEW_VERSION}"
+    ## 2.a Construct new CHANGELOG.md file
+    # Read the first 5 lines and write them to the temp file
+    head -n 5 "${CHANGELOG_FILE}" > "${temp_file}"
 
 
-## 2. CHANGELOG Update ##
-echo
-echo " STEP 2 ---> Auto-Update CHANGELOG"
-echo
+    # 2.a.1 Append the new changelog entry
+    echo -e "\n## ${NEW_VERSION} ($(date +%Y-%m-%d))\n" >> "${temp_file}"
+    echo "${changelog_entry}" >> "${temp_file}"
 
-# Generate changelog entry using group-commits.sh
-changelog_entry=$(${BIN_DIR}/group-commits.sh --prev "${DEFAULT_BRANCH}")
+    # 2.a.2 Append the rest of the original changelog file, skipping the first 5 lines
+    tail -n +6 "${CHANGELOG_FILE}" >> "${temp_file}"
 
-# using sed proved troublesome (needed to escape special characters), now using simpler heuristic
-# insert new entry after 5th line of CHANGELOG.md file!
-
-# Create a temporary file for the updated changelog
-temp_file=$(mktemp)
-
-## 2.a Construct new CHANGELOG.md file
-# Read the first 5 lines and write them to the temp file
-head -n 5 "${CHANGELOG_FILE}" > "${temp_file}"
+    # Replace the original changelog file with the updated one
+    mv "${temp_file}" "${CHANGELOG_FILE}"
 
 
-# 2.a.1 Append the new changelog entry
-echo -e "\n## ${NEW_VERSION} ($(date +%Y-%m-%d))\n" >> "${temp_file}"
-echo "${changelog_entry}" >> "${temp_file}"
+    # Display the updated changelog
+    echo "Updated CHANGELOG:"
+    echo "=================="
+    # cat "${CHANGELOG_FILE}"
 
-# 2.a.2 Append the rest of the original changelog file, skipping the first 5 lines
-tail -n +6 "${CHANGELOG_FILE}" >> "${temp_file}"
+    # Pause for manual edits
+    echo "Press any key to open '${CHANGELOG_FILE}' in VS Code for manual edits!"
+    read dummy
+    code "${CHANGELOG_FILE}"
 
-# Replace the original changelog file with the updated one
-mv "${temp_file}" "${CHANGELOG_FILE}"
+    echo "Press any key after done editing '${CHANGELOG_FILE}'"
+    read dummy
 
+    git add "${CHANGELOG_FILE}"
+    echo =======
+    git diff --stat --cached
+    echo =======
 
-# Display the updated changelog
-echo "Updated CHANGELOG:"
-echo "=================="
-# cat "${CHANGELOG_FILE}"
+    # Dialog before Commit
+    echo "Press any key to commit '${CHANGELOG_FILE}'!"
+    read dummy
 
-# Pause for manual edits
-echo "Press any key to open '${CHANGELOG_FILE}' in VS Code for manual edits!"
-read dummy
-code "${CHANGELOG_FILE}"
+    ### 2.b Commit the changes
+    git commit -m "docs(changelog): add ${NEW_VERSION} Release entry in ${CHANGELOG_FILE}"
 
-echo "Press any key after done editing '${CHANGELOG_FILE}'"
-read dummy
-
-git add "${CHANGELOG_FILE}"
-echo =======
-git diff --stat --cached
-echo =======
-
-# Dialog before Commit
-echo "Press any key to commit '${CHANGELOG_FILE}'!"
-read dummy
-
-### 2.b Commit the changes
-git commit -m "docs(changelog): add ${NEW_VERSION} Release entry in ${CHANGELOG_FILE}"
+    # Increment internal step number after completing changelog update
+    STEP_NUMBER=$((STEP_NUMBER + 1))
+fi
 
 echo
+# Print completion message
 echo "DONE!"
 
 echo
