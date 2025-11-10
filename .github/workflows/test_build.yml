@@ -124,19 +124,49 @@ jobs:
         if: contains(inputs.build_installation, 'edit')
         run: tox -e dev -vv -s false
 
-
+      # TODO: delegate to github action
       - name: Discover Python Distribution Name from Source
         shell: bash
         run: |
+          EXTRACTED_NAME=""
+          # pyproject.toml
           if [ -f "pyproject.toml" ]; then
-            DISTRO_NAME=$(cat pyproject.toml | grep -E "^name" | sed -E "s/name = \"(.*)\"/\1/")
-          elif [ -f "setup.py" ]; then
-            DISTRO_NAME=$(cat setup.py | grep -E "^name" | sed -E "s/name = \"(.*)\"/\1/")
-          else
-            echo "No pyproject.toml or setup.py found"
+            NAME=$(grep -E '^name[[:space:]]*=' pyproject.toml | sed -E 's/name[[:space:]]*=\s*"([^"]+)"/\1/')
+            if [ -n "$NAME" ]; then
+              echo "Extracted from pyproject.toml: $NAME"
+              EXTRACTED_NAME="$NAME"
+            else
+              echo "Extraction failed in pyproject.toml"
+            fi
+          fi
+
+          # setup.cfg
+          if [ -z "$EXTRACTED_NAME" ] && [ -f "setup.cfg" ]; then
+            NAME=$(grep -E '^name[[:space:]]*=' setup.cfg | sed -E 's/name[[:space:]]*=\s*([^"]+)/\1/')
+            if [ -n "$NAME" ]; then
+              echo "Extracted from setup.cfg: $NAME"
+              EXTRACTED_NAME="$NAME"
+            else
+              echo "Extraction failed in setup.cfg"
+            fi
+          fi
+
+          # setup.py
+          if [ -z "$EXTRACTED_NAME" ] && [ -f "setup.py" ]; then
+            NAME=$(grep -E 'name[[:space:]]*=' setup.py | sed -E 's/.*name[[:space:]]*=\s*"([^"]+)".*/\1/')
+            if [ -n "$NAME" ]; then
+              echo "Extracted from setup.py: $NAME"
+              EXTRACTED_NAME="$NAME"
+            else
+              echo "Extraction failed in setup.py"
+            fi
+          fi
+
+          if [ -z "$EXTRACTED_NAME" ]; then
+            echo "No config file found or no name found in any file"
             exit 1
           fi
-          echo DISTRO_NAME="$DISTRO_NAME" >> $GITHUB_ENV
+          echo DISTRO_NAME="$EXTRACTED_NAME" >> $GITHUB_ENV
 
       ## Version from Source ##
 
