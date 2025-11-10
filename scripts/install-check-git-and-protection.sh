@@ -10,8 +10,8 @@ CONFIG_DIR="$HOME/.config/check-git-and-protection"
 mkdir -p "$BIN_DIR"
 mkdir -p "$CONFIG_DIR"
 
-# List of scripts to fetch and install
-SCRIPTS="check-git-branches-exist.sh check-github-branch-protection-using-jq.sh check-github-branch-protection.sh check-setup-git-and-protection.sh"
+## SCRIPTS to fetch and INSTALL
+SCRIPTS="check-git-branches-exist.sh check-github-branch-protection-using-jq.sh check-github-branch-protection.sh check-setup-git-and-protection.sh sem-ver-bump.sh group-commits.sh terminal-based-release.sh"
 
 # Base URL for fetching scripts
 BASE_URL="https://raw.githubusercontent.com/boromir674/automated-workflows/develop/scripts"
@@ -38,12 +38,12 @@ fi
 
 # Optional: Create a default configuration file
 echo "Creating default configuration at '$CONFIG_DIR/config.env'"
-echo "export MAIN_BRANCH=main" > "$CONFIG_DIR/config.env"
-echo "export DEV_BRANCH=dev" >> "$CONFIG_DIR/config.env"
-echo "export RELEASE_BRANCH=release" >> "$CONFIG_DIR/config.env"
+echo 'export MAIN_BRANCH=${MAIN_BRANCH:-main}' > "$CONFIG_DIR/config.env"
+echo 'export RELEASE_BRANCH=${RELEASE_BRANCH:-release}' >> "$CONFIG_DIR/config.env"
+echo 'export DEV_BRANCH=${DEV_BRANCH:-dev}' >> "$CONFIG_DIR/config.env"
 echo "Configuration file created at $CONFIG_DIR/config.env"
-
-echo "Installation complete. Scripts are now available in your PATH."
+echo
+echo "**** Installation complete! Scripts are now available in your PATH. ****"
 
 echo "       1: check-git-branches-exist.sh"
 echo "      2a: check-github-branch-protection-using-jq.sh"
