@@ -105,8 +105,10 @@ jobs:
       run: |
         sudo apt-get update -y --allow-releaseinfo-change
         sudo apt-get install -y graphviz
+
     - name: Draw Dependency Graphs as .svg files
       run: tox -e pydeps -vv -s false
+
     - name: Upload Dependency Graphs as artifacts
       uses: actions/upload-artifact@v4
       with:
