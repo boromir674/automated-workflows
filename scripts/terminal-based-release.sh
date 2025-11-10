@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Define installation directories
 CONFIG_DIR="$HOME/.config/check-git-and-protection"
@@ -11,10 +11,6 @@ else
     RELEASE_BRANCH="${RELEASE_BRANCH:-release}"
     DEV_BRANCH="${DEV_BRANCH:-dev}"
 fi
-
-### 1. SEM VER SOURCE UPDATE ###
-# Files to update with new version number
-SOURCES_TO_UPDATE="${SOURCES_TO_UPDATE:-src/my_package/__init__.py pyproject.toml uv.lock README.md}"
 
 ### 2. CHANGELOG Update ###
 CHANGELOG_FILE="${CHANGELOG_FILE:-CHANGELOG.md}"
@@ -48,10 +44,6 @@ RELEASE_BRANCH="$RELEASE_BRANCH"
 # Example:
 # ./terminal-based-release.sh 0.1.0
 # ./terminal-based-release.sh 0.1.0 dev
-
-
-# Set the SOFTWARE_RELEASE_GH_API_TOKEN env var, required by `release-software-rolling` tool
-. ../software-release/.env
 
 set -e
 
@@ -156,8 +148,6 @@ tail -n +6 "${CHANGELOG_FILE}" >> "${temp_file}"
 
 # Replace the original changelog file with the updated one
 mv "${temp_file}" "${CHANGELOG_FILE}"
-
-
 
 
 
