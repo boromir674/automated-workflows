@@ -14,10 +14,14 @@ theme:
     next: fontawesome/solid/angle-right
     default: material/tag
   # favicon: images/favicon.png
+
   features:
     - navigation.path
     - navigation.top
     - navigation.footer
+    # renders copy button on code blocks
+    - content.code.copy
+
     # - navigation.indexes
   # navigation.instant break mermaid
   # features:
@@ -94,17 +98,29 @@ markdown_extensions:
   # if attr_list is also added, then tooltips on other html elements are supported as below:
   # ie :material-information-outline:{ title="Important information" }
 
+  # The Details extension supercharges the Admonition extension, making the resulting call-outs collapsible, allowing them to be opened and closed by the user.
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#details
+  # example: ??? blahblah
+  # expanded example: ???+ blahblah
+  # if element is insise non-trivial content wrap in div with class markdown 
+  - pymdownx.details
 
 
 #### SIDE NAVIGATION - DESIGN ####
 nav:
   # each item in the list, renders a left side navigation item/page
-  - Home:
-      - "Quick Start": index.md
+  - Home: index.md
+  - Tutorials:
+    - "Branching Model": "tutorials/branch_model_tutorial.md"
   - How-to Guides:
       - "CD: Dockerhub": "guides/guide_setup_cicd.md"
       - "CD: PyPI": "guides/guide_setup_pypi.md"
       - "CI: Build(s) Testing": "guides/guide_test_build.md"
+      
+      - "Git Ops - V2":
+        - "Git Readiness": "guides/gitops-v2/guide_git_readiness.md"
+        - "Release": "guides/gitops/setup/guide_setup_terminal_based_release_process.md"
+
       - "Git Ops":
           - guides/gitops/index.md
           - "Setup":
@@ -135,6 +151,7 @@ nav:
       - "Git Ops - Tag Main": api/ref_go-tag-main.md
       - "Git Ops - Clean-up Tags": api/ref_go-delete-tags.md
   - Topics:
+      - "Branching Strategy": "topics/branch_model.md"
       - "Single Status Workflow'": "topics/workflow_single_status_idea.md"
       - "Git Ops":
           - "topics/gitops/index.md"
