@@ -240,7 +240,7 @@ jobs:
       # defaults to the    env var, which defaults to 'dist'
 
       ## Build Wheel with `python -m build`, not `pip wheel`##
-      - name: "Build Wheel (from sdist) with 'build' and run Tests"
+      - name: "Build Wheel (from sdist) with 'build' module"
         if: contains(inputs.build_installation, 'wheel')
         run: tox -e build -vv -s false
         env:
