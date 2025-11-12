@@ -356,3 +356,7 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ${{ env.BUILD_DEST }}
           if-no-files-found: error
+          # allow same name uploads from different matrix runs
+          # allows matrix to work with universal wheels
+          # if migrate away from pure python, redesign this
+          overwrite: true
