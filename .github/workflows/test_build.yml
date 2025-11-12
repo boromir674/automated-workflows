@@ -310,7 +310,7 @@ jobs:
       - run: mv ./.tox/coverage.xml ${{ env.COVERAGE_FILE }}
         shell: bash
 
-      - run: echo COVERAGE_ARTIFACT="ALL_CODE_COVERAGE" >> $GITHUB_OUTPUT
+      - run: echo COVERAGE_ARTIFACT="ALL_CODE_COVERAGE-${{ matrix.python-version }}" >> $GITHUB_OUTPUT
         id: set_coverage_artifact
 
       - name: "Upload Test Coverage as Artifacts"
