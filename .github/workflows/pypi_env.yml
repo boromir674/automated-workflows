@@ -54,16 +54,19 @@ jobs:
       name: ${{ inputs.pypi_env }}
     env:
       DIST_DIR: ${{ inputs.dist_folder || 'dist' }}
+      _DOWNLOAD_FOLDER: downloaded-artifacts  # for DRY purposes / internal plumbing
     steps:
     - uses: actions/checkout@v4
-    # TODO only Download Build Artifacts
-    # For python, Builds typically are files: *.tar.gz, *.whl, cython builds, etc.
-    - name: Download Source & Wheel distributions
+
+    - name: Download Source & Wheel distributions, from 'python_distro-*' Artifact
       uses: actions/download-artifact@v4
       with:
-        path: ${{ inputs.artifacts_path }}
+        path: ${{ env._DOWNLOAD_FOLDER }}
+        pattern: python_distro-*
+        merge-multiple: true
 
-    - run: ls -laR ${{ inputs.artifacts_path }}
+    - run: ls -laR
+    - run: ls -laR ${{ env._DOWNLOAD_FOLDER }}
 
     # Create DIST Dir folder, to Upload to PyPI
     - run: mkdir ${DIST_DIR}
@@ -72,7 +75,7 @@ jobs:
     # Every Python Release must a Source Distro Build
     - name: "Discover .tar.gz Source Distribution, from CI Artifacts"
       run: |
-        targz_files=$(find ${{ inputs.artifacts_path }} -type f -name ${{ inputs.distro_name }}*.tar.gz)
+        targz_files=$(find ${{ env._DOWNLOAD_FOLDER }} -type f -name ${{ inputs.distro_name }}*.tar.gz)
         targz_files_array=($targz_files)
 
         SOURCE_DISTRO=${targz_files_array[0]}  # a *.tar.gz file path
@@ -106,10 +109,10 @@ jobs:
     - name: "Copy .whl WHEEL Distro(s) files, into '${{ env.DIST_DIR }}' folder"
       run: |
         echo " -> Downloaded Wheel(s):"
-        find ${{ inputs.artifacts_path }} -type f -name "${{ inputs.distro_name }}*.whl"
+        find ${{ env._DOWNLOAD_FOLDER }} -type f -name "${{ inputs.distro_name }}*.whl"
         echo
 
-        res=$(find ${{ inputs.artifacts_path }} -type f -name "${{ inputs.distro_name }}*.whl")
+        res=$(find ${{ env._DOWNLOAD_FOLDER }} -type f -name "${{ inputs.distro_name }}*.whl")
 
         for f in $res; do
           echo "[INFO] Copying Wheel Distribution: $f";

@@ -43,6 +43,8 @@
 
 # Future Work: run Tests in Parallel Jobs
 
+# Limitation: expects universal wheels to be produced
+
 on:
   workflow_call:
     inputs:
@@ -85,6 +87,10 @@ on:
         description: "CI Artifact Name (id / alias) of uploaded Coverage XML"
         value: ${{ jobs.test_build.outputs.COVERAGE_ARTIFACT }}
 
+      PEP_VERSION:
+        description: "PEP version of the wheel file"
+        value: ${{ jobs.test_build.outputs.PEP_VERSION }}
+
 
 jobs:
   # gather_info:
@@ -98,6 +104,8 @@ jobs:
       matrix: ${{fromJSON(inputs.job_matrix)}}
     outputs:
       COVERAGE_ARTIFACT: ${{ steps.set_coverage_artifact.outputs.COVERAGE_ARTIFACT }}
+      PEP_VERSION: ${{ steps.extract_wheel_info.outputs.PEP_VERSION }}
+
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SDIST_DIR: 'sdist_dir'
@@ -249,20 +257,53 @@ jobs:
         if: contains(inputs.build_installation, 'sdist') && ! contains(inputs.build_installation, 'wheel')
         run: tox -e sdist -vv -s false --notest
 
+      - name: Extract Package PEP Version from Wheel or tarball
+        id: extract_wheel_info
+        shell: bash
+        run: |
+
+          # Dynamically extract PEP version from wheel or tarball (sdist)
+          WHEEL_FILE=$(ls dist/${DISTRO_NAME}-*.whl 2>/dev/null || true)
+          SDIST_FILE=$(ls dist/${DISTRO_NAME}-*.tar.gz 2>/dev/null || true)
+
+          if [ -n "$WHEEL_FILE" ]; then
+            FILE_NAME="$(basename $WHEEL_FILE)"
+            echo "[INFO] Found wheel: $FILE_NAME"
+            # Extract version from wheel filename
+            PEP_VERSION=$(echo "$FILE_NAME" | sed -E "s/${DISTRO_NAME}-([^-]+)-.*/\1/")
+            echo "WHEEL_NAME=$FILE_NAME" >> $GITHUB_ENV
+            ls -l "$WHEEL_FILE"
+          elif [ -n "$SDIST_FILE" ]; then
+            FILE_NAME="$(basename $SDIST_FILE)"
+            echo "[INFO] Found sdist: $FILE_NAME"
+            # Extract version from sdist filename
+            # Example: mylib-1.2.12.tar.gz -> 1.2.12
+            PEP_VERSION=$(echo "$FILE_NAME" | sed -E "s/${DISTRO_NAME}-([^-]+)\.tar\.gz/\1/")
+            echo "SDIST_NAME=$FILE_NAME" >> $GITHUB_ENV
+            ls -l "$SDIST_FILE"
+          else
+            echo "[ERROR] No wheel or sdist found in dist/"
+            exit 1
+          fi
+
+          echo "PEP_VERSION=$PEP_VERSION" >> $GITHUB_OUTPUT
+          echo "[INFO] Extracted PEP version: $PEP_VERSION"
+
+
       - name: Set Distro Version
         id: distros
         run: |
-          PEP440_DISTRO="${DISTRO_NAME}-${VERSION}"
+          PEP440_DISTRO="${DISTRO_NAME}-${{ steps.extract_wheel_info.outputs.PEP_VERSION }}"
           SDIST_NAME="${PEP440_DISTRO}.tar.gz"
           WHEEL_NAME="${PEP440_DISTRO}-py3-none-any.whl"
 
-          SDIST_FILE="$BUILD_DEST/$SDIST_NAME"
+          SDIST_FILE="$BUILD_DEST/$SDIST_NAME"  # store dist/module.tar.gz
           WHEEL_FILE="$BUILD_DEST/$WHEEL_NAME"
 
-          # if sdist, but not wheel
+          # if sdist is at .tox/dist/module.tar.gz, then adjust path
 
           if [[ -f ".tox/$SDIST_FILE" ]]; then
-            SDIST_FILE=".tox/${BUILD_DEST}/${SDIST_NAME}"
+            SDIST_FILE=".tox/${SDIST_FILE}"
           fi
 
           echo SDIST_FILE="$SDIST_FILE" >> $GITHUB_OUTPUT
