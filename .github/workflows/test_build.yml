@@ -76,7 +76,6 @@ on:
       artifact_name:
         required: false
         type: string
-        default: 'dist'
         description: "CI Artifact Name (id / alias) for uploading Distros, such as files .tar.gz, .whl(s)"
 
     ### OUTPUTS ###
@@ -351,7 +350,7 @@ jobs:
       - name: "Upload .TAR.GZ and .WHL Distro Artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.artifact_name }}
+          name: ${{ inputs.artifact_name || format('python_distro-{0}-{1}', matrix.platform, matrix.python-version) }}
           path: ${{ env.BUILD_DEST }}
           if-no-files-found: error
           # allow same name uploads from different matrix runs
