@@ -89,7 +89,7 @@ on:
 
       PEP_VERSION:
         description: "PEP version of the wheel file"
-        value: ${{ jobs.test_build.outputs.PEP_VERSION }}
+        value: ${{ jobs.aggregate_pep_version.outputs.PEP_VERSION }}
 
 
 jobs:
@@ -398,3 +398,13 @@ jobs:
           # allows matrix to work with universal wheels
           # if migrate away from pure python, redesign this
           overwrite: true
+
+
+  aggregate_pep_version:
+    needs: test_build
+    runs-on: ubuntu-latest
+    outputs:
+      PEP_VERSION: ${{ needs.test_build.outputs.PEP_VERSION }}
+    steps:
+      - name: Aggregate PEP_VERSION
+        run: echo "PEP_VERSION=${{ needs.test_build.outputs.PEP_VERSION }}"
