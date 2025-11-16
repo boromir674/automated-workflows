@@ -114,13 +114,16 @@ jobs:
       - name: 'Display Docs Build/Test Script in Summary'
         run: |
           echo "# Docs Test script" >> $GITHUB_STEP_SUMMARY
-          echo "```bash" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`sh" >> $GITHUB_STEP_SUMMARY
+          cat "${{ steps.create_docs_build_script.outputs.DOCS_TEST_SCRIPT }}" >> $GITHUB_STEP_SUMMARY
+
           # do not use cat "${{ steps.create_docs_build_script.outputs.DOCS_TEST_SCRIPT }}" >> $GITHUB_STEP_SUMMARY
           # read file contents and pipe through echo to dump to summary
-          while IFS= read -r line; do
-            echo "$line" >> $GITHUB_STEP_SUMMARY
-          done < docs_build.sh
-          echo "```" >> $GITHUB_STEP_SUMMARY
+          # while IFS= read -r line; do
+          #   echo "$line" >> $GITHUB_STEP_SUMMARY
+          # done < docs_build.sh
+
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       #### 2. Build Documentation HTML/CSS/JS from docs sources ####
       - name: 'Run Docs Build Process and perform Tests during build'

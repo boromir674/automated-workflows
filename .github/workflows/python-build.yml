@@ -40,6 +40,13 @@ on:
         default: 'dist'
         description: "CI Artifact Name (id / alias) for uploading Distros, such as files .tar.gz, .whl(s)"
 
+      # DISTRIBUTE TESTS to MULTIPLE CPUs
+      distribute_tests:
+        required: false
+        type: boolean
+        default: true
+        description: "Whether to distribute tests across multiple CPUs using pytest-xdist"
+
     ### OUTPUTS ###
     # Map the workflow outputs to job outputs
     outputs:
@@ -68,7 +75,8 @@ jobs:
         -ra --cov --cov-report=term-missing \
         --cov-context=test \
         --cov-report=xml:coverage.{envname}.xml \
-        -n auto tests
+        ${{ inputs.distribute_tests == true && '-n auto' || '' }} \
+        tests
       # log deletion post hook fails on windows, due to permission error! (other process is using the file, so removing is denied)
       # windows spawn multiple processes, so log deletion is not possible, even when running 1 Single Unit Test
       BUG_LOG_DEL_WIN: 'permission_error'
@@ -186,7 +194,7 @@ jobs:
           pytest -ra --cov --cov-report=term-missing \
             --cov-context=test \
             --cov-report=xml:coverage.test-edit.xml \
-            -n auto tests
+            ${{ inputs.distribute_tests == true && '-n auto' || '' }} tests
 
 
       ######## PHASE 2: BUILD WHEEL AND SDIST DISTRIBUTIONS FROM CODE ########
@@ -325,7 +333,7 @@ jobs:
           pytest -ra --cov --cov-report=term-missing \
             --cov-report=html:test-wheels/htmlcov --cov-context=test \
             --cov-report=xml:coverage.test-wheels.xml \
-            -n auto tests
+            ${{ inputs.distribute_tests == true && '-n auto' || '' }} tests
 
 
       ## Code Coverage ## TODO; enable combine by moving each .coverage file to other dir to avoid override of subsequent coverage invocations with pytest
