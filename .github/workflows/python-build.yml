@@ -198,6 +198,8 @@ jobs:
         run: |
           . venv-edit/${{ env.VENV_ACTIVATE }}
 
+          ls -ltrR venv-edit
+
           # pytest ${{ env.PYTEST_ARGS }}
           ${{ matrix.python-version == '3.9' && './venv-edit/bin/' || '' }}pytest -ra --cov --cov-report=term-missing \
             --cov-context=test \
