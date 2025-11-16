@@ -1,10 +1,33 @@
-# Reusable Job for Documentation Static Site Building
+#########################################################
+##     Reusable Documentation Site Builder Workflow    ##
+#########################################################
+
+## Mkdocs or Sphinx Documentation (Static) Site Building ##
+
+# - For mkdocs requires a 'mkdocs.yml' config file in the repo root
+# - For sphinx requires a 'docs/conf.py' config file in the 'docs/' directory
+# - For both Build Tools, expects the docs source files to be in the 'docs/' directory
+
+# 1. Creates Docs reproducible Build environemnt, with exact python dependencies
+# 2. Runs one or more Docs Build commands and verifies they succeed
+# 3. Optionally uploads built docs site to CI Artifacts for later retrieval
+
+# Assumptions:
+# - project supports editable (-e) install, to make the source code available in PYTHONPATH
+# - pyproject.toml integrates/supports uv
+
 
 name: Docs Build
+
 on:
   workflow_call:
     inputs:
-      # App Installation Settings #
+      # Docs Builder - Settings #
+      build_tool:
+        required: false
+        default: 'mkdocs'
+        description: "Documentation build tool to use. Options: 'mkdocs' or 'sphinx'. Default is 'mkdocs'"
+        type: string
 
       # Upload build to CI Artifacts
       upload_distro:
@@ -13,7 +36,7 @@ on:
         type: boolean
         description: "Whether to upload built docs distro to CI Artifacts"
 
-      # Trigger Behavior Settings #
+      # Trigger Behavior - Settings #
       default_trigger:
         required: false
         default: true
@@ -25,7 +48,7 @@ on:
         description: "Override the default trigger, 'true' gurantees run, 'false' not run"
         type: string  # IMPORTANT: must be string, to model 3 states {true, false, none}
 
-      # Environment Settings #
+      # Python Environment - Settings #
       python_version:
         required: false
         default: '3.11'
@@ -36,6 +59,8 @@ jobs:
   test:
     if: inputs.override == 'true' || (inputs.override != 'false' && inputs.default_trigger == true)
     runs-on: 'ubuntu-latest'
+    env:
+      BUILD_OUTPUT_DIR: docs-dist  # for internal plumbing / DRYness
     steps:
       - uses: actions/checkout@v4
 
@@ -44,14 +69,13 @@ jobs:
         with:
           python-version: '${{ inputs.python_version }}'
 
-      # Install uv
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: 'Export pinned Prod + Docs dependencies'
         run: uv export --no-emit-project --no-dev --extra docs --frozen --format requirements-txt -o requirements.txt
 
-      # Install dependencies in virtualenv
+      # 1a. Install dependencies in virtualenv
       - name: 'Install "Prod + Docs" dependencies'
         run: |
           uv venv
@@ -59,43 +83,46 @@ jobs:
 
       # here the .venv is built with the exact dependencies
 
-      ## Install Package in 'edit' mode ##
+      ## 1b. Install Package in 'edit' mode ##
       - name: 'Install Package in Edit mode'
         run: uv pip install --no-deps -e .
 
-      #### Build Documentation HTML/CSS/JS from docs sources ####
-      - name: Run Docs Build Process and perform Tests during build
+      ## Create Docs Build/Test script, based on input Docs Builder Tool
+      - name: "Create Docs Build/Test script for Docs Builder Tool '${{ inputs.build_tool }}'"
+        id: create_docs_build_script
+        run: |
+          echo "#!/bin/bash" > docs_build.sh
+
+          if [ "${{ inputs.build_tool }}" = "mkdocs" ]; then
+            echo "mkdocs build --site-dir dist/docs" >> docs_build.sh
+            chmod +x docs_build.sh
+          elif [ "${{ inputs.build_tool }}" = "sphinx" ]; then
+            echo "sphinx-build -E -b doctest docs dist/docs" >> docs_build.sh
+            echo "sphinx-build -E -b html docs dist/docs" >> docs_build.sh
+            echo "sphinx-build -b spelling docs dist/docs" >> docs_build.sh
+            echo "sphinx-build -b linkcheck docs dist/docs || 'true'" >> docs_build.sh
+          else
+            echo "[ERROR] Unsupported docs build tool: ${{ inputs.build_tool }}. Supported: mkdocs, sphinx"
+            exit 1
+          fi
+          chmod +x docs_build.sh
+
+          echo DOCS_TEST_SCRIPT=docs_build.sh >> $GITHUB_OUTPUT
+
+      - name: 'Display Docs Build/Test Script in Summary'
+        run: |
+          echo "# Docs Test script" >> $GITHUB_STEP_SUMMARY
+          echo "```bash" >> $GITHUB_STEP_SUMMARY
+          cat docs_build.sh >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+
+      #### 2. Build Documentation HTML/CSS/JS from docs sources ####
+      - name: 'Run Docs Build Process and perform Tests during build'
         run: |
           . .venv/bin/activate
 
-          # check if mkdocs command is available, if not run source .venv/bin/activate
-          if ! command -v mkdocs &> /dev/null
-          then
-              echo "[INFO] mkdocs could not be found, trying with 'source'"
-              source .venv/bin/activate
-          fi
-
-          # check if mkdocs command is available, if not check if uv run --active mkdocs work, else abort
-          if ! command -v mkdocs &> /dev/null
-          then
-              echo "[INFO] mkdocs could not be found, trying with 'uv run mkdocs'"
-              if ! uv run --active mkdocs &> /dev/null
-              then
-                  echo "[WARNING] mkdocs could not be found even with 'uv run mkdocs'"
-              fi
-          fi
-
-          # echo "[INFO] Running Doc Tests!"
-          # sphinx-build -E -b doctest docs dist/docs
-
-          echo "[INFO] Building docs"
-          uv run --active mkdocs build --site-dir dist/docs
-
-          # echo "[INFO] Building docs with spelling check"
-          # sphinx-build -b spelling docs dist/docs
-
-          # echo "[INFO] Building docs with url link check"
-          # sphinx-build -b linkcheck docs dist/docs || 'true'
+          echo "[INFO] Running Docs Build/Test script: ${{ steps.create_docs_build_script.outputs.DOCS_TEST_SCRIPT }}"
+          ./${{ steps.create_docs_build_script.outputs.DOCS_TEST_SCRIPT }}
 
       - name: "Upload Docs HTML/CSS/JS bundle to CI Artifacts"
         if: inputs.upload_distro
