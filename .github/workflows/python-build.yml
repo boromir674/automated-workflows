@@ -188,7 +188,30 @@ jobs:
         shell: bash
         run: |
           . venv-edit/${{ env.VENV_ACTIVATE }}
-          ${{ env.PIP_INSTALL }} --no-deps -e .[test]
+          ${{ env.PIP_INSTALL }} --no-deps -e .
+
+      # Mitigate uv + python 3.9 incopatibility with "extras" python feature
+      - name: "Read and install test dependencies from pyproject.toml, with pip"
+        if: matrix.python-version == '3.9'
+        shell: bash
+        run: |
+          . venv-edit/${{ env.VENV_ACTIVATE }}
+          awk '
+          /\[project.optional-dependencies\]/ {found=1}
+          found && /test = \[/ {in_test=1; next}
+          in_test && /\]/ {exit}
+          in_test {
+              gsub(/^[[:space:]]*"/, "");      # Remove leading quote
+              gsub(/",?$/, "");                # Remove trailing quote/comma
+              if(length($0)>0) print $0
+          }' pyproject.toml | while read -r dep; do
+              # Remove environment marker (anything after the first semicolon)
+              base_dep=$(echo "$dep" | cut -d';' -f1 | xargs)
+              if [ -n "$base_dep" ]; then
+                  echo "Installing: $base_dep"
+                  pip install "$base_dep"
+              fi
+          done
 
       # 3. Test Mode 1: Run Test Suite against code
       - name: 'Run Test Suite against the Package code'
