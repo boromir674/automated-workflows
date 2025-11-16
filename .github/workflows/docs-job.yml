@@ -68,11 +68,28 @@ jobs:
         run: |
           . .venv/bin/activate
 
+          # check if mkdocs command is available, if not run source .venv/bin/activate
+          if ! command -v mkdocs &> /dev/null
+          then
+              echo "[INFO] mkdocs could not be found, trying with 'source'"
+              source .venv/bin/activate
+          fi
+
+          # check if mkdocs command is available, if not check if uv run --active mkdocs work, else abort
+          if ! command -v mkdocs &> /dev/null
+          then
+              echo "[INFO] mkdocs could not be found, trying with 'uv run mkdocs'"
+              if ! uv run --active mkdocs &> /dev/null
+              then
+                  echo "[WARNING] mkdocs could not be found even with 'uv run mkdocs'"
+              fi
+          fi
+
           # echo "[INFO] Running Doc Tests!"
           # sphinx-build -E -b doctest docs dist/docs
 
           echo "[INFO] Building docs"
-          mkdocs build --site-dir dist/docs
+          uv run --active mkdocs build --site-dir dist/docs
 
           # echo "[INFO] Building docs with spelling check"
           # sphinx-build -b spelling docs dist/docs
