@@ -84,7 +84,7 @@ jobs:
       # Dynamic command for 'Virtualenv activation' script
       VENV_ACTIVATE: ${{ matrix.platform == 'windows-latest' && 'Scripts/activate' || 'bin/activate' }}
 
-      # python 3.8 and 3.9 are not compatible with uv virtenv features (38 is not compatible with uv export too, 3.9 is)
+      # python 3.8 and 3.9 are not compatible with uv virtenv features (38 is not compatible with uv export too, 3.9 also incopatible even though it does not throw error !)
       CREATE_VENV: ${{ matrix.python-version == '3.9' && 'python -m virtualenv' || 'uv venv' }}
       PIP_INSTALL: ${{ matrix.python-version == '3.9' && 'pip install' || 'uv pip install' }}
     steps:
@@ -169,7 +169,7 @@ jobs:
           ## Set Source Sem Ver to Release Candidate Sem Ver ##
           sh ./scripts/distro-sem-ver-bump.sh "${RC_SEMVER}"
 
-      # UV Export Prod + Test Dependencies (without package)
+      # UV Export Prod + Test Dependencies (without package) (uv export does not respect extras for py 3.9; 3.8 and below throws error)
       - name: "Export exact 'Prod + Test' Dependencies in requirements.txt format"
         run: uv export --no-emit-project --no-dev --extra test --frozen --format requirements-txt -o prod+test.txt
 
@@ -188,7 +188,7 @@ jobs:
         shell: bash
         run: |
           . venv-edit/${{ env.VENV_ACTIVATE }}
-          ${{ env.PIP_INSTALL }} --no-deps -e .
+          ${{ env.PIP_INSTALL }} --no-deps -e .[test]
 
       # 3. Test Mode 1: Run Test Suite against code
       - name: 'Run Test Suite against the Package code'
