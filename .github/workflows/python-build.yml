@@ -265,15 +265,6 @@ jobs:
           echo "[DEBUG] Raw METADATA content from wheel:"
           unzip -p ../dist/*.whl '*/METADATA' 2>/dev/null | head -20 || echo "Could not extract METADATA"
 
-          echo '---' >> $GITHUB_STEP_SUMMARY
-          echo "**Raw MEtadata File**" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          unzip -p ../dist/*.whl '*/METADATA' 2>/dev/null >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo '---' >> $GITHUB_STEP_SUMMARY
-
-
-
           echo "[DEBUG] === NAME/VERSION FIELD CHECK ==="
           NAME_FIELD=$(unzip -p ../dist/*.whl '*/METADATA' 2>/dev/null | grep '^Name:' || echo "Name: NOT FOUND")
           VERSION_FIELD=$(unzip -p ../dist/*.whl '*/METADATA' 2>/dev/null | grep '^Version:' || echo "Version: NOT FOUND")
