@@ -85,8 +85,10 @@ jobs:
       VENV_ACTIVATE: ${{ matrix.platform == 'windows-latest' && 'Scripts/activate' || 'bin/activate' }}
 
       # python 3.8 and 3.9 are not compatible with uv virtenv features (38 is not compatible with uv export too, 3.9 also incopatible even though it does not throw error !)
-      CREATE_VENV: ${{ matrix.python-version == '3.9' && 'python -m virtualenv' || 'uv venv' }}
-      PIP_INSTALL: ${{ matrix.python-version == '3.9' && 'pip install' || 'uv pip install' }}
+      # CREATE_VENV: ${{ matrix.python-version == '3.9' && 'python -m virtualenv' || 'uv venv' }}
+      CREATE_VENV: ${{ matrix.python-version == '3.9' && 'uv venv' || 'uv venv' }}
+      # PIP_INSTALL: ${{ matrix.python-version == '3.9' && 'pip install' || 'uv pip install' }}
+      PIP_INSTALL: ${{ matrix.python-version == '3.9' && 'uv pip install' || 'uv pip install' }}
     steps:
       - run: 'echo "OS: ${{ matrix.platform }}, Python: ${{ matrix.python-version }}"'
 
@@ -107,10 +109,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.8.0"
-
-      - name: "Install 'virtualenv' module, since uv venv feature is not compatible with python3.9"
-        if: matrix.python-version == '3.9'
-        run: python -m pip install virtualenv
 
       # ### Sanity Check that folder is Compatible for Python Distro / Build ###
       # - run: uvx pyroma --directory .
@@ -191,27 +189,27 @@ jobs:
           ${{ env.PIP_INSTALL }} --no-deps -e .
 
       # Mitigate uv + python 3.9 incopatibility with "extras" python feature
-      - name: "Read and install test dependencies from pyproject.toml, with pip"
-        if: matrix.python-version == '3.9'
-        shell: bash
-        run: |
-          . venv-edit/${{ env.VENV_ACTIVATE }}
-          awk '
-          /\[project.optional-dependencies\]/ {found=1}
-          found && /test = \[/ {in_test=1; next}
-          in_test && /\]/ {exit}
-          in_test {
-              gsub(/^[[:space:]]*"/, "");      # Remove leading quote
-              gsub(/",?$/, "");                # Remove trailing quote/comma
-              if(length($0)>0) print $0
-          }' pyproject.toml | while read -r dep; do
-              # Remove environment marker (anything after the first semicolon)
-              base_dep=$(echo "$dep" | cut -d';' -f1 | xargs)
-              if [ -n "$base_dep" ]; then
-                  echo "Installing: $base_dep"
-                  pip install "$base_dep"
-              fi
-          done
+      # - name: "Read and install test dependencies from pyproject.toml, with pip"
+      #   if: matrix.python-version == '3.9'
+      #   shell: bash
+      #   run: |
+      #     . venv-edit/${{ env.VENV_ACTIVATE }}
+      #     awk '
+      #     /\[project.optional-dependencies\]/ {found=1}
+      #     found && /test = \[/ {in_test=1; next}
+      #     in_test && /\]/ {exit}
+      #     in_test {
+      #         gsub(/^[[:space:]]*"/, "");      # Remove leading quote
+      #         gsub(/",?$/, "");                # Remove trailing quote/comma
+      #         if(length($0)>0) print $0
+      #     }' pyproject.toml | while read -r dep; do
+      #         # Remove environment marker (anything after the first semicolon)
+      #         base_dep=$(echo "$dep" | cut -d';' -f1 | xargs)
+      #         if [ -n "$base_dep" ]; then
+      #             echo "Installing: $base_dep"
+      #             pip install "$base_dep"
+      #         fi
+      #     done
 
       # 3. Test Mode 1: Run Test Suite against code
       - name: 'Run Test Suite against the Package code'
