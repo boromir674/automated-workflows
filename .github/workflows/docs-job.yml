@@ -95,7 +95,6 @@ jobs:
 
           if [ "${{ inputs.build_tool }}" = "mkdocs" ]; then
             echo "mkdocs build --site-dir dist/docs" >> docs_build.sh
-            chmod +x docs_build.sh
           elif [ "${{ inputs.build_tool }}" = "sphinx" ]; then
             echo "sphinx-build -E -b doctest docs dist/docs" >> docs_build.sh
             echo "sphinx-build -E -b html docs dist/docs" >> docs_build.sh
@@ -106,14 +105,21 @@ jobs:
             exit 1
           fi
           chmod +x docs_build.sh
+          echo SCRIPT START
+          cat docs_build.sh
+          echo SCRIPT END
 
-          echo DOCS_TEST_SCRIPT=docs_build.sh >> $GITHUB_OUTPUT
+          echo "DOCS_TEST_SCRIPT=docs_build.sh" >> $GITHUB_OUTPUT
 
       - name: 'Display Docs Build/Test Script in Summary'
         run: |
           echo "# Docs Test script" >> $GITHUB_STEP_SUMMARY
           echo "```bash" >> $GITHUB_STEP_SUMMARY
-          cat docs_build.sh >> $GITHUB_STEP_SUMMARY
+          # do not use cat "${{ steps.create_docs_build_script.outputs.DOCS_TEST_SCRIPT }}" >> $GITHUB_STEP_SUMMARY
+          # read file contents and pipe through echo to dump to summary
+          while IFS= read -r line; do
+            echo "$line" >> $GITHUB_STEP_SUMMARY
+          done < docs_build.sh
           echo "```" >> $GITHUB_STEP_SUMMARY
 
       #### 2. Build Documentation HTML/CSS/JS from docs sources ####
