@@ -191,7 +191,7 @@ jobs:
           . venv-edit/${{ env.VENV_ACTIVATE }}
 
           # pytest ${{ env.PYTEST_ARGS }}
-          ${{ matrix.python-version == '3.9' && 'uv run --active' || '' }} pytest -ra --cov --cov-report=term-missing \
+          ${{ matrix.python-version == '3.9' && 'uv run --active python -m' || '' }} pytest -ra --cov --cov-report=term-missing \
             --cov-context=test \
             --cov-report=xml:coverage.test-edit.xml \
             ${{ inputs.distribute_tests == true && '-n auto' || '' }} tests
@@ -321,7 +321,7 @@ jobs:
           PY_WHEEL: 1 # required on Windows Job when app is installed via wheel
         run: |
           . venv-wheels/${{ env.VENV_ACTIVATE }}
-          ${{ matrix.python-version == '3.9' && 'uv run --active' || '' }} pytest -ra --cov --cov-report=term-missing \
+          ${{ matrix.python-version == '3.9' && 'python -m' || '' }} pytest -ra --cov --cov-report=term-missing \
             --cov-report=html:test-wheels/htmlcov --cov-context=test \
             --cov-report=xml:coverage.test-wheels.xml \
             ${{ inputs.distribute_tests == true && '-n auto' || '' }} tests
