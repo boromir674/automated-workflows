@@ -83,6 +83,10 @@ jobs:
 
       # Dynamic command for 'Virtualenv activation' script
       VENV_ACTIVATE: ${{ matrix.platform == 'windows-latest' && 'Scripts/activate' || 'bin/activate' }}
+
+      # python 3.8 and 3.9 are not compatible with uv virtenv features (38 is not compatible with uv export too, 3.9 is)
+      CREATE_VENV: ${{ matrix.python-version == '3.9' && 'python -m virtualenv' || 'uv venv' }}
+      PIP_INSTALL: ${{ matrix.python-version == '3.9' && 'pip install' || 'uv pip install' }}
     steps:
       - run: 'echo "OS: ${{ matrix.platform }}, Python: ${{ matrix.python-version }}"'
 
@@ -103,6 +107,10 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.8.0"
+
+      - name: "Install 'virtualenv' module, since uv venv feature is not compatible with python3.9"
+        if: matrix.python-version == '3.9'
+        run: python -m pip install virtualenv
 
       # ### Sanity Check that folder is Compatible for Python Distro / Build ###
       # - run: uvx pyroma --directory .
@@ -171,16 +179,16 @@ jobs:
       - name: Create venv with exact 'Prod + Test' Dependencies
         shell: bash
         run: |
-          uv venv venv-edit
+          ${{ env.CREATE_VENV }} venv-edit
           . venv-edit/${{ env.VENV_ACTIVATE }}
-          uv pip install --no-deps -r prod+test.txt
+          ${{ env.PIP_INSTALL }} --no-deps -r prod+test.txt
       
       # 2. INSTALL Package in 'edit' mode
       - name: Install Package in 'edit' mode inside venv
         shell: bash
         run: |
           . venv-edit/${{ env.VENV_ACTIVATE }}
-          uv pip install --no-deps -e .
+          ${{ env.PIP_INSTALL }} --no-deps -e .
 
       # 3. Test Mode 1: Run Test Suite against code
       - name: 'Run Test Suite against the Package code'
@@ -188,7 +196,7 @@ jobs:
         env:
           COVERAGE_FILE: '.coverage.edit'
         run: |
-          source venv-edit/${{ env.VENV_ACTIVATE }}
+          . venv-edit/${{ env.VENV_ACTIVATE }}
 
           # pytest ${{ env.PYTEST_ARGS }}
           ${{ matrix.python-version == '3.9' && 'python -m' || '' }} pytest -ra --cov --cov-report=term-missing \
@@ -245,7 +253,7 @@ jobs:
         run: |
           uv venv check-env
           . check-env/${{ env.VENV_ACTIVATE }}
-          uv pip install poetry-core pyroma 'twine >=6.0.0, <7.0.0'
+          ${{ env.PIP_INSTALL }} poetry-core pyroma 'twine >=6.0.0, <7.0.0'
 
           echo "# ENVIRONMENT INFO" >> $GITHUB_STEP_SUMMARY
           echo "- Python version in verification env: $(python --version)" >> $GITHUB_STEP_SUMMARY
@@ -307,11 +315,11 @@ jobs:
       - name: Install Package and prod+test Wheels
         shell: bash
         run: |
-          uv venv venv-wheels
+          ${{ env.CREATE_VENV }} venv-wheels
           . venv-wheels/${{ env.VENV_ACTIVATE }}
 
-          uv pip install --no-deps dist-wheels/*.whl
-          uv pip install --no-deps dist/*.whl
+          ${{ env.PIP_INSTALL }} --no-deps dist-wheels/*.whl
+          ${{ env.PIP_INSTALL }} --no-deps dist/*.whl
 
       # 3. Run Tests
       - name: 'Run Test Suite against the Package Wheel and prod+test wheels'
@@ -334,9 +342,9 @@ jobs:
           OUTPUT_XML: coverage-${{ matrix.platform }}-${{ matrix.python-version }}.xml
         shell: bash
         run: |
-          uv venv cov-env
+          ${{ env.CREATE_VENV }} cov-env
           . cov-env/${{ env.VENV_ACTIVATE }}
-          uv pip install 'coverage[toml] >= 5.1' 'diff_cover >=6'
+          ${{ env.PIP_INSTALL }} 'coverage[toml] >= 5.1' 'diff_cover >=6'
 
           echo '[INFO] Running coverage'
           coverage combine --keep
