@@ -188,7 +188,7 @@ jobs:
         env:
           COVERAGE_FILE: '.coverage.edit'
         run: |
-          . venv-edit/${{ env.VENV_ACTIVATE }}
+          source venv-edit/${{ env.VENV_ACTIVATE }}
 
           # pytest ${{ env.PYTEST_ARGS }}
           ${{ matrix.python-version == '3.9' && 'python -m' || '' }} pytest -ra --cov --cov-report=term-missing \
